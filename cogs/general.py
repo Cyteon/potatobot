@@ -108,6 +108,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="uptime"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def uptime(self, context: Context):
         uptime = time.time() - self.bot.start_time
         str = time.strftime("%H:%M:%S", time.gmtime(uptime))
@@ -119,6 +121,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="botinfo"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def botinfo(self, context: Context) -> None:
         dpyVersion = discord.__version__
         serverCount = len(self.bot.guilds)
@@ -150,6 +154,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="cmdstats"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def cmdstats(self, context: Context) -> None:
         sorted_commands = sorted(self.bot.command_usage.items(), key=lambda x: x[1], reverse=True)
         embed = discord.Embed(title="Command Statistics", color=0x00ff00)
@@ -181,6 +187,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="ping"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ping(self, context: Context) -> None:
         """
         Check if the bot is alive.
@@ -201,6 +209,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="bug <bug>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(5, 3600, commands.BucketType.user)
     async def bug(self, context: Context, *, bug: str) -> None:
         channel = self.bot.get_channel(1244584577989873684)
@@ -223,6 +233,8 @@ class General(commands.Cog, name="⬜ General"):
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.describe(text="The text you want to translate.")
     @app_commands.describe(language="The language you want to translate the text to.")
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def translate(self, context: Context, text: str, language: str = "en") -> None:
 
         translated = GoogleTranslator(source='auto', target=language).translate(text)
@@ -242,6 +254,8 @@ class General(commands.Cog, name="⬜ General"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.describe(question="The question you want to ask.")
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def eight_ball(self, context: Context, *, question: str) -> None:
         """
         Ask any question to the bot.
@@ -285,6 +299,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="support"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def support(self, context: commands.Context) -> None:
 
         message = await context.send(f"https://discord.gg/ZcFsFb9RJU")
@@ -295,8 +311,10 @@ class General(commands.Cog, name="⬜ General"):
         usage="reddit [optional: subreddit]"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def reddit(self, context: Context, subreddit: str = None) -> None:
-        if not subreddit:
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def reddit(self, context: Context, subreddit: str = "") -> None:
+        if subreddit == "":
             subreddit = await reddit.subreddit("random")
         else:
             subreddit = await reddit.subreddit(subreddit)
