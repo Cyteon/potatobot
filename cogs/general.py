@@ -141,9 +141,7 @@ class General(commands.Cog, name="⬜ General"):
         embed.add_field(name="Shard Ping:", value=f"{round(shard_ping * 1000)}ms")
         embed.add_field(name="Shard Servers:", value=shard_servers)
 
-        #embed.set_thumbnail(url=thumbnail)
-        embed.set_author(name=context.author.display_name, icon_url=context.author.display_avatar.url)
-
+        embed.set_footer(text="Bot made by Cyteon @ https://github.com/cyteon")
         await context.send(embed=embed)
 
     @commands.hybrid_command(
@@ -297,8 +295,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="reddit [optional: subreddit]"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def reddit(self, context: Context, subreddit: str = "") -> None:
-        if subreddit == "":
+    async def reddit(self, context: Context, subreddit: str = None) -> None:
+        if not subreddit:
             subreddit = await reddit.subreddit("random")
         else:
             subreddit = await reddit.subreddit(subreddit)
@@ -386,6 +384,8 @@ class CogSelect(discord.ui.Select):
         embed.add_field(
             name=cog_name.capitalize(), value=f"```{help_text}```", inline=False
         )
+        embed.set_footer(text=f"Requested by {interaction.user}")
+
         # Edit the original message instead of sending a new one
         await interaction.message.edit(embed=embed)
 

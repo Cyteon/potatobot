@@ -563,6 +563,7 @@ class Owner(commands.Cog, name="owner"):
         backup_db["users"].drop()
         backup_db["starboard"].drop()
         backup_db["users_global"].drop()
+        backup_db["reactionroles"].drop()
 
         await message.edit(content="Status: Removed old data from backup...")
 
@@ -596,8 +597,13 @@ class Owner(commands.Cog, name="owner"):
 
         await message.edit(content="Status: Copied starboard...")
 
+        for starboard in db["reactionroles"].find():
+            backup_db["reactionroles"].insert_one(starboard)
 
-        await message.edit("Database has been copied to backup")
+        await message.edit(content="Status: Copied reaction roles...")
+
+
+        await message.edit(content="Database has been copied to backup")
 
     @commands.command(
         name="force_system_prompt",
