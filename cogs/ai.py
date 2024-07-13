@@ -651,6 +651,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai_image_old <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image_old(self, context: Context, *, prompt: str) -> None:
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": context.author.id})

@@ -137,6 +137,8 @@ class Owner(commands.Cog, name="owner"):
         description="Load a cog",
     )
     @commands.is_owner()
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def load(self, context: Context, cog: str) -> None:
         try:
             await self.bot.load_extension(f"cogs.{cog}")
@@ -156,6 +158,8 @@ class Owner(commands.Cog, name="owner"):
         description="Unloads a cog.",
     )
     @commands.is_owner()
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def unload(self, context: Context, cog: str) -> None:
         try:
             await self.bot.unload_extension(f"cogs.{cog}")
@@ -175,6 +179,8 @@ class Owner(commands.Cog, name="owner"):
         description="Reloads a cog",
     )
     @app_commands.describe(cog="The name of the cog to reload")
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.is_owner()
     async def reload(self, context: Context, cog: str) -> None:
         try:
@@ -240,6 +246,8 @@ class Owner(commands.Cog, name="owner"):
         description=":D",
     )
     @commands.is_owner()
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def eval(self, context, *, cmd: str):
         fn_name = "_eval_expr"
 
@@ -317,6 +325,8 @@ class Owner(commands.Cog, name="owner"):
         description="Blacklist a user",
     )
     @commands.is_owner()
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def blacklist(self, context, user: discord.User, *, reason: str = None):
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": user.id})
@@ -352,6 +362,8 @@ class Owner(commands.Cog, name="owner"):
         description="Unblacklist a user",
     )
     @commands.is_owner()
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def unblacklist(self, context, user: discord.User):
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": user.id})

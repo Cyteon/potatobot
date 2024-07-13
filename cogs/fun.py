@@ -368,7 +368,6 @@ class Fun(commands.Cog, name="🎉 Fun"):
             imageData = io.BytesIO(await img.read())
             await context.send(file=discord.File(imageData, "blur.png"))
 
-        #await context.send("https://some-random-api.com/canvas/overlay/triggered?avatar=" + user.display_avatar.url)
     @avatar.command(
         name="pixelate",
         description="Pixelate someone",
@@ -440,6 +439,113 @@ class Fun(commands.Cog, name="🎉 Fun"):
 
             imageData = io.BytesIO(await img.read())
             await context.send(file=discord.File(imageData, "wasted.png"))
+
+    @avatar.command(
+        name="passed",
+        description="Passed",
+        usage="avatar passed [optional: user]"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def passed(self, context: Context, user: discord.User = None) -> None:
+        if not user:
+            user = context.author
+
+        async with aiohttp.ClientSession() as session:
+            img = await session.get(
+                f"https://some-random-api.com/canvas/overlay/passed?avatar={user.display_avatar.url}"
+            )
+
+            imageData = io.BytesIO(await img.read())
+            await context.send(file=discord.File(imageData, "passed.png"))
+
+    @avatar.command(
+        name="trans",
+        description="Trans border around pfp",
+        usage="avatar trans [optional: user]"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def trans(self, context: Context, user: discord.User = None) -> None:
+        if not user:
+            user = context.author
+
+        async with aiohttp.ClientSession() as session:
+            img = await session.get(
+                f"https://some-random-api.com/canvas/misc/transgender?avatar={user.display_avatar.url}"
+            )
+
+            imageData = io.BytesIO(await img.read())
+            await context.send(file=discord.File(imageData, "transgender.png"))
+
+    @commands.hybrid_group(
+        name="image",
+        description="Commands for image creation",
+        usage="image <subcommand>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def image(self, context: Context) -> None:
+        embed = discord.Embed(
+            title="Image",
+            description="Commands"
+        )
+
+        # get all subcommands in group
+
+        subcommands = [cmd for cmd in self.image.walk_commands()]
+
+        data = []
+
+        for subcommand in subcommands:
+            description = subcommand.description.partition("\n")[0]
+            data.append(f"{await self.bot.get_prefix(context)}image {subcommand.name} - {description}")
+
+        help_text = "\n".join(data)
+        embed = discord.Embed(
+            title=f"Help: Image", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{help_text}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @image.command(
+        name="youtube",
+        description="Youtube comment",
+        usage="image youtube <user> <text>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def youtube(self, context: Context, user: discord.User, *, text: str) -> None:
+        if not user:
+            user = context.author
+
+        async with aiohttp.ClientSession() as session:
+            img = await session.get(
+                f"https://some-random-api.com/canvas/misc/youtube-comment?avatar={user.display_avatar.url}&username={user.display_name}&comment={text}"
+            )
+
+            imageData = io.BytesIO(await img.read())
+            await context.send(file=discord.File(imageData, "youtube.png"))
+
+    @image.command(
+        name="tweet",
+        description="Tweet",
+        usage="image tweet <user> <text>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def tweet(self, context: Context, user: discord.User, *, tweet: str) -> None:
+        async with aiohttp.ClientSession() as session:
+            nick = user.nick if hasattr(user, 'nick') else user.display_name
+            if nick == None:
+                nick = user.display_name
+
+            img = await session.get(
+                f"https://some-random-api.com/canvas/misc/tweet?avatar={user.display_avatar.url}&username={user.global_name}&displayname={nick}&comment={tweet}&replies=-1"
+            )
+
+            imageData = io.BytesIO(await img.read())
+            await context.send(file=discord.File(imageData, "tweet.png"))
 
     @commands.hybrid_command(
         name="ttt",

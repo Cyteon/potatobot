@@ -128,8 +128,8 @@ class General(commands.Cog, name="⬜ General"):
         serverCount = len(self.bot.guilds)
         memberCount = len(set(self.bot.get_all_members()))
 
-        shard_id = context.guild.shard_id
-        shard = self.bot.get_shard(shard_id)
+        shard_id = context.guild.shard_id if context.guild else None
+        shard = self.bot.get_shard(shard_id) if shard_id is not None else self.bot.shards[0]
         shard_ping = shard.latency
         shard_servers = len([guild for guild in self.bot.guilds if guild.shard_id == shard_id])
 
