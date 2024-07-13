@@ -154,3 +154,5 @@ pickle/
 .pem
 .key
 config.json
+
+*.out
