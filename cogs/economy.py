@@ -34,7 +34,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         if not data:
             data = CONSTANTS.user_data_template(user.id, context.guild.id)
             db.insert_one(data)
-        await context.send(f"**{user}** have ${data['wallet']} in their wallet")
+        await context.send(f"**{user}** has ${data['wallet']} in their wallet")
 
     @commands.hybrid_command(
         name="daily",
