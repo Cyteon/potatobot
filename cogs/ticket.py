@@ -1,0 +1,528 @@
+# This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
+
+import discord
+import asyncio
+import os
+from datetime import datetime
+from discord.ext import commands
+from discord.ext.commands import Context
+
+from discord.ui import Button, button, View
+
+from utils import CONSTANTS, ServerLogger, DBClient, Checks
+
+client = DBClient.client
+db = client.potatobot
+
+class CreateButton(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @button(label="Create Ticket",style=discord.ButtonStyle.blurple, emoji="🎫",custom_id="ticketopen")
+    async def ticket(self, interaction: discord.Interaction, button: Button):
+        c = db["guilds"]
+
+        data = c.find_one({"id": interaction.guild.id})
+
+        if not data:
+            await interaction.channel.send("**Tickets info not found! If you are an admin use `/setting` for more info**")
+            return
+
+        if not data["tickets_category"] or not data["tickets_support_role"]:
+            await interaction.channel.send("**Tickets info not found! If you are an admin use `/setting` for more info**")
+            return
+
+
+        await interaction.response.defer(ephemeral=True)
+        category: discord.CategoryChannel = discord.utils.get(interaction.guild.categories, id=data["tickets_category"])
+        for ch in category.text_channels:
+            if ch.topic == f"{interaction.user.id} DO NOT CHANGE THE TOPIC OF THIS CHANNEL!":
+                await interaction.followup.send("You already have a ticket in {0}".format(ch.mention), ephemeral=True)
+                return
+
+        r1 : discord.Role = interaction.guild.get_role(data["tickets_support_role"])
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            r1: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True),
+            interaction.user: discord.PermissionOverwrite(read_messages = True, send_messages=True),
+            interaction.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+        channel = await category.create_text_channel(
+            name=str(interaction.user),
+            topic=f"{interaction.user.id} DO NOT CHANGE THE TOPIC OF THIS CHANNEL!",
+            overwrites=overwrites
+        )
+        await channel.send("{0} a ticket has been created!".format(r1.mention))
+        await channel.send(
+            embed=discord.Embed(
+                title=f"Ticket Created!",
+                description="Don't ping a staff member, they will be here soon.",
+                color = discord.Color.green()
+            ),
+            view = CloseButton()
+        )
+        await channel.send("Please describe your issue")
+
+        await interaction.followup.send(
+            embed= discord.Embed(
+                description = "Created your ticket in {0}".format(channel.mention),
+                color = discord.Color.blurple()
+            ),
+            ephemeral=True
+        )
+
+        await ServerLogger.send_log(
+            title="Ticekt Created",
+            description="Created by {0}".format(interaction.user.mention),
+            color=discord.Color.green(),
+            guild=interaction.guild,
+            channel=interaction.channel
+        )
+
+class CloseButton(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @button(label="Close the ticket",style=discord.ButtonStyle.red,custom_id="closeticket",emoji="🔒")
+    async def close(self, interaction: discord.Interaction, button: Button):
+        c = db["guilds"]
+
+        data = c.find_one({"id": interaction.guild.id})
+
+        if not data:
+            await interaction.channel.send("**Tickets info not found! If you are an admin use `/setting` for more info**")
+            return
+
+        if not data["tickets_category"] or not data["tickets_support_role"]:
+            await interaction.channel.send("**Tickets info not found! If you are an admin use `/setting` for more info**")
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        await interaction.channel.send("Closing this ticket in 3 seconds!")
+
+        await asyncio.sleep(3)
+
+        category: discord.CategoryChannel = discord.utils.get(interaction.guild.categories, id = data["tickets_category"])
+        r1 : discord.Role = interaction.guild.get_role(data["tickets_support_role"])
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            r1: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True),
+            interaction.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+        await interaction.channel.edit(category=category, overwrites=overwrites)
+        await interaction.channel.send(
+            embed= discord.Embed(
+                description="Ticket Closed!",
+                color = discord.Color.red()
+            ),
+            view = TrashButton()
+        )
+
+        member = interaction.guild.get_member(int(interaction.channel.topic.split(" ")[0]))
+
+
+        os.makedirs("logs", exist_ok=True)
+        log_file = f"logs/{interaction.channel.id}.log"
+        with open(log_file, "w", encoding="UTF-8") as f:
+            f.write(
+                f'Ticket log from: #{interaction.channel} ({interaction.channel.id}) in the guild "{interaction.guild}" ({interaction.guild.id}) at {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n'
+            )
+            async for message in interaction.channel.history(
+                limit=None, oldest_first=True
+            ):
+                attachments = []
+                for attachment in message.attachments:
+                    attachments.append(attachment.url)
+                attachments_text = (
+                    f"[Attached File{'s' if len(attachments) >= 2 else ''}: {', '.join(attachments)}]"
+                    if len(attachments) >= 1
+                    else ""
+                )
+                f.write(
+                    f"{message.created_at.strftime('%d.%m.%Y %H:%M:%S')} {message.author} {message.id}: {message.clean_content} {attachments_text}\n"
+                )
+
+        guilds = DBClient.client.potatobot["guilds"]
+        data = guilds.find_one({"id": interaction.guild.id})
+
+        if data["log_channel"]:
+            log_channel = interaction.guild.get_channel(data["log_channel"])
+
+            if log_channel:
+                try:
+                    await log_channel.send(file=discord.File(log_file))
+
+                    embed = discord.Embed(
+                        title="Ticket Closed",
+                        description=f"Ticket {interaction.channel.name} closed by {interaction.user.mention}",
+                        color=discord.Color.orange()
+                    )
+
+                    await log_channel.send(embed=embed)
+                except:
+                    pass
+
+        try:
+            with open (log_file, "rb") as f:
+                await member.send(f"Your ticket in {interaction.guild} has been closed. Transcript: ", file=discord.File(f))
+        except Exception as e:
+            await interaction.channel.send(
+                f"Couldn't send the log file to {member.mention}, " + str(e)
+            )
+
+
+
+        os.remove(log_file)
+
+
+class TrashButton(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @button(label="Delete the ticket", style=discord.ButtonStyle.red, emoji="🚮", custom_id="trash")
+    async def trash(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.defer()
+        await interaction.channel.send("Deleting the ticket in 3 seconds")
+        await asyncio.sleep(3)
+
+        await interaction.channel.delete()
+        await ServerLogger.send_log(
+            title="Ticket Deleted",
+            description=f"Deleted by {interaction.user.mention}, ticket: {interaction.channel.name}",
+            color=discord.Color.red(),
+            guild=interaction.guild,
+            channel=interaction.channel
+        )
+
+# Here we name the cog and create a new class for the cog.
+class Ticket(commands.Cog, name="🎫 Ticket"):
+    def __init__(self, bot) -> None:
+        self.bot = bot
+
+    # Here you can just add your own commands, you'll always need to provide "self" as first parameter.
+
+    @commands.hybrid_command(
+        name="ticketembed",
+        description="Command to make a embed for making tickets",
+        usage="ticketembed"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(administrator=True)
+    async def ticketembed(self, context):
+        await context.send(
+            embed = discord.Embed(
+                description="Press the button to create a new ticket!",
+                color=discord.Color.blue()
+            ),
+            view = CreateButton()
+        )
+
+    @commands.hybrid_command(
+        name="open",
+        description="Open a ticket",
+        usage="open"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def open(self, context: Context):
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            await context.send("**Tickets info not found! If you are an admin use `/setting` for more info**")
+            return
+
+        if not data["tickets_category"]:
+            await context.send("**Tickets info not found! If you are an admin use `/setting` for more info**")
+            return
+
+        category: discord.CategoryChannel = discord.utils.get(context.guild.categories, id=data["tickets_category"])
+        for ch in category.text_channels:
+            if ch.topic == f"{context.author.id} DO NOT CHANGE THE TOPIC OF THIS CHANNEL!":
+                await context.send("You already have a ticket in {0}".format(ch.mention))
+                return
+        r1 = None
+
+        if data["tickets_support_role"]:
+            r1 : discord.Role = context.guild.get_role(data["tickets_support_role"])
+        else:
+            r1 = context.guild.default_role
+        overwrites = {
+            context.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            r1: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True),
+            context.author: discord.PermissionOverwrite(read_messages = True, send_messages=True),
+            context.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+        channel = await category.create_text_channel(
+            name=str(context.author),
+            topic=f"{context.author.id} DO NOT CHANGE THE TOPIC OF THIS CHANNEL!",
+            overwrites=overwrites
+        )
+        await channel.send("{0} a ticket has been created!".format(r1.mention))
+        await channel.send(
+            embed=discord.Embed(
+                title=f"Ticket Created!",
+                description="Don't ping a staff member, they will be here soon.",
+                color = discord.Color.green()
+            ),
+            view = CloseButton()
+        )
+        await channel.send("Please describe your issue")
+
+        await context.send(
+            embed= discord.Embed(
+                description = "Created your ticket in {0}".format(channel.mention),
+                color = discord.Color.blurple()
+            )
+        )
+
+        await ServerLogger.send_log(
+            title="Ticket Created",
+            description="Created by {0}".format(context.author.mention),
+            color=discord.Color.green(),
+            guild=context.guild,
+            channel=context.channel
+        )
+
+    @commands.hybrid_group(
+        name="ticket",
+        description="Commands to manage a ticket",
+        usage="ticket"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def ticket(self, context: Context):
+        embed = discord.Embed(
+            title="Ticket",
+            description="Commands"
+        )
+
+        # get all subcommands in group
+
+        subcommands = [cmd for cmd in self.ticket.walk_commands()]
+
+        data = []
+
+        for subcommand in subcommands:
+            description = subcommand.description.partition("\n")[0]
+            data.append(f"{await self.bot.get_prefix(context)}ticket {subcommand.name} - {description}")
+
+        help_text = "\n".join(data)
+        embed = discord.Embed(
+            title=f"Help: Ticket", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{help_text}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @ticket.command(name="upgrade", description="Remove support role access from the ticket", usage="ticket upgrade")
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def upgrade(self, context: Context):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        c = db["guilds"]
+        guild = c.find_one({"id": context.guild.id})
+
+        if not guild or not guild.get("tickets_support_role"):
+            return await context.send("Support role not configured for this server.")
+
+        support_role = context.guild.get_role(guild["tickets_support_role"])
+        if not support_role:
+            return await context.send("Support role not found.")
+
+        if support_role not in context.channel.overwrites:
+            return await context.send("This ticket is already upgraded.")
+
+        await context.channel.set_permissions(support_role, overwrite=None)
+        await context.send("Support role access has been removed from this ticket.")
+
+        await ServerLogger.send_log(
+            title="Ticket Upgraded",
+            description=f"{context.author.mention} upgraded ticket {context.channel.name}",
+            color=discord.Color.purple(),
+            guild=context.guild,
+            channel=context.channel
+        )
+
+    @ticket.command(name="downgrade", description="Restore support role access to the ticket", usage="ticket downgrade")
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def downgrade(self, context: Context):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        c = db["guilds"]
+        guild = c.find_one({"id": context.guild.id})
+
+        if not guild or not guild.get("tickets_support_role"):
+            return await context.send("Support role not configured for this server.")
+
+        support_role = context.guild.get_role(guild["tickets_support_role"])
+        if not support_role:
+            return await context.send("Support role not found.")
+
+        if support_role in context.channel.overwrites:
+            return await context.send("This ticket is already accessible to the support role.")
+
+        await context.channel.set_permissions(support_role, read_messages=True, send_messages=True)
+        await context.send("Support role access has been restored to this ticket.")
+
+        await ServerLogger.send_log(
+            title="Ticket Downgraded",
+            description=f"{context.author.mention} downgraded ticket {context.channel.name}",
+            color=discord.Color.green(),
+            guild=context.guild,
+            channel=context.channel
+        )
+
+    @ticket.command(name="add", description="Add a user to the ticket", usage="ticket add <user>")
+    @commands.check(Checks.is_not_blacklisted)
+    async def add(self, context: Context, user: discord.Member):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        member = context.guild.get_member(int(context.channel.topic.split(" ")[0]))
+
+        if not context.author == member and not context.author.guild_permissions.manage_channels:
+            return await context.send("You don't have permission to add users to this ticket.")
+
+        if user in context.channel.members:
+            return await context.send(f"{user.mention} is already in this ticket.")
+
+        await context.channel.set_permissions(user, read_messages=True, send_messages=True)
+        await context.send(f"Added {user.mention} to the ticket.")
+
+        await ServerLogger.send_log(
+            title="User Added to Ticket",
+            description=f"{context.author.mention} added {user.mention} to ticket {context.channel.name}",
+            color=discord.Color.blue(),
+            guild=context.guild,
+            channel=context.channel
+        )
+
+    @ticket.command(name="remove", description="Remove a user from the ticket", usage="ticket remove <user>")
+    @commands.check(Checks.is_not_blacklisted)
+    async def remove(self, context: Context, user: discord.Member):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        member = context.guild.get_member(int(context.channel.topic.split(" ")[0]))
+
+        if not context.author == member and not context.author.guild_permissions.manage_channels:
+            return await context.send("You don't have permission to remove users from this ticket.")
+
+        if user not in context.channel.members:
+            return await context.send(f"{user.mention} is not in this ticket.")
+
+        if user == context.channel.guild.get_member(int(context.channel.topic.split(" ")[0])):
+            return await context.send("You can't remove the ticket creator.")
+
+        await context.channel.set_permissions(user, overwrite=None)
+        await context.send(f"Removed {user.mention} from the ticket.")
+
+        await ServerLogger.send_log(
+            title="User Removed from Ticket",
+            description=f"{context.author.mention} removed {user.mention} from ticket {context.channel.name}",
+            color=discord.Color.orange(),
+            guild=context.guild,
+            channel=context.channel
+        )
+
+    @ticket.command(name="close", description="Close the ticket", usage="ticket close")
+    @commands.check(Checks.is_not_blacklisted)
+    async def close(self, context: Context):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        member = context.guild.get_member(int(context.channel.topic.split(" ")[0]))
+
+        if not context.author == member and not context.author.guild_permissions.manage_channels:
+            return await context.send("You don't have permission to close this ticket.")
+
+        await context.send("Starting ticket closing, dont run command again")
+
+        os.makedirs("logs", exist_ok=True)
+        log_file = f"logs/{context.channel.id}.log"
+        with open(log_file, "w", encoding="UTF-8") as f:
+            f.write(
+                f'Ticket log from: #{context.channel} ({context.channel.id}) in the guild "{context.guild}" ({context.guild.id}) at {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n'
+            )
+            async for message in context.channel.history(
+                limit=None, oldest_first=True
+            ):
+                attachments = []
+                for attachment in message.attachments:
+                    attachments.append(attachment.url)
+                attachments_text = (
+                    f"[Attached File{'s' if len(attachments) >= 2 else ''}: {', '.join(attachments)}]"
+                    if len(attachments) >= 1
+                    else ""
+                )
+                f.write(
+                    f"{message.created_at.strftime('%d.%m.%Y %H:%M:%S')} {message.author} {message.id}: {message.clean_content} {attachments_text}\n"
+                )
+
+        guilds = DBClient.client.potatobot["guilds"]
+        data = guilds.find_one({"id": context.guild.id})
+
+        if data["log_channel"]:
+            log_channel = context.guild.get_channel(data["log_channel"])
+
+            if log_channel:
+                try:
+                    await log_channel.send(file=discord.File(log_file))
+
+                    embed = discord.Embed(
+                        title="Ticket Closed",
+                        description=f"Ticket {context.channel.name} closed by {context.author.mention}",
+                        color=discord.Color.orange()
+                    )
+
+                    await log_channel.send(embed=embed)
+                except Exception as e:
+                    return await context.send("An error occurred, " + str(e))
+
+        try:
+            with open (log_file, "rb") as f:
+                await member.send(f"Your ticket in {context.guild} has been closed. Transcript: ", file=discord.File(f))
+        except Exception as e:
+            await context.channel.send(
+                f"Couldn't send the log file to {member.mention}, " + str(e)
+            )
+
+        await context.channel.set_permissions(member, overwrite=None)
+
+
+        os.remove(log_file)
+
+        await context.channel.send(
+            embed= discord.Embed(
+                description="Ticket Closed!",
+                color = discord.Color.red()
+            ),
+            view = TrashButton()
+        )
+
+
+
+
+# And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
+async def setup(bot) -> None:
+    await bot.add_cog(Ticket(bot))
+    bot.add_view(CreateButton())
+    bot.add_view(CloseButton())
+    bot.add_view(TrashButton())
