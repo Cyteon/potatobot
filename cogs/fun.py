@@ -541,7 +541,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
                 nick = user.display_name
 
             img = await session.get(
-                f"https://some-random-api.com/canvas/misc/tweet?avatar={user.display_avatar.url}&username={user.global_name}&displayname={nick}&comment={tweet}&replies=-1"
+                f"https://some-random-api.com/canvas/misc/tweet?avatar={user.display_avatar.url}&username={user.global_name if not user.bot else user.display_name}&displayname={nick}&comment={tweet}&replies=-1"
             )
 
             imageData = io.BytesIO(await img.read())
