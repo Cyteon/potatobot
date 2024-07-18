@@ -17,7 +17,7 @@ all copies or substantial portions of the Software.
 
 import discord
 import aiohttp
-from discord import ui
+from discord import ui, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
@@ -34,6 +34,8 @@ class Code(commands.Cog, name="💻 Code"):
         usage="code"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def code(self, context: Context) -> None:
         if context.interaction is None:
             await context.send("This command can only be used as a slash command.")

@@ -318,6 +318,9 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         if prefix == "none":
             return await context.send("Current prefix is: `" + self.prefixDB.get(str(context.guild.id)) + "`")
 
+        if prefix == "/":
+            return await context.send("Prefix cannot be `/`")
+
         guild_id = str(context.guild.id)
         self.prefixDB.set(guild_id, prefix)
         self.prefixDB.dump()
@@ -852,6 +855,51 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                 description="An error occurred while trying to ban the user. Make sure my role is above the role of the user you want to ban.",
                 color=0xE02B2B,
             )
+            await context.send(embed=embed)
+
+    @commands.hybrid_command(
+        name="hackban",
+        description="Ban a user that is not in the server"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(ban_members=True)
+    @commands.bot_has_permissions(ban_members=True)
+    async def hackban(self, context: Context, user: discord.User, reason: str = "Not specified"):
+        if user == self.bot.user:
+            return await context.send("what did i do :C")
+
+        try:
+            context.guild.ban(user, reason=reason)
+
+            embed = discord.Embed(
+                title="User Banned",
+                description=f"**{user}** was banned by **{context.author}**!",
+                color=0xBEBEFE,
+            )
+
+            embed.add_field(name="Reason:", value=reason)
+
+            guilds = db["guilds"]
+            data = guilds.find_one({"id": context.guild.id})
+
+            if not data:
+                data = CONSTANTS.guild_data_template(context.guild.id)
+                guilds.insert_one(data)
+
+            if "log_channel" in data:
+                log_channel = context.guild.get_channel(data["log_channel"])
+
+                if log_channel:
+                    await log_channel.send(embed=embed)
+
+            await context.send(f"Banned **{user}**!")
+        except:
+            embed = discord.Embed(
+                title="Error!",
+                description="An error occurred while trying to ban the user.",
+                color=0xE02B2B,
+            )
+
             await context.send(embed=embed)
 
     @commands.hybrid_command(

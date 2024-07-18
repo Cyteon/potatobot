@@ -86,7 +86,7 @@ class General(commands.Cog, name="⬜ General"):
             if cog.startswith("-"):
                 continue
 
-            if "owner" in cog and context.author.id != 871722786006138960:
+            if "owner" in cog and context.author.id != int(os.getenv("OWNER_ID")):
                 continue
 
             if "staff" in cog:
@@ -108,6 +108,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="uptime"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def uptime(self, context: Context):
         uptime = time.time() - self.bot.start_time
         str = time.strftime("%H:%M:%S", time.gmtime(uptime))
@@ -119,13 +121,15 @@ class General(commands.Cog, name="⬜ General"):
         usage="botinfo"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def botinfo(self, context: Context) -> None:
         dpyVersion = discord.__version__
         serverCount = len(self.bot.guilds)
         memberCount = len(set(self.bot.get_all_members()))
 
-        shard_id = context.guild.shard_id
-        shard = self.bot.get_shard(shard_id)
+        shard_id = context.guild.shard_id if context.guild else None
+        shard = self.bot.get_shard(shard_id) if shard_id is not None else self.bot.shards[0]
         shard_ping = shard.latency
         shard_servers = len([guild for guild in self.bot.guilds if guild.shard_id == shard_id])
 
@@ -150,6 +154,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="cmdstats"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def cmdstats(self, context: Context) -> None:
         sorted_commands = sorted(self.bot.command_usage.items(), key=lambda x: x[1], reverse=True)
         embed = discord.Embed(title="Command Statistics", color=0x00ff00)
@@ -181,6 +187,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="ping"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ping(self, context: Context) -> None:
         """
         Check if the bot is alive.
@@ -201,6 +209,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="bug <bug>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(5, 3600, commands.BucketType.user)
     async def bug(self, context: Context, *, bug: str) -> None:
         channel = self.bot.get_channel(1244584577989873684)
@@ -223,6 +233,8 @@ class General(commands.Cog, name="⬜ General"):
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.describe(text="The text you want to translate.")
     @app_commands.describe(language="The language you want to translate the text to.")
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def translate(self, context: Context, text: str, language: str = "en") -> None:
 
         translated = GoogleTranslator(source='auto', target=language).translate(text)
@@ -242,6 +254,8 @@ class General(commands.Cog, name="⬜ General"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.describe(question="The question you want to ask.")
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def eight_ball(self, context: Context, *, question: str) -> None:
         """
         Ask any question to the bot.
@@ -290,13 +304,42 @@ class General(commands.Cog, name="⬜ General"):
         message = await context.send(f"https://discord.gg/ZcFsFb9RJU")
 
     @commands.hybrid_command(
+        name="urban-dictionary",
+        description="Get the definition of a word from Urban Dictionary.",
+        usage="urban-dictionary <word>",
+        aliases=["urban"]
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def urban_dict(self, context: Context, *, term: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://api.urbandictionary.com/v0/define?term={term}") as response:
+                data = await response.json()
+
+                if not data["list"]:
+                    return await context.send("No results found.")
+
+                definition = data["list"][0]["definition"]
+
+                embed = discord.Embed(
+                    title=f"Definition of {term}",
+                    description=definition,
+                    color=0xBEBEFE
+                )
+
+                await context.send(embed=embed)
+
+    @commands.hybrid_command(
         name="reddit",
         description="Returns a random post from reddit, or from a subreddit",
         usage="reddit [optional: subreddit]"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def reddit(self, context: Context, subreddit: str = None) -> None:
-        if not subreddit:
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def reddit(self, context: Context, subreddit: str = "") -> None:
+        if subreddit == "":
             subreddit = await reddit.subreddit("random")
         else:
             subreddit = await reddit.subreddit(subreddit)
@@ -304,9 +347,11 @@ class General(commands.Cog, name="⬜ General"):
         #check if NSFW
         loaded_sub = subreddit
         await loaded_sub.load()
-        if loaded_sub.over18 and not context.channel.is_nsfw() and not context.channel.id == context.author.id:
-            await context.send("This subreddit is NSFW, please use this command in a NSFW channel or dms.")
-            return
+
+        if hasattr(context.channel, "over18"):
+            if loaded_sub.over18 and not context.channel.is_nsfw() and not context.channel.id == context.author.id:
+                await context.send("This subreddit is NSFW, please use this command in a NSFW channel or dms.")
+                return
 
         posts = []
         async for post in subreddit.hot(limit=25):
@@ -328,8 +373,10 @@ class General(commands.Cog, name="⬜ General"):
             loaded_post = random_post
             await loaded_post.load()
 
-            if loaded_post.over_18 and not context.channel.is_nsfw() and not context.channel.id == context.author.id:
-                continue
+            if not context.guild:
+                if loaded_post.over_18 and not context.channel.is_nsfw() and not context.channel.id == context.author.id:
+                    continue
+
             if loaded_post.stickied:
                 continue
 

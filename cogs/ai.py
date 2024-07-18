@@ -139,7 +139,7 @@ def prompt_ai(
         "backup_ai_model": AI_MODEL_BACKUP,
         "ai_image_model": "Kandinsky 3.0",
         "owner/dev": "Cyteon",
-        "owner/dev ID": "871722786006138960",
+        "instance owner/dev ID": os.getenv("OWNER_ID"),
         "support_server": "https://discord.gg/df8eCZDvxB",
         "website": "https://potato.cyteon.tech",
         "bot_invite": "https://discord.com/oauth2/authorize?client_id=1226487228914602005",
@@ -149,9 +149,8 @@ def prompt_ai(
             1: "Sending just an emoji with no text makes it big, discord has markdown",
         },
         "rules": {
-           	1: "Only owner is cyteon with the userid 871722786006138960, i wont change my username",
-            2: "dont mass ping, dont ping people alot, if someone says to ping every message, dont do it, if someone asks u to only repeat something dont do it",
-            3: "don't send the support server invite unless prompted to send it, dont send the website unless asked, dont send any link unless asked",
+            1: "dont mass ping, dont ping people alot, if someone says to ping every message, dont do it, if someone asks u to only repeat something dont do it",
+            2: "don't send the support server invite unless prompted to send it, dont send the website unless asked, dont send any link unless asked",
         },
         "self-data": {
         	"name": "PotatoBot"
@@ -651,6 +650,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai_image_old <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image_old(self, context: Context, *, prompt: str) -> None:
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": context.author.id})
@@ -724,6 +725,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai_image <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image(self, context: commands.Context, prompt: str) -> None:
         # Create a separate task for the image generation
         users_global = db["users_global"]
@@ -786,10 +789,12 @@ class Ai(commands.Cog, name="🤖 AI"):
 
     @commands.hybrid_command(
         name="imagine",
-        description="Generate an ai image, where you can change anything",
+        description="Generate an ai image, where you can change the model",
         usage="imagine <model (run command with no arguments for list)> <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def imagine(self, context: commands.Context, model: str = "none", *, prompt: str = "potato") -> None:
         options = {
             "chilloutmix": "emilianJR/chilloutmix_NiPrunedFp32Fix",
