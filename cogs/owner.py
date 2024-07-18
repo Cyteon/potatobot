@@ -213,12 +213,6 @@ class Owner(commands.Cog, name="owner"):
     @app_commands.describe(message="The message that should be repeated by the bot")
     @commands.is_owner()
     async def say(self, context: Context, *, message: str) -> None:
-        """
-        The bot will say anything you want.
-
-        :param context: The hybrid command context.
-        :param message: The message that should be repeated by the bot.
-        """
         await context.channel.send(message)
 
     @commands.hybrid_command(
@@ -241,7 +235,7 @@ class Owner(commands.Cog, name="owner"):
         message = await channel.fetch_message(message_id)
         await message.reply(reply)
 
-    @commands.command(
+    @commands.hybrid_command(
         name="eval",
         description=":D",
     )
@@ -395,7 +389,7 @@ class Owner(commands.Cog, name="owner"):
 
     @commands.hybrid_command(
         name="ai_ignore",
-        description="Ignore a user for AI",
+        description="Make the AI ignore someone",
     )
     @commands.is_owner()
     async def ai_ignore(self, context, user: discord.User, *, reason: str = None):
@@ -419,7 +413,7 @@ class Owner(commands.Cog, name="owner"):
 
     @commands.hybrid_command(
         name="ai_unignore",
-        description="Unignore a user for AI",
+        description="Make the AI not ignore someone",
     )
     @commands.is_owner()
     async def ai_unignore(self, context, user: discord.User):
@@ -441,7 +435,7 @@ class Owner(commands.Cog, name="owner"):
 
         await context.send(f"{user} will now be ignored by the AI")
 
-    @commands.hybrid_command(
+    @commands.command(
         name="inspect",
         description="Inspect a user",
     )
@@ -464,7 +458,6 @@ class Owner(commands.Cog, name="owner"):
         embed.add_field(name="Times Flagged", value=user_data["inspect"]["times_flagged"])
         embed.add_field(name="NSFW Requests", value=user_data["inspect"]["nsfw_requests"])
 
-
         # STUFF THAT MIGHT NOT BE FOUND
         if "ai_requests" in user_data["inspect"]:
             embed.add_field(name="AI Requests", value=user_data["inspect"]["ai_requests"])
@@ -477,7 +470,7 @@ class Owner(commands.Cog, name="owner"):
 
         await context.send(embed=embed)
 
-    @commands.hybrid_command(
+    @commands.command(
     	name="inspect_clear",
         description="Clear someones inspect data"
     )
@@ -542,7 +535,7 @@ class Owner(commands.Cog, name="owner"):
         await context.send(embed=embed)
 
 
-    @commands.hybrid_command(
+    @commands.command(
         name="ai_announce",
         description="Announce smth",
     )
@@ -559,7 +552,7 @@ class Owner(commands.Cog, name="owner"):
 
                 await channel.send(embed=embed)
 
-    @commands.hybrid_command(
+    @commands.command(
         name="copy_db_to_backup",
         description="Copy the database to a backup"
     )

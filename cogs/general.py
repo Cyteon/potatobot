@@ -304,6 +304,33 @@ class General(commands.Cog, name="⬜ General"):
         message = await context.send(f"https://discord.gg/ZcFsFb9RJU")
 
     @commands.hybrid_command(
+        name="urban-dictionary",
+        description="Get the definition of a word from Urban Dictionary.",
+        usage="urban-dictionary <word>",
+        aliases=["urban"]
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def urban_dict(self, context: Context, *, term: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://api.urbandictionary.com/v0/define?term={term}") as response:
+                data = await response.json()
+
+                if not data["list"]:
+                    return await context.send("No results found.")
+
+                definition = data["list"][0]["definition"]
+
+                embed = discord.Embed(
+                    title=f"Definition of {term}",
+                    description=definition,
+                    color=0xBEBEFE
+                )
+
+                await context.send(embed=embed)
+
+    @commands.hybrid_command(
         name="reddit",
         description="Returns a random post from reddit, or from a subreddit",
         usage="reddit [optional: subreddit]"
