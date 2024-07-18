@@ -318,6 +318,9 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         if prefix == "none":
             return await context.send("Current prefix is: `" + self.prefixDB.get(str(context.guild.id)) + "`")
 
+        if prefix == "/":
+            return await context.send("Prefix cannot be `/`")
+
         guild_id = str(context.guild.id)
         self.prefixDB.set(guild_id, prefix)
         self.prefixDB.dump()
