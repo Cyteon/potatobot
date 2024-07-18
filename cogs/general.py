@@ -86,7 +86,7 @@ class General(commands.Cog, name="⬜ General"):
             if cog.startswith("-"):
                 continue
 
-            if "owner" in cog and context.author.id != 871722786006138960:
+            if "owner" in cog and context.author.id != int(os.getenv("OWNER_ID")):
                 continue
 
             if "staff" in cog:

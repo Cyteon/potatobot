@@ -5,6 +5,7 @@ import discord
 import asyncio
 import datetime
 import logging
+import os
 
 logger = logging.getLogger("discord_bot")
 
@@ -802,7 +803,7 @@ class Security(commands.Cog, name="🛡️ Security"):
     async def add(self, context: Context, user: discord.Member) -> None:
         guild_owner = context.guild.owner
 
-        if context.author != guild_owner and context.author.id != 871722786006138960:
+        if context.author != guild_owner and context.author.id != int(os.getenv("OWNER_ID")):
             await context.send("You must be the guild owner to use this command!")
             return
 
@@ -918,7 +919,7 @@ class Security(commands.Cog, name="🛡️ Security"):
     async def trusted_add(self, context: Context, user: discord.Member) -> None:
         guild_owner = context.guild.owner
 
-        if context.author != guild_owner and context.author.id != 871722786006138960:
+        if context.author != guild_owner and context.author.id != int(os.getenv("OWNER_ID")):
             await context.send("You must be the guild owner to use this command!")
             return
 
