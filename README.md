@@ -16,7 +16,7 @@ Invite: https://discord.com/oauth2/authorize?client_id=1226487228914602005
 2. Go to the project directory
 
 ```bash
-  cd potatobo
+  cd potatobot
 ```
 
 3. Install python dependencies
