@@ -650,7 +650,7 @@ class BlackjackView(View):
 
         if self.player_score == 21:
             self.game_over = True
-            user["wallet"] += self.amount * 3
+            user["wallet"] += self.amount
 
             newdata = {"$set": {"wallet": user["wallet"]}}
             db.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
@@ -677,7 +677,7 @@ class BlackjackView(View):
 
         if self.dealer_score > 21:
             self.game_over = True
-            user["wallet"] += self.amount * 3
+            user["wallet"] += self.amount
 
             newdata = {"$set": {"wallet": user["wallet"]}}
             db.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
