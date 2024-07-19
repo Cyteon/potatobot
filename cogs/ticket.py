@@ -440,6 +440,75 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             channel=context.channel
         )
 
+    @ticket.command(name="claim", description="Claim the ticket", usage="ticket claim")
+    @commands.check(Checks.is_not_blacklisted)
+    async def claim(self, context: Context):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        member = context.guild.get_member(int(context.channel.topic.split(" ")[0]))
+
+        if context.author == member:
+            return await context.send("This is your ticket.")
+
+        guilds = db["guilds"]
+        guild = guilds.find_one({"id": context.guild.id})
+
+        if guild and guild.get("tickets_support_role"):
+            support_role = context.guild.get_role(guild["tickets_support_role"])
+
+            await context.channel.set_permissions(member, overwrite=None)
+            await context.channel.set_permissions(support_role, read_messages=True, send_messages=False)
+            await context.channel.set_permissions(context.author, read_messages=True, send_messages=True)
+
+            embed = discord.Embed(
+                title="Ticket Claimed",
+                description=f"{context.author.mention} will now handle this ticket.",
+            )
+
+            await context.send(embed=embed)
+
+            await ServerLogger.send_log(
+                title="Ticket Claimed",
+                description=f"{context.author.mention} claimed ticket {context.channel.name}",
+                color=discord.Color.green(),
+                guild=context.guild,
+                channel=context.channel
+            )
+
+    @ticket.command(name="unclaim", description="Unclaim the ticket", usage="ticket unclaim")
+    @commands.check(Checks.is_not_blacklisted)
+    async def unclaim(self, context: Context):
+        try:
+            int(context.channel.topic.split()[0])
+        except:
+            return await context.send("This is not a ticket channel.")
+
+        member = context.guild.get_member(int(context.channel.topic.split(" ")[0]))
+
+        if context.author == member:
+            return await context.send("This is your ticket.")
+
+        guilds = db["guilds"]
+        guild = guilds.find_one({"id": context.guild.id})
+
+        if guild and guild.get("tickets_support_role"):
+            support_role = context.guild.get_role(guild["tickets_support_role"])
+
+            await context.channel.set_permissions(member, read_messages=True, send_messages=True)
+            await context.channel.set_permissions(support_role, read_messages=True, send_messages=True)
+            await context.channel.set_permissions(context.author, overwrite=None)
+
+            embed = discord.Embed(
+                title="Ticket Unclaimed",
+                description=f"{context.author.mention} has unclaimed this ticket.",
+            )
+
+            await context.send(embed=embed)
+
+
     @ticket.command(name="close", description="Close the ticket", usage="ticket close")
     @commands.check(Checks.is_not_blacklisted)
     async def close(self, context: Context):
@@ -505,6 +574,7 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             )
 
         await context.channel.set_permissions(member, overwrite=None)
+        await context.channel.edit(name=f"closed-{context.channel.name}")
 
 
         os.remove(log_file)
@@ -516,6 +586,25 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             ),
             view = TrashButton()
         )
+
+    @ticket.command(name="delete", description="Delete the ticket", usage="ticket delete")
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def delete(self, context: Context):
+        if not context.channel.name.startswith("closed-"):
+            return await context.send("Please close the ticket first")
+
+        await context.channel.delete()
+
+        await ServerLogger.send_log(
+            title="Ticket Deleted",
+            description=f"{context.author.mention} deleted ticket {context.channel.name}",
+            color=discord.Color.red(),
+            guild=context.guild,
+            channel=context.channel
+        )
+
+
 
 
 
