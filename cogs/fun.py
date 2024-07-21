@@ -166,7 +166,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
 
                     await context.send(embed=embed)
                 else:
-                    await context.send(f"BoredAPI is currently experiencing issues Status")
+                    await context.send(f"BoredAPI is currently experiencing issues: Status " + str(r.status))
     @commands.hybrid_command(
         name="advice",
         description="Get some advice",
