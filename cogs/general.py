@@ -108,7 +108,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="uptime"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def uptime(self, context: Context):
         uptime = time.time() - self.bot.start_time
@@ -121,7 +121,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="botinfo"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def botinfo(self, context: Context) -> None:
         dpyVersion = discord.__version__
@@ -132,6 +132,7 @@ class General(commands.Cog, name="⬜ General"):
         shard = self.bot.get_shard(shard_id) if shard_id is not None else self.bot.shards[0]
         shard_ping = shard.latency
         shard_servers = len([guild for guild in self.bot.guilds if guild.shard_id == shard_id])
+        shard_count = len(self.bot.shards)
 
         embed = discord.Embed(title=f'{self.bot.user.name} - Stats', color = discord.Color.blurple())
 
@@ -144,6 +145,7 @@ class General(commands.Cog, name="⬜ General"):
         embed.add_field(name="Shard ID:", value=shard_id)
         embed.add_field(name="Shard Ping:", value=f"{round(shard_ping * 1000)}ms")
         embed.add_field(name="Shard Servers:", value=shard_servers)
+        embed.add_field(name="Shard Count:", value=shard_count)
 
         embed.set_footer(text="Bot made by Cyteon @ https://github.com/cyteon")
         await context.send(embed=embed)
@@ -154,7 +156,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="cmdstats"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def cmdstats(self, context: Context) -> None:
         sorted_commands = sorted(self.bot.command_usage.items(), key=lambda x: x[1], reverse=True)
@@ -187,7 +189,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="ping"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ping(self, context: Context) -> None:
         """
@@ -209,7 +211,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="bug <bug>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(5, 3600, commands.BucketType.user)
     async def bug(self, context: Context, *, bug: str) -> None:
@@ -233,7 +235,7 @@ class General(commands.Cog, name="⬜ General"):
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.describe(text="The text you want to translate.")
     @app_commands.describe(language="The language you want to translate the text to.")
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def translate(self, context: Context, text: str, language: str = "en") -> None:
 
@@ -254,7 +256,7 @@ class General(commands.Cog, name="⬜ General"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.describe(question="The question you want to ask.")
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def eight_ball(self, context: Context, *, question: str) -> None:
         """
@@ -310,7 +312,7 @@ class General(commands.Cog, name="⬜ General"):
         aliases=["urban"]
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def urban_dict(self, context: Context, *, term: str):
         async with aiohttp.ClientSession() as session:
@@ -336,7 +338,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="reddit [optional: subreddit]"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def reddit(self, context: Context, subreddit: str = "") -> None:
         if subreddit == "":
@@ -400,6 +402,34 @@ class General(commands.Cog, name="⬜ General"):
 
         await context.send(embed=embed)
 
+    @commands.hybrid_command(
+        name="vote",
+        description="Vote for the bot on top.gg",
+        usage="vote"
+    )
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def vote(self, context: Context):
+        embed = discord.Embed(
+            title="Vote on top.gg",
+            description="Help out the bot by voting now!",
+            url="https://top.gg/bot/1226487228914602005/vote",
+            color=0xBEBEFE
+        )
+
+        await context.send(embed=embed, view=VoteView())
+
+class VoteButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.link, label="Vote on top.gg", url="https://top.gg/bot/1226487228914602005/vote")
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message("Thank you for voting!", ephemeral=True)
+
+class VoteView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(VoteButton())
 
 class CogSelect(discord.ui.Select):
     def __init__(self, cogs, author):

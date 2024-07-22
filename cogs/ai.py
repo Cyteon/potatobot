@@ -650,7 +650,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai_image_old <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image_old(self, context: Context, *, prompt: str) -> None:
         users_global = db["users_global"]
@@ -725,7 +725,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai_image <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image(self, context: commands.Context, prompt: str) -> None:
         # Create a separate task for the image generation
@@ -793,7 +793,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="imagine <model (run command with no arguments for list)> <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def imagine(self, context: commands.Context, model: str = "none", *, prompt: str = "potato") -> None:
         options = {

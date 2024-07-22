@@ -34,7 +34,7 @@ class Code(commands.Cog, name="💻 Code"):
         usage="code"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def code(self, context: Context) -> None:
         if context.interaction is None:

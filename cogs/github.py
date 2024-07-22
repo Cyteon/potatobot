@@ -33,7 +33,7 @@ class Github(commands.Cog, name="🖧 Github"):
         description="Commands related to GitHub",
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def github(self, context: Context) -> None:
         embed = discord.Embed(

@@ -124,7 +124,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="http <code>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def http(self, context: Context, code) -> None:
         await context.send(f"https://http.cat/{code}.jpg")
@@ -134,7 +134,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         description="Get an activity if you are bored"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def bored(self, context: Context) -> None:
         async with aiohttp.ClientSession() as session:
@@ -173,7 +173,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="advice"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def advice(self, context: Context) -> None:
         async with aiohttp.ClientSession() as session:
@@ -187,7 +187,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         description="Get an insult"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def insult(self, context: Context) -> None:
         async with aiohttp.ClientSession() as session:
@@ -203,7 +203,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="cat"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def cat(self, context: Context) -> None:
 
@@ -227,7 +227,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="dog"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def dog(self, context: Context) -> None:
 
@@ -251,7 +251,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="gif [optional: query]"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def gif(self, context: Context, *, query="NONE") -> None:
         rand = False
@@ -303,7 +303,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def avatar(self, context: Context) -> None:
         embed = discord.Embed(
@@ -482,7 +482,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="image <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def image(self, context: Context) -> None:
         embed = discord.Embed(
@@ -553,7 +553,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="ttt <opponent>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def tictactoe(self, context: Context, opponent: discord.User) -> None:
         """Start a game of Tic-Tac-Toe with the specified opponent."""
