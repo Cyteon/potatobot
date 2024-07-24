@@ -212,13 +212,43 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         if user.bot:
             return
 
-        c = db["guilds"]
+        users = db["users"]
+        user_data = await CachedDB.find_one(users, {"id": user.id})
 
-        data = await CachedDB.find_one(c, {"id": user.guild.id})
+        guilds = db["guilds"]
+
+        data = await CachedDB.find_one(guilds, {"id": user.guild.id})
+
 
         if not data:
             data = CONSTANTS.guild_data_template(user.guild.id)
-            c.insert_one(data)
+            guilds.insert_one(data)
+
+        if user_data:
+            if "jailed" in user_data:
+                if user_data["jailed"]:
+                    if "jail_role" in data:
+                        role = None
+                        jail_channel = None
+
+                        if data["jail_role"] == 0:
+                            role = await user.guild.create_role(name="Jailed", reason="Jail role created by PotatoBot")
+                            data["jail_role"] = role.id
+
+                            newdata = {"$set": {"jail_role": role.id}}
+                            guilds.update_one({"id": user.guild.id}, newdata)
+                        else:
+                            role = user.guild.get_role(data["jail_role"])
+
+                        for old_role in user.roles:
+                            if old_role == user.guild.default_role:
+                                continue
+
+                            await user.remove_roles(old_role)
+
+                        await user.add_roles(role, reason="User is jailed and tried to rejoin")
+
+                        return
 
         if not "default_role" in data:
             return
@@ -1212,7 +1242,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     async def jail(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await context.send("Jailing user... please wait")
         guilds = db["guilds"]
-        data = guilds.find_one({"id": context.guild.id})
+        data = await CachedDB.find_one(guilds, {"id": context.guild.id})
 
         if not data:
             data = CONSTANTS.guild_data_template(context.guild.id)
@@ -1271,6 +1301,18 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await jail_channel.set_permissions(context.guild.default_role, view_channel=False)
         await jail_channel.set_permissions(role, view_channel=True)
 
+        users = db["users"]
+        user_data = await CachedDB.find_one(users, {"id": user.id})
+
+        if not user_data:
+            user_data = CONSTANTS.user_data_template(context.guild.id, user.id)
+            users.insert_one(user_data)
+
+        newdata = {
+            "$set": { "jailed": True }
+        }
+
+        await CachedDB.update_one(users, {"id": user.id}, newdata)
 
         await context.send(f"{user.mention} has been jailed")
 
@@ -1285,6 +1327,20 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         data = guilds.find_one({"id": context.guild.id})
 
         await user.remove_roles(context.guild.get_role(data["jail_role"]))
+
+        users = db["users"]
+        user_data = await CachedDB.find_one(users, {"id": user.id})
+
+        if not user_data:
+            user_data = CONSTANTS.user_data_template(context.guild.id, user.id)
+            users.insert_one(user_data)
+
+        newdata = {
+            "$set": { "jailed": False }
+        }
+
+        await CachedDB.update_one(users, {"id": user.id}, newdata)
+
         await context.send(f"{user.mention} has been unjailed")
 
     @commands.hybrid_group(

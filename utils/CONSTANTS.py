@@ -49,6 +49,7 @@ def user_data_template(user_id, guild_id):
         "xp": 0,
         "level": 0,
         "last_daily": 0,
+        "jailed": False,
         "farm": {
             "saplings": 0,
             "crops": 0,
