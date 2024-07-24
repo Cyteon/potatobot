@@ -143,12 +143,12 @@ class Stats(commands.Cog, name="📈 Stats"):
         os.remove(f'graphs/graph-msgs-{context.channel.id}.png')
 
     @chart.command(
-        name="users",
-        description="Show chart of user activity",
-        usage="chart users"
+        name="members",
+        description="Show chart of member count",
+        usage="chart members"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def users(self, context: Context) -> None:
+    async def members(self, context: Context) -> None:
         guild_id = str(context.guild.id)
         if not db.exists(guild_id):
             await context.send("No data available for this server.")
@@ -187,15 +187,15 @@ class Stats(commands.Cog, name="📈 Stats"):
             previous_point = (x, y)
             textangle(draw, dates[i].strftime('%d %b'), (x - 40, 720), 45, (255, 255, 255), font)
 
-        label_text = f'User Count - Last 30 days'
+        label_text = f'Member Count - Last 30 days'
 
         label_width, _ = draw.textsize(label_text, font=font)
         draw.text((20, 20), label_text, font=font, fill=(255, 255, 255))
 
-        img.save(f'graphs/graph-users-{context.channel.id}.png')
-        await context.send(file=discord.File(f'graphs/graph-users-{context.channel.id}.png'))
+        img.save(f'graphs/graph-members-{context.channel.id}.png')
+        await context.send(file=discord.File(f'graphs/graph-members-{context.channel.id}.png'))
 
-        os.remove(f'graphs/graph-users-{context.channel.id}.png')
+        os.remove(f'graphs/graph-members-{context.channel.id}.png')
 
 async def setup(bot) -> None:
     await bot.add_cog(Stats(bot))
