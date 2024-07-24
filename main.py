@@ -36,7 +36,7 @@ else:
         config = json.load(file)
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain("./ssl/potato-api.cyteon.tech.pem", keyfile="./ssl/potato-api.cyteon.tech.key")
+ssl_context.load_cert_chain(config["ssl_certfile"], config["ssl_keyfile"])
 
 origins = config["origins"]
 
