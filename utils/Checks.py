@@ -11,7 +11,7 @@ async def is_not_blacklisted(context):
     user = await CachedDB.find_one(users_global, {"id": context.author.id}, ex=120)
 
     if user is None:
-        user = CONSTANTS.user_global_data_template(message.author.id)
+        user = CONSTANTS.user_global_data_template(context.author.id)
         users_global.insert_one(user)
 
     if user["blacklisted"]:
