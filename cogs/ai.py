@@ -472,7 +472,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         try:
             data = await loop.run_in_executor(None, functools.partial(prompt_ai, prompt, context.author.id, 0, str(userInfo), groq_client=client))
 
-            await context.send(data)
+            await context.reply(data)
 
             ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
             self.statsDB.set("ai_requests", ai_requests)
