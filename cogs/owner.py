@@ -272,7 +272,7 @@ class Owner(commands.Cog, name="owner"):
         await context.send(result)
 
 
-    @commands.hybrid_command(
+    @commands.command(
         name="enable_ai",
         description="Give server AI access",
     )
@@ -293,7 +293,7 @@ class Owner(commands.Cog, name="owner"):
 
         await context.send("AI access have been enabled in this server")
 
-    @commands.hybrid_command(
+    @commands.command(
         name="disable_ai",
         description="Disable server AI access",
     )

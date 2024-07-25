@@ -18,3 +18,4 @@ asyncpraw
 fastapi
 uvicorn
 aioredis
+asteval

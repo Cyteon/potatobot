@@ -53,6 +53,7 @@ class TicTacToeButton(Button):
             self.label = "X" if view.current_player == self.player_x else "O"
             self.style = discord.ButtonStyle.danger if view.current_player == self.player_x else discord.ButtonStyle.primary
             self.disabled = True
+
             view.board[self.x][self.y] = 1 if view.current_player == self.player_x else -1
             view.current_player = self.player_o if view.current_player == self.player_x else self.player_x
 

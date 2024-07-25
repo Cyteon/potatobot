@@ -406,14 +406,14 @@ class Ai(commands.Cog, name="🤖 AI"):
         result = convos.delete_many({"expiresAt": {"$lt": time.time()}})
 
 
-    @commands.cooldown(60, 60, commands.BucketType.default)
+    @commands.cooldown(10, 60, commands.BucketType.default)
     @commands.hybrid_command(
         name="ai",
         description="Ask an AI for something",
         usage="ai <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def ai(self, context: Context, *, query_str: str) -> None:
+    async def ai(self, context: Context, *, prompt: str) -> None:
         if self.ai_temp_disabled:
             await context.send("AI is temporarily disabled due to techincal difficulties")
             return
@@ -498,13 +498,86 @@ class Ai(commands.Cog, name="🤖 AI"):
         loop = asyncio.get_running_loop()
         try:
             async with context.channel.typing():
-                data = await loop.run_in_executor(None, functools.partial(prompt_ai, query_str, context.author.id, 0, str(userInfo), groq_client=client))
+                data = await loop.run_in_executor(None, functools.partial(prompt_ai, prompt, context.author.id, 0, str(userInfo), groq_client=client))
 
                 await context.reply(data)
 
                 ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
                 self.statsDB.set("ai_requests", ai_requests)
                 self.statsDB.dump()
+        except Exception as e:
+            err = f"An error in the AI has occured: {e}"
+            await context.reply(err)
+
+    @commands.cooldown(10, 60, commands.BucketType.default)
+    @commands.hybrid_command(
+        name="ai_userinstall",
+        description="Ask an AI for something (userinstall only)",
+        usage="ai_userinstall <prompt>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=False, users=True)
+    @app_commands.allowed_contexts(guilds=False, dms=True, private_channels=True)
+    async def ai_userinstall(self, context: Context, *, prompt: str) -> None:
+        if self.ai_temp_disabled:
+            await context.send("AI is temporarily disabled due to techincal difficulties")
+            return
+
+        await context.defer()
+
+        users_global = db["users_global"]
+        user_data = users_global.find_one({"id": context.author.id})
+
+        if not user_data:
+            user_data = CONSTANTS.user_global_data_template(context.author.id)
+            users_global.insert_one(user_data)
+
+        if user_data:
+            if user_data["ai_ignore"]:
+                await context.reply("**You are being ignored by the AI, reason: " + user_data["ai_ignore_reason"] + "**")
+                return
+
+        if profanity.contains_profanity(context.message.content):
+            newdata ={
+                "$inc": { "inspect.nsfw_requests": 1}
+            }
+
+            users_global.update_one(
+                { "id": context.author.id }, newdata
+            )
+
+        if not "ai_requests" in user_data["inspect"]:
+            newdata = {
+                "$set": { "inspect.ai_requests": 0}
+            }
+            users_global.update_one(
+                { "id": context.author.id }, newdata
+            )
+
+        newdata ={
+            "$inc": { "inspect.ai_requests": 1}
+        }
+
+        users_global.update_one(
+            { "id": context.author.id }, newdata
+        )
+
+
+        client = Groq(api_key=get_api_key())
+
+
+
+        userInfo = { "user": context.author }
+
+        loop = asyncio.get_running_loop()
+        try:
+            data = await loop.run_in_executor(None, functools.partial(prompt_ai, prompt, context.author.id, 0, str(userInfo), groq_client=client))
+
+            await context.send(data)
+
+            ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
+            self.statsDB.set("ai_requests", ai_requests)
+            self.statsDB.dump()
         except Exception as e:
             err = f"An error in the AI has occured: {e}"
             await context.reply(err)

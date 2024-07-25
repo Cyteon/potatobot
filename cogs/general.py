@@ -9,6 +9,9 @@ import aiohttp
 import time
 import asyncpraw
 
+from asteval import Interpreter
+aeval = Interpreter()
+
 import logging
 logger = logging.getLogger("discord_bot")
 
@@ -418,6 +421,28 @@ class General(commands.Cog, name="⬜ General"):
         )
 
         await context.send(embed=embed, view=VoteView())
+
+    @commands.hybrid_command(
+        name="calc",
+        description="Calculate a math expression.",
+        usage="calc <expression>",
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def calc(self, context: Context, *, expression: str) -> None:
+        try:
+            result = aeval(expression)
+
+            embed = discord.Embed(
+                title="Calculator",
+                description=f"**Input:**\n```{expression}```\n**Output:**\n```{result}```",
+                color=0xBEBEFE
+            )
+
+            await context.send(embed=embed)
+        except Exception as e:
+            await context.send(f"An error occurred: {e}")
 
 class VoteButton(discord.ui.Button):
     def __init__(self):
