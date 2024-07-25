@@ -405,7 +405,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         convos = db["ai_convos"]
         result = convos.delete_many({"expiresAt": {"$lt": time.time()}})
 
-
     @commands.cooldown(10, 60, commands.BucketType.default)
     @commands.hybrid_command(
         name="ai",
@@ -413,112 +412,9 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai(self, context: Context, *, prompt: str) -> None:
-        if self.ai_temp_disabled:
-            await context.send("AI is temporarily disabled due to techincal difficulties")
-            return
-
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        users_global = db["users_global"]
-        user_data = users_global.find_one({"id": context.author.id})
-
-        if not user_data:
-            user_data = CONSTANTS.user_global_data_template(context.author.id)
-            users_global.insert_one(user_data)
-
-        if user_data:
-            if user_data["ai_ignore"]:
-                await context.reply("**You are being ignored by the AI, reason: " + user_data["ai_ignore_reason"] + "**")
-                return
-
-        if profanity.contains_profanity(context.message.content):
-            newdata ={
-                "$inc": { "inspect.nsfw_requests": 1}
-            }
-
-            users_global.update_one(
-                { "id": context.author.id }, newdata
-            )
-
-        for word in WORD_BLACKLIST:
-            if word.lower() in context.message.content.lower():
-                newdata = {
-                    "$inc": { "inspect.times_flagged": 1}
-                }
-
-                users_global.update_one(
-                    { "id": context.author.id }, newdata
-                )
-
-                raise discord.ext.commands.errors.CommandError("Your message contains a blacklisted word")
-
-        if not "ai_requests" in user_data["inspect"]:
-            newdata = {
-                "$set": { "inspect.ai_requests": 0}
-            }
-            users_global.update_one(
-                { "id": context.author.id }, newdata
-            )
-
-        newdata ={
-            "$inc": { "inspect.ai_requests": 1}
-        }
-
-        users_global.update_one(
-            { "id": context.author.id }, newdata
-        )
-
-
-        if data["groq_api_key"] == "NONE":
-            if not data["ai_access"]:
-                await context.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(context)}groq_api_key <api_key>**")
-                logger.info(f"{context.author} tried to ask AI in {context.guild.name} ({context.guild.id}): AI Disabled!")
-                return
-            client = Groq(api_key=get_api_key())
-        else:
-            cipher_suite = Fernet(os.getenv("HASHING_SECRET"))
-            key = cipher_suite.decrypt(data["groq_api_key"]).decode()
-
-            client = Groq(api_key=key)
-
-        c = db["users"]
-        userInfo = c.find_one({"id": context.author.id, "guild_id": context.guild.id})
-
-        if not userInfo:
-            userInfo = {}
-
-        userInfo["user"] = context.author
-
-        loop = asyncio.get_running_loop()
-        try:
-            async with context.channel.typing():
-                data = await loop.run_in_executor(None, functools.partial(prompt_ai, prompt, context.author.id, 0, str(userInfo), groq_client=client))
-
-                await context.reply(data)
-
-                ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
-                self.statsDB.set("ai_requests", ai_requests)
-                self.statsDB.dump()
-        except Exception as e:
-            err = f"An error in the AI has occured: {e}"
-            await context.reply(err)
-
-    @commands.cooldown(10, 60, commands.BucketType.default)
-    @commands.hybrid_command(
-        name="ai_userinstall",
-        description="Ask an AI for something (userinstall only)",
-        usage="ai_userinstall <prompt>"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=False, users=True)
-    @app_commands.allowed_contexts(guilds=False, dms=True, private_channels=True)
-    async def ai_userinstall(self, context: Context, *, prompt: str) -> None:
         if self.ai_temp_disabled:
             await context.send("AI is temporarily disabled due to techincal difficulties")
             return
@@ -565,9 +461,12 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         client = Groq(api_key=get_api_key())
 
-
-
         userInfo = { "user": context.author }
+
+        c = db["users"]
+        userData = c.find_one({"id": context.author.id, "guild_id": context.guild.id}) if context.guild else {}
+
+        userInfo["data"] = userData
 
         loop = asyncio.get_running_loop()
         try:
