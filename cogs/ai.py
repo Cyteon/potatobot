@@ -45,8 +45,13 @@ else:
     with open(f"./config.json") as file:
         config = json.load(file)
 
-AI_MODEL = "llama3-70b-8192"
-AI_MODEL_BACKUP = "mixtral-8x7b-32768"
+models = [
+    "llama-3.1-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-groq-70b-8192-tool-use-preview",
+    "llama3-groq-8b-8192-tool-use-preview",
+    "gemma2-9b-it"
+]
 
 api_key = os.getenv('FUSION_API_KEY')
 secret_key = os.getenv('FUSION_SECRET_KEY')
@@ -135,8 +140,7 @@ def prompt_ai(
     systemInfo = {
         "datetime": datetime.now(),
         "timezone": time.tzname,
-        "primary_ai_model": AI_MODEL,
-        "backup_ai_model": AI_MODEL_BACKUP,
+        "ai_models": models,
         "ai_image_model": "Kandinsky 3.0",
         "owner/dev": "Cyteon",
         "instance owner/dev ID": os.getenv("OWNER_ID"),
@@ -164,18 +168,16 @@ def prompt_ai(
         }
     )
 
-    try:
-        ai_response = groq_client.chat.completions.create(
-            messages=newMessageArray,
-            model=AI_MODEL,
-        ).choices[0].message.content
-    except Exception as e:
-        logger.error(f"Error in AI: {e}")
-        logger.info("Using Backup Model " + AI_MODEL_BACKUP + " to respond")
-        ai_response = groq_client.chat.completions.create(
-            messages=newMessageArray,
-            model=AI_MODEL_BACKUP,
-        ).choices[0].message.content
+    for model in models:
+        try:
+            ai_response = groq_client.chat.completions.create(
+                messages=newMessageArray,
+                model=model,
+            ).choices[0].message.content
+
+            break
+        except Exception as e:
+            pass
 
     messageArray.append(
         {
@@ -184,7 +186,7 @@ def prompt_ai(
         }
     )
 
-    if len(messageArray) >= 25:
+    if len(messageArray) >= 24 :
         newdata = {
                 "$set": { "messageArray": messageArray[2::],  }
         }
