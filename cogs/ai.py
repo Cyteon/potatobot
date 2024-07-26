@@ -273,6 +273,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         self.ai_temp_disabled = False
         self.get_prefix = bot.get_prefix
         self.statsDB = bot.statsDB
+        self.cooldown = commands.CooldownMapping.from_cooldown(5, 10, commands.BucketType.user)
+        self.too_many_violations = commands.CooldownMapping.from_cooldown(2, 10, commands.BucketType.user)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -288,11 +290,16 @@ class Ai(commands.Cog, name="🤖 AI"):
         if message.content.startswith(await self.bot.get_prefix(message)):
             return
 
+
         if self.ai_temp_disabled:
             await message.reply("AI is temporarily disabled due to techincal difficulties")
             return
 
+        bucket = self.cooldown.get_bucket(message)
+        retry_after = bucket.update_rate_limit()
+
         users_global = db["users_global"]
+
         user_data = await CachedDB.find_one(users_global, {"id": message.author.id})
 
         if not user_data:
@@ -307,6 +314,40 @@ class Ai(commands.Cog, name="🤖 AI"):
             if user_data["blacklisted"]:
                 await message.reply("**You are blacklisted from using the bot, reason: " + user_data["blacklist_reason"] + "**")
                 return
+
+
+        if retry_after:
+            embed = discord.Embed(
+                title="Slow Down! Ratelimit hit",
+                description=f"Try again <t:{(time.time() + int(retry_after)):.0f}:R>",
+                color=discord.Color.red()
+            )
+            embed.set_footer(text="Further violations may result in a mute or blacklist.")
+
+            await message.reply(embed=embed)
+
+            bucket = self.too_many_violations.get_bucket(message)
+            retry_after = bucket.update_rate_limit()
+
+            if retry_after:
+                embed = discord.Embed(
+                    title="Too many violations! Max ratelimit hit",
+                    description=f"You have been blacklisted from using the AI.",
+                    color=discord.Color.red()
+                )
+                embed.set_footer(text=" If you believe this is a mistake, please contact the support server.")
+
+                newdata = {
+                    "$set": { "ai_ignore": True, "ai_ignore_reason": "Too many violations, max ratelimit hit."}
+                }
+
+                users_global.update_one(
+                    { "id": message.author.id }, newdata
+                )
+
+                await message.reply(embed=embed)
+
+            return
 
         if profanity.contains_profanity(message.content):
             newdata ={

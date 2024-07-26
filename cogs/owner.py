@@ -433,7 +433,7 @@ class Owner(commands.Cog, name="owner"):
 
         users_global.update_one({"id": user.id}, newdata)
 
-        await context.send(f"{user} will now be ignored by the AI")
+        await context.send(f"{user} will no longer be ignored by the AI")
 
     @commands.command(
         name="inspect",
