@@ -274,7 +274,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         self.get_prefix = bot.get_prefix
         self.statsDB = bot.statsDB
         self.cooldown = commands.CooldownMapping.from_cooldown(5, 10, commands.BucketType.user)
-        self.too_many_violations = commands.CooldownMapping.from_cooldown(2, 10, commands.BucketType.user)
+        self.too_many_violations = commands.CooldownMapping.from_cooldown(3, 10, commands.BucketType.user)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
