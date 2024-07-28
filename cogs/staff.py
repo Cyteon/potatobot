@@ -1136,7 +1136,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
-    async def unmute(self, context: Context, user: discord.Member, reason: str = "Not specified") -> None:
+    async def unmute(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await user.timeout(None, reason=reason)
         await context.send(f"{user.mention} has been unmuted")
 
