@@ -478,7 +478,7 @@ class Owner(commands.Cog, name="owner"):
         users_global = db["users_global"]
 
         newdata = {
-            "$set": {"inspect.total_commands": 0, "inspect.times_flagged": 0, "inspect.nsfw_requests": 0}
+            "$set": {"inspect.total_commands": 0, "inspect.times_flagged": 0, "inspect.nsfw_requests": 0, "inspect.ai_requests": 0}
         }
 
         users_global.update_one({"id": user.id}, newdata)

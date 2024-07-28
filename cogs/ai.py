@@ -378,6 +378,9 @@ class Ai(commands.Cog, name="🤖 AI"):
                 { "id": message.author.id }, newdata
             )
 
+        if user_data["inspect"]["ai_requests"] == 0:
+            await message.reply("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
         }
@@ -484,6 +487,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             users_global.update_one(
                 { "id": context.author.id }, newdata
             )
+
+        if user_data["inspect"]["ai_requests"] == 0:
+            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -709,6 +716,10 @@ class Ai(commands.Cog, name="🤖 AI"):
                 { "id": context.author.id }, newdata
             )
 
+        if user_data["inspect"]["ai_requests"] == 0:
+            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+
+
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
         }
@@ -775,6 +786,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             users_global.update_one(
                 { "id": context.author.id }, newdata
             )
+
+        if user_data["inspect"]["ai_requests"] == 0:
+            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -873,6 +888,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             users_global.update_one(
                 { "id": context.author.id }, newdata
             )
+
+        if user_data["inspect"]["ai_requests"] == 0:
+            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}

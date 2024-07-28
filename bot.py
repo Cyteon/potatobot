@@ -95,7 +95,7 @@ class DiscordBot(commands.AutoShardedBot):
         )
         self.logger = logger
         self.config = config
-        self.version = "1.4.8"
+        self.version = "1.4.9"
         self.start_time = time.time()
         self.commands_this_hour = 0
         self.command_usage = {}
@@ -236,6 +236,8 @@ class DiscordBot(commands.AutoShardedBot):
                 f"Executed {executed_command} command by {context.author} (ID: {context.author.id}) in DMs"
             )
 
+
+
         commands_ran = (statsDB.get("commands_ran") if statsDB.exists("commands_ran") else 0) + 1
         statsDB.set("commands_ran", commands_ran)
         statsDB.dump()
@@ -246,6 +248,11 @@ class DiscordBot(commands.AutoShardedBot):
         if user is None:
             user = utils.CONSTANTS.user_global_data_template(context.author.id)
             users_global.insert_one(user)
+
+        if user["inspect"]["total_commands"] == 0:
+            await context.send(
+                f"By using this bot's commands you agree to us logging:\n- Data about commands ran"
+            )
 
         new_data_command = {
             "$inc": {
