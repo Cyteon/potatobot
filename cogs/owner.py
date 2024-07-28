@@ -454,7 +454,6 @@ class Owner(commands.Cog, name="owner"):
         )
 
         embed.add_field(name="Total Commands", value=user_data["inspect"]["total_commands"])
-        embed.add_field(name="Total Messages", value=user_data["inspect"]["total_messages"])
         embed.add_field(name="Times Flagged", value=user_data["inspect"]["times_flagged"])
         embed.add_field(name="NSFW Requests", value=user_data["inspect"]["nsfw_requests"])
 
@@ -479,7 +478,7 @@ class Owner(commands.Cog, name="owner"):
         users_global = db["users_global"]
 
         newdata = {
-            "$set": {"inspect.total_commands": 0, "inspect.total_messages": 0, "inspect.times_flagged": 0, "inspect.nsfw_requests": 0}
+            "$set": {"inspect.total_commands": 0, "inspect.times_flagged": 0, "inspect.nsfw_requests": 0}
         }
 
         users_global.update_one({"id": user.id}, newdata)

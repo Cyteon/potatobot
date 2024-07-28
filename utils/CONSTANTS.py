@@ -70,7 +70,6 @@ def user_global_data_template(user_id):
         "ai_ignore_reason": "",
         "inspect": {
             "total_commands": 0,
-            "total_messages": 0,
             "times_flagged": 0,
             "nsfw_requests": 0,
             "ai_requests": 0,

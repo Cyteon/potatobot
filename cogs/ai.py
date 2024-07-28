@@ -368,7 +368,7 @@ class Ai(commands.Cog, name="🤖 AI"):
                     { "id": message.author.id }, newdata
                 )
 
-                raise discord.ext.commands.errors.CommandError("Your message contains a blacklisted word")
+                return await message.reply("Your message contains a blacklisted word, please refrain from using it.")
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {

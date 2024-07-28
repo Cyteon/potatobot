@@ -194,21 +194,6 @@ class DiscordBot(commands.AutoShardedBot):
         if message.author == self.user or message.author.bot:
             return
 
-        users_global = db["users_global"]
-        user = await CachedDB.find_one(users_global, {"id": message.author.id})
-
-        if user is None:
-            user = utils.CONSTANTS.user_global_data_template(message.author.id)
-            users_global.insert_one(user)
-
-        new_data_message = {
-            "$inc": {
-                "inspect.total_messages": 1
-            }
-        }
-
-        users_global.update_one({"id": message.author.id}, new_data_message)
-
         arr = message.content.split(" ")
 
         arr[0] = arr[0].lower()
