@@ -336,7 +336,7 @@ class Owner(commands.Cog, name="owner"):
             }
         }
 
-        users_global.update_one({"id": user.id}, newdata)
+        await CachedDB.update_one(users_global, {"id": user.id}, newdata)
 
         await context.send(f"{user} has been blacklisted.")
 
@@ -373,7 +373,7 @@ class Owner(commands.Cog, name="owner"):
             }
         }
 
-        users_global.update_one({"id": user.id}, newdata)
+        await CachedDB.update_one(users_global, {"id": user.id}, newdata)
 
         await context.send(f"{user} has been unblacklisted.")
 
@@ -392,7 +392,7 @@ class Owner(commands.Cog, name="owner"):
         description="Make the AI ignore someone",
     )
     @commands.is_owner()
-    async def ai_ignore(self, context, user: discord.User, *, reason: str = None):
+    async def ai_ignore(self, context, user: discord.User, *, reason: str = "No reason provided"):
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": user.id})
 
@@ -407,7 +407,7 @@ class Owner(commands.Cog, name="owner"):
             }
         }
 
-        users_global.update_one({"id": user.id}, newdata)
+        await CachedDB.update_one(users_global, {"id": user.id}, newdata)
 
         await context.send(f"{user} will now be ignored by the AI.")
 
@@ -431,7 +431,7 @@ class Owner(commands.Cog, name="owner"):
             }
         }
 
-        users_global.update_one({"id": user.id}, newdata)
+        await CachedDB.update_one(users_global, {"id": user.id}, newdata)
 
         await context.send(f"{user} will no longer be ignored by the AI")
 
