@@ -485,8 +485,6 @@ class Owner(commands.Cog, name="owner"):
 
         user_new = users_global.find_one({"id": user.id})
 
-        await context.send(user_new)
-
         await context.send(f"Cleared inspect info for {user.mention}")
 
     @commands.command(
