@@ -379,7 +379,7 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await message.reply("By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+            await message.reply("By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity")
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
