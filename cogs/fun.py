@@ -119,16 +119,66 @@ class Fun(commands.Cog, name="🎉 Fun"):
     async def joos(self, context: Context) -> None:
         await context.send("<:joos:1254878760218529873>")
 
-    @commands.hybrid_command(
+    @commands.hybrid_group(
         name="http",
-        description="Get image of cats representing http codes",
-        usage="http <code>"
+        description="Commands for http cat/dog/fish images.",
+        usage="http <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def http(self, context: Context, code) -> None:
+    async def http(self, context: Context) -> None:
+        embed = discord.Embed(
+            title="Http",
+            description="Commands"
+        )
+
+        # get all subcommands in group
+
+        subcommands = [cmd for cmd in self.http.walk_commands()]
+
+        data = []
+
+        for subcommand in subcommands:
+            description = subcommand.description.partition("\n")[0]
+            data.append(f"{await self.bot.get_prefix(context)}http {subcommand.name} - {description}")
+
+        help_text = "\n".join(data)
+        embed = discord.Embed(
+            title=f"Help: Http", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{help_text}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @http.command(
+        name="cat",
+        description="Get a cat image representing a http status code.",
+        usage="http cat <code>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def cat(self, context: Context, code) -> None:
         await context.send(f"https://http.cat/{code}.jpg")
+
+    @http.command(
+        name="dog",
+        description="Get a dog image representing a http status code.",
+        usage="http dog <code>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def dog(self, context: Context, code) -> None:
+        await context.send(f"https://http.dog/{code}.jpg")
+
+    @http.command(
+        name="fish",
+        description="Get a fish image representing a http status code.",
+        usage="http fish <code>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def fish(self, context: Context, code) -> None:
+        await context.send(f"https://http.fish/{code}.jpg")
 
     @commands.hybrid_command( # TODO: fix this crap
         name="bored",
