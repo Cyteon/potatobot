@@ -1316,6 +1316,12 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         await context.send(f"{user.mention} has been jailed")
 
+        embed = discord.Embed(
+            description = "You have been jailed for reason: **" + reason + "**",
+            color = 0xBEBEFE
+        )
+        await context.send(user.mention, embed=embed)
+
     @commands.hybrid_command(
         name="unjail",
         description="Unjail a user."
