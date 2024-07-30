@@ -135,7 +135,7 @@ class UpdateModel(BaseModel):
 
 @app.put("/api/guild/{id}/update", response_model=UpdateModel)
 async def update_guild(id: int, data: UpdateModel):
-    return {"message": "This endpoint is disabled for security", "status": 501}
+    return {"message": "This endpoint is disabled for security reasons", "status": 501}
 
     data = jsonable_encoder(data)
 

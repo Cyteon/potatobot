@@ -95,7 +95,7 @@ class DiscordBot(commands.AutoShardedBot):
         )
         self.logger = logger
         self.config = config
-        self.version = "1.4.11"
+        self.version = "1.4.12"
         self.start_time = time.time()
         self.commands_this_hour = 0
         self.command_usage = {}

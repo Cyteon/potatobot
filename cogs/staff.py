@@ -1238,7 +1238,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         description="Jail a user."
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
+    @commands.has_permissions(administrator=True)
     async def jail(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await context.send("Jailing user... please wait")
         guilds = db["guilds"]
@@ -1298,6 +1298,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
             await channel.set_permissions(role, view_channel=False)
 
+        if not jail_channel:
+            jail_channel = await context.guild.create_text_channel(name="jail", reason="Jail channel created by PotatoBot")
+            data["jail_channel"] = jail_channel.id
+
+            newdata = {"$set": {"jail_channel": jail_channel.id}}
+            guilds.update_one({"id": context.guild.id}, newdata)
+
         await jail_channel.set_permissions(context.guild.default_role, view_channel=False)
         await jail_channel.set_permissions(role, view_channel=True)
 
@@ -1320,14 +1327,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
             description = "You have been jailed for reason: **" + reason + "**",
             color = 0xBEBEFE
         )
-        await context.send(user.mention, embed=embed)
+        await jail_channel.send(user.mention, embed=embed)
 
     @commands.hybrid_command(
         name="unjail",
         description="Unjail a user."
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
+    @commands.has_permissions(administrator=True)
     async def unjail(self, context: Context, user: discord.Member):
         guilds = db["guilds"]
         data = guilds.find_one({"id": context.guild.id})
