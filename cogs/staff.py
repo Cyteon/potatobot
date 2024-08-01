@@ -1076,7 +1076,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="mute",
         aliases=["timeout"],
-        description="Mute a user in the server."
+        description="Mute a user in the server.",
+        usage="mute <user> <time> [reason]",
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(moderate_members=True)
@@ -1123,7 +1124,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="unmute",
         aliases=["untimeout"],
-        description="Unmute a user in the server."
+        description="Unmute a user in the server.",
+        usage="unmute <user> [reason]",
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(moderate_members=True)
@@ -1160,7 +1162,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="unlock",
-        description="Unlock a channel."
+        description="Unlock a channel.",
+        usage="unlock [channel]"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -1181,7 +1184,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="stealemoji",
-        description="Steal an emoji from another server."
+        description="Steal an emoji from another server.",
+        usage="stealemoji <emoji> <name>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_emojis=True)
@@ -1205,7 +1209,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="emojifromurl",
-        description="Add an emoji from a URL."
+        description="Add an emoji from a URL.",
+        usage="emojifromurl <url> <name>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_emojis=True)
@@ -1231,7 +1236,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="jail",
-        description="Jail a user."
+        description="Jail a user.",
+        usage="jail <user> [reason]"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
@@ -1328,7 +1334,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="unjail",
-        description="Unjail a user."
+        description="Unjail a user.",
+        usage="unjail <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
