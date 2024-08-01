@@ -357,7 +357,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Prefix set to {prefix}")
 
     @commands.hybrid_command(
-        name="groq_api_key",
+        name="groq-api-key",
         description="Set API key for AI"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -454,7 +454,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(embed=embed)
 
     @settings.command(
-        name="should_announce_levelup",
+        name="should-announce-levelup",
         description="Should announce levelup"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -474,7 +474,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Set should announce levelup to {enabled}")
 
     @settings.command(
-        name="daily_cash",
+        name="daily-cash",
         description="Set daily cash amount"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -497,7 +497,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
 
     @settings.command(
-        name="tickets_category",
+        name="tickets-category",
         description="Set category where tickets are created"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -518,7 +518,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Set tickets category to {category.mention}")
 
     @settings.command(
-        name="level_up_channel",
+        name="level-up-channel",
         description="Set level up announce channel"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -539,7 +539,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Set level announce channel to {channel.mention}")
 
     @settings.command(
-        name="tickets_support_role",
+        name="tickets-support-role",
         description="Set ticket support role"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -560,7 +560,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Set tickets support role to {role.mention}")
 
     @settings.command(
-        name="log_channel",
+        name="log-channel",
         description="Set log channel"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -581,7 +581,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Set log channel to {channel.mention}")
 
     @settings.command(
-        name="default_role",
+        name="default-role",
         description="Set default role to be given to new members"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -619,7 +619,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(f"Set default role to {role.name}")
 
     @settings.group(
-        name="level_roles",
+        name="level-roles",
         description="Commands to set up level roles",
     )
     @commands.check(Checks.is_not_blacklisted)
