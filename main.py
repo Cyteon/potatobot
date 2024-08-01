@@ -34,6 +34,9 @@ else:
     with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json") as file:
         config = json.load(file)
 
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+ssl_context.load_cert_chain(config["ssl_certfile"], config["ssl_keyfile"])
+
 origins = config["origins"]
 
 app.add_middleware(
@@ -172,7 +175,10 @@ async def get_stats():
 def run_fastapi():
     uvicorn.run(
         app, host="0.0.0.0",
-        port=80,
+        port=443,
+        ssl_keyfile=config["ssl_keyfile"],
+        ssl_certfile=config["ssl_certfile"],
+        ssl_version=ssl.PROTOCOL_TLS
     )
 
 # Run FastAPI in a separate thread
