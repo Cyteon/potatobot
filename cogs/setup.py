@@ -97,7 +97,7 @@ class TicketCategorySelect(discord.ui.Select):
 
         embed = discord.Embed(
             title="What role should be given access to the tickets and pinged?",
-            description="Mention the role so that they can access the tickets and be pinged when a ticket is created.",
+            description="This can be a role like `Support` or `Staff`. You can mention the role to select it.",
             color=0x2F3136
         )
 
@@ -121,6 +121,7 @@ class TicketCategorySelect(discord.ui.Select):
             except:
                 await interaction.followup.send("You must mention a role.", ephemeral=True)
 
+        await message.delete()
         db.guilds.update_one({"id": self.server_id}, {"$set": {"tickets_support_role": role_id}})
 
         embed = discord.Embed(
@@ -180,7 +181,7 @@ class LevelingSetupView(discord.ui.View):
 
         embed = discord.Embed(
             title="Should levelups be announced?",
-            description="Would you like to announce levelups?",
+            description="Tell when someone levels up",
             color=0x2F3136
         )
 
@@ -213,7 +214,7 @@ class LevelingShouldAnnounceLevelUp(discord.ui.View):
 
         embed = discord.Embed(
             title="Would you like to set a channel for levelups?",
-            description="Do you want to set a channel where levelups should be announced?",
+            description="Which channel to send levelup messages, will be sent in the channel where the user leveled up if not set. Mention the channel to select it.",
             color=0x2F3136
         )
 
@@ -246,7 +247,7 @@ class LevelingChannelSelectView(discord.ui.View):
 
         embed = discord.Embed(
             title="Mention the channel for levelups",
-            description="Send a message containing the channel where levelups should be announced.",
+            description="Which channel to send levelup messages, will be sent in the channel where the user leveled up if not set. Mention the channel.",
             color=0x2F3136
         )
 
@@ -270,6 +271,7 @@ class LevelingChannelSelectView(discord.ui.View):
             except:
                 await interaction.followup.send("You must mention a channel.", ephemeral=True)
 
+        await message.delete()
         db.guilds.update_one({"id": self.server_id}, {"$set": {"level_announce_channel": channel_id}})
 
         embed = discord.Embed(
@@ -329,6 +331,7 @@ class StarboardSetupView(discord.ui.View):
             except:
                 await interaction.followup.send("You must mention a channel.", ephemeral=True)
 
+        await message.delete()
         db.guilds.update_one({"id": self.server_id}, {"$set": {"starboard.channel": channel_id}})
 
         embed = discord.Embed(
@@ -354,6 +357,7 @@ class StarboardSetupView(discord.ui.View):
 
         threshold = int(message.content)
 
+        await message.delete()
         db.guilds.update_one({"id": self.server_id}, {"$set": {"starboard.threshold": threshold}})
 
         embed = discord.Embed(
@@ -362,7 +366,7 @@ class StarboardSetupView(discord.ui.View):
             color = 0x2F3136
         )
 
-        await interaction.response.edit_message(embed=embed, view=LoggingSetupView(self.server_id))
+        await interaction.message.edit(embed=embed, view=LoggingSetupView(self.server_id))
 
     @discord.ui.button(label="No", style=discord.ButtonStyle.secondary)
     async def no(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -413,6 +417,7 @@ class LoggingSetupView(discord.ui.View):
             except:
                 await interaction.followup.send("You must mention a channel.", ephemeral=True)
 
+        await message.delete()
         db.guilds.update_one({"id": self.server_id}, {"$set": {"log_channel": channel_id}})
 
         embed = discord.Embed(

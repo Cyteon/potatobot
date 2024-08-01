@@ -121,7 +121,6 @@ class CloseButton(View):
 
         member = interaction.guild.get_member(int(interaction.channel.topic.split(" ")[0]))
 
-
         os.makedirs("logs", exist_ok=True)
         log_file = f"logs/{interaction.channel.id}.log"
         with open(log_file, "w", encoding="UTF-8") as f:
@@ -171,8 +170,6 @@ class CloseButton(View):
                 f"Couldn't send the log file to {member.mention}, " + str(e)
             )
 
-
-
         os.remove(log_file)
 
 
@@ -195,12 +192,9 @@ class TrashButton(View):
             channel=interaction.channel
         )
 
-# Here we name the cog and create a new class for the cog.
 class Ticket(commands.Cog, name="🎫 Ticket"):
     def __init__(self, bot) -> None:
         self.bot = bot
-
-    # Here you can just add your own commands, you'll always need to provide "self" as first parameter.
 
     @commands.hybrid_command(
         name="ticketembed",
@@ -292,13 +286,6 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def ticket(self, context: Context):
-        embed = discord.Embed(
-            title="Ticket",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.ticket.walk_commands()]
 
         data = []
@@ -604,12 +591,6 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             channel=context.channel
         )
 
-
-
-
-
-
-# And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
 async def setup(bot) -> None:
     await bot.add_cog(Ticket(bot))
     bot.add_view(CreateButton())

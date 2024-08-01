@@ -272,29 +272,16 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="filter <filter> <args>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.check(create_player)
     async def filter(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Filter",
-            description="Commands"
-        )
+        prefix = await self.bot.get_prefix(context)
 
-        # get all subcommands in group
+        cmds = "\n".join([f"{prefix}filter {cmd.name} - {cmd.description}" for cmd in self.filter.walk_commands()])
 
-        subcommands = [cmd for cmd in self.filter.walk_commands()]
-
-        data = []
-
-        for subcommand in subcommands:
-            description = subcommand.description.partition("\n")[0]
-            data.append(f"{await self.bot.get_prefix(context)}filter {subcommand.name} - {description}")
-
-        help_text = "\n".join(data)
         embed = discord.Embed(
             title=f"Help: Filter", description="List of available commands:", color=0xBEBEFE
         )
         embed.add_field(
-            name="Commands", value=f"```{help_text}```", inline=False
+            name="Commands", value=f"```{cmds}```", inline=False
         )
 
         await context.send(embed=embed)

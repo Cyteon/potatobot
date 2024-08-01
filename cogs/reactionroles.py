@@ -102,11 +102,6 @@ class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
     async def reactionroles(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Reaction Roles",
-            description="Commands"
-        )
-
         subcommands = [cmd for cmd in self.reactionroles.walk_commands()]
 
         data = []

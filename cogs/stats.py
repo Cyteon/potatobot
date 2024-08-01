@@ -60,13 +60,6 @@ class Stats(commands.Cog, name="📈 Stats"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def chart(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Chart",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.chart.walk_commands()]
 
         data = []

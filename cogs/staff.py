@@ -375,7 +375,10 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         await context.send(key)
 
-        #await context.message.delete()
+        try:
+            await context.message.delete()
+        except:
+            pass
 
         newdata = { "$set": { "groq_api_key": cipher_text } }
 
@@ -391,13 +394,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
     async def settings(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Settings",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.settings.walk_commands()]
 
         data = []
@@ -779,15 +775,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="nick",
+        aliases=["n"],
         description="Change the nickname of a user on a server.",
+        usage="nick <user> <nickname>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
-    @app_commands.describe(
-        user="The user that should have a new nickname.",
-        nickname="The new nickname that should be set.",
-    )
     async def nick(
         self, context: Context, user: discord.User, *, nickname: str = None
     ) -> None:
@@ -811,14 +805,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="ban",
         description="Bans a user from the server.",
+        usage="ban <user> [reason]"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    @app_commands.describe(
-        user="The user that should be banned.",
-        reason="The reason why the user should be banned.",
-    )
     async def ban(
         self, context: Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
@@ -889,7 +880,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="hackban",
-        description="Ban a user that is not in the server"
+        description="Ban a user that is not in the server",
+        usage="hackban <user> [reason]",
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(ban_members=True)
@@ -899,11 +891,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
             return await context.send("what did i do :C")
 
         try:
-            context.guild.ban(user, reason=reason)
+            await context.guild.ban(user, reason=reason, delete_message_days=0)
 
             embed = discord.Embed(
-                title="User Banned",
-                description=f"**{user}** was banned by **{context.author}**!",
+                title="User Hackbanned",
+                description=f"**{user}** was hackbanned by **{context.author}**!",
                 color=0xBEBEFE,
             )
 
@@ -935,6 +927,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="softban",
         description="Bans and unbans a user from the server to delete messages",
+        usage="softban <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(ban_members=True)
@@ -1055,9 +1048,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
-    @app_commands.describe(
-        limit="The limit of messages that should be archived.",
-    )
     async def archive(self, context: Context, limit: int = 10) -> None:
         os.makedirs("logs", exist_ok=True)
         log_file = f"logs/{context.channel.id}.log"
@@ -1089,7 +1079,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         description="Mute a user in the server."
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_permissions(moderate_members=True)
+    @commands.bot_has_permissions(moderate_members=True)
     async def mute(self, context: Context, user: discord.Member, time: str, *, reason: str = "Not specified") -> None:
         if user == self.bot.user:
             return await context.send("what did i do :C")
@@ -1135,7 +1126,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         description="Unmute a user in the server."
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_permissions(moderate_members=True)
+    @commands.bot_has_permissions(moderate_members=True)
     async def unmute(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await user.timeout(None, reason=reason)
         await context.send(f"{user.mention} has been unmuted")
@@ -1151,6 +1143,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def lockdown(self, context: Context, channel: discord.TextChannel = None) -> None:
         if not channel:
             channel = context.channel
@@ -1171,6 +1164,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def unlock(self, context: Context, channel: discord.TextChannel = None) -> None:
         if not channel:
             channel = context.channel
@@ -1191,6 +1185,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True)
     async def stealemoji(self, context: Context, emoji: discord.PartialEmoji, name: str) -> None:
         try:
             emoji_bytes = await emoji.read()
@@ -1214,6 +1209,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True)
     async def emojifromurl(self, context: Context, url: str, name: str) -> None:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
@@ -1238,7 +1234,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         description="Jail a user."
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
+    @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def jail(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await context.send("Jailing user... please wait")
         guilds = db["guilds"]
@@ -1334,7 +1331,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         description="Unjail a user."
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
+    @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def unjail(self, context: Context, user: discord.Member):
         guilds = db["guilds"]
         data = guilds.find_one({"id": context.guild.id})
@@ -1363,13 +1361,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def warnings(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Warnings",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.warnings.walk_commands()]
 
         data = []
@@ -1469,6 +1460,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def recreate(self, context: Context) -> None:
         await context.send("Are you sure you want to recreate this channel?", view=deleteconfirm(context.author, context.channel))
 

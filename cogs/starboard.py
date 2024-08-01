@@ -150,13 +150,6 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def starboard(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Starboard",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.starboard.walk_commands()]
 
         data = []

@@ -11,7 +11,6 @@ from typing import Optional
 
 import ssl
 
-from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,9 +33,6 @@ if not os.path.isfile(f"{os.path.realpath(os.path.dirname(__file__))}/config.jso
 else:
     with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json") as file:
         config = json.load(file)
-
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain(config["ssl_certfile"], config["ssl_keyfile"])
 
 origins = config["origins"]
 
@@ -129,32 +125,6 @@ async def get_guild(id: int):
 
     return guild
 
-class UpdateModel(BaseModel):
-    author: int
-    newdata: str
-
-@app.put("/api/guild/{id}/update", response_model=UpdateModel)
-async def update_guild(id: int, data: UpdateModel):
-    return {"message": "This endpoint is disabled for security reasons", "status": 501}
-
-    data = jsonable_encoder(data)
-
-    guild = bot.get_guild(id)
-
-    if guild.get_member(data["author"]).guild_permissions.administrator:
-        guilds = db["guilds"]
-        guild_data = guilds.find_one({"id": guild.id})
-
-        if guild_data is None:
-            guild_data = CONSTANTS.guild_data_template(id)
-            guilds.insert_one(guild_data)
-
-        guilds.update_one({"id": guild.id}, {"$set": json.loads(data["newdata"])})
-
-        return data
-    else:
-        return {"message": "You do not have the required permissions.", "status": 403}
-
 
 @app.get("/api/user/{id}")
 async def get_user(id: int):
@@ -202,10 +172,7 @@ async def get_stats():
 def run_fastapi():
     uvicorn.run(
         app, host="0.0.0.0",
-        port=443,
-        ssl_keyfile=config["ssl_keyfile"],
-        ssl_certfile=config["ssl_certfile"],
-        ssl_version=ssl.PROTOCOL_TLS
+        port=80,
     )
 
 # Run FastAPI in a separate thread

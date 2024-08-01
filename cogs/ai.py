@@ -389,10 +389,8 @@ class Ai(commands.Cog, name="🤖 AI"):
             { "id": message.author.id }, newdata
         )
 
-
         c = db["guilds"]
         data = c.find_one({"id": message.guild.id})
-
 
         if not data:
             data = CONSTANTS.guild_data_template(message.guild.id)
@@ -410,7 +408,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             client = Groq(api_key=key)
 
         c = db["users"]
-        #userInfo = c.find_one({"id": message.author.id, "guild_id": message.guild.id})
         userInfo = await CachedDB.find_one(c, {"id": message.author.id, "guild_id": message.guild.id})
 
         if not userInfo:
@@ -426,9 +423,10 @@ class Ai(commands.Cog, name="🤖 AI"):
                 systemPrompt = data["system_prompt"]
 
             if profanity.contains_profanity(systemPrompt):
-                if not message.channel.is_nsfw():
-                    await message.reply("The system prompt contains profanity and this channel is not marked as NSFW. **Using default system prompt**")
-                    systemPrompt = "NONE"
+                if hasattr(message.channel, "is_nsfw"):
+                    if not message.channel.is_nsfw():
+                        await message.reply("The system prompt contains profanity and this channel is not marked as NSFW. **Using default system prompt**")
+                        systemPrompt = "NONE"
 
         loop = asyncio.get_running_loop()
         try:
@@ -532,9 +530,9 @@ class Ai(commands.Cog, name="🤖 AI"):
             await context.reply(err)
 
     @commands.hybrid_command(
-        name="set_ai_channel",
+        name="set-ai-channel",
         description="Set current channel as an AI channel",
-        usage="set_ai_channel"
+        usage="set-ai-channel"
     )
     @commands.has_permissions(manage_channels=True)
     @commands.check(Checks.is_not_blacklisted)
@@ -583,9 +581,9 @@ class Ai(commands.Cog, name="🤖 AI"):
         )
 
     @commands.hybrid_command(
-        name="unset_ai_channel",
+        name="unset-ai-channel",
         description="Unset current channel as an AI channel",
-        usage="unset_ai_channel"
+        usage="unset-ai-channel"
     )
     @commands.has_permissions(manage_channels=True)
     @commands.check(Checks.is_not_blacklisted)
@@ -608,7 +606,7 @@ class Ai(commands.Cog, name="🤖 AI"):
 
     @commands.cooldown(1, 30, commands.BucketType.user)
     @commands.hybrid_command(
-        name="create_ai_thread",
+        name="create-ai-thread",
         description="Create AI thread so u dont have to do !ai",
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -667,9 +665,9 @@ class Ai(commands.Cog, name="🤖 AI"):
         await context.send("Thread created: " + newChannel.mention)
 
     @commands.hybrid_command(
-        name="ai_image",
+        name="ai-image",
         description="Generate an ai image",
-        usage="ai_image <prompt>"
+        usage="ai-image <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -697,8 +695,9 @@ class Ai(commands.Cog, name="🤖 AI"):
                 { "id": context.author.id }, newdata
             )
 
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW requests are not allowed in non nsfw channels!", ephemeral=True)
+            if hasattr(context.channel, "is_nsfw"):
+                if not context.channel.is_nsfw():
+                    return await context.send(f"NSFW requests are not allowed in non nsfw channels!", ephemeral=True)
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -773,8 +772,9 @@ class Ai(commands.Cog, name="🤖 AI"):
             return await context.send("Invalid model. Available models: " + ", ".join(options.keys()))
 
         if model in nsfw_options:
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW models are not allowed in non NSFW channels!", ephemeral=True)
+            if hasattr(context.channel, "is_nsfw"):
+                if not context.channel.is_nsfw():
+                    return await context.send(f"NSFW models are not allowed in non NSFW channels!", ephemeral=True)
 
         if user_data:
             if user_data["ai_ignore"]:
@@ -799,8 +799,9 @@ class Ai(commands.Cog, name="🤖 AI"):
                 { "id": context.author.id }, newdata
             )
 
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW requests are not allowed in non NSFW channels!", ephemeral=True)
+            if hasattr(context.channel, "is_nsfw"):
+                if not context.channel.is_nsfw():
+                    return await context.send(f"NSFW requests are not allowed in non NSFW channels!", ephemeral=True)
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -859,20 +860,28 @@ class Ai(commands.Cog, name="🤖 AI"):
         return images_data
 
     @commands.hybrid_command(
-        name="system_prompt",
+        name="system-prompt",
         description="Set the system prompt for the AI",
-        usage="system_prompt <prompt>"
+        usage="system-prompt <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
-    async def system_prompt(self, context: Context, *, prompt: str) -> None:
+    async def system_prompt(self, context: Context, *, prompt: str = "") -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if prompt == "":
+            if data:
+                if "system_prompt" in data:
+                    return await context.send("Current system prompt: " + data["system_prompt"])
+                else:
+                    return await context.send("No system prompt set.")
+
         if profanity.contains_profanity(prompt):
             if not context.channel.is_nsfw():
                 prompt = "NONE"
                 await context.send("The system prompt contains profanity and this channel is not marked as NSFW. Please use an NSFW channel for NSFW prompts.")
 
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
 
         newdata = {
                 "$set": { "system_prompt": prompt }
@@ -885,20 +894,9 @@ class Ai(commands.Cog, name="🤖 AI"):
         await context.send("System prompt set to: " + prompt)
 
     @commands.hybrid_command(
-        name="get_system_prompt",
-        description="Get the system prompt for the AI",
-        usage="get_system_prompt"
-    )
-    async def get_system_prompt(self, context: Context) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        await context.send("System prompt is: " + data["system_prompt"])
-
-    @commands.hybrid_command(
-        name="reset_ai",
+        name="reset-ai",
         description="Reset AI data",
-        usage="reset_ai"
+        usage="reset-ai"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
@@ -907,8 +905,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         c.delete_one({"id": context.channel.id})
         await context.send("AI data reset for " + context.channel.mention)
 
-    @commands.hybrid_command(
-        name="toggle_ai",
+    @commands.command(
+        name="toggle-ai",
         description="Reset AI data (owner only)",
     )
     @commands.is_owner()

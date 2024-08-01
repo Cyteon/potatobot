@@ -23,6 +23,8 @@ def guild_data_template(guild_id):
         "default_role": 0,
         "lockdown": False,
         "oldperms": {},
+        "authorized_bots": [],
+        "disabled_commands": [], # I might add this later
         "starboard": {
             "channel": 0,
             "threshold": 5,
@@ -33,10 +35,10 @@ def guild_data_template(guild_id):
                 "anti_danger_perms": False,
                 "anti_massban": False,
                 "anti_masskick": False,
-                "anti_masscreate": False,
                 "anti_massdelete": False,
                 "anti_massping": False,
                 "anti_webhook_spam": False,
+                "anti_unauthorized_bot": False,
             }
         }
     }
@@ -49,6 +51,7 @@ def user_data_template(user_id, guild_id):
         "xp": 0,
         "level": 0,
         "last_daily": 0,
+        "last_robbed_at": 0,
         "jailed": False,
         "farm": {
             "saplings": 0,
@@ -77,7 +80,7 @@ def user_global_data_template(user_id):
         "strikes": {}
     }
 
-LEVELS_AND_XP: Final = {  # credit's for this goes to the mee6 developers as we use the same exp values as them
+LEVELS_AND_XP: Final = {  # credit's for this goes to the mee6 developers as we use the same xp values as them
     0: 0,
     1: 100,
     2: 255,

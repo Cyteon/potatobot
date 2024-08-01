@@ -16,7 +16,7 @@ from utils import CONSTANTS, DBClient, Checks, CachedDB
 KICK_TRESHOLD = 5
 BAN_TRESHOLD = 3
 DELETE_TRESHOLD = 2
-PING_TRESHOLD = 12
+PING_TRESHOLD = 1
 WEBHOOK_TRESHOLD = 40
 
 client = DBClient.client
@@ -30,9 +30,12 @@ delete_cache = {}
 
 deleted_channels = {}
 
+users_cant_be_moderated = []
+
 class Security(commands.Cog, name="🛡️ Security"):
     def __init__(self, bot) -> None:
         self.bot = bot
+        self.users_cant_be_moderated = users_cant_be_moderated
         self.clear_cache.start()
 
     @tasks.loop(minutes=10)
@@ -146,13 +149,12 @@ class Security(commands.Cog, name="🛡️ Security"):
 
 
             if ping_cache[message.author] > PING_TRESHOLD:
-                logger.info("boom")
                 ping_cache[message.author] = 0
                 if message.author == message.guild.owner:
                     return
 
                 users = db["users"]
-                user_data = users.find_one({"id": message.author.id, "guild_id": message.guild.id})
+                user_data = await CachedDB.find_one(users, {"id": message.author.id, "guild_id": message.guild.id})
 
                 if not user_data:
                     user_data = CONSTANTS.user_data_template(message.author.id, message.guild.id)
@@ -161,7 +163,6 @@ class Security(commands.Cog, name="🛡️ Security"):
                 if "whitelisted" in user_data:
                     if user_data["whitelisted"]:
                         return
-
 
                 guilds = db["guilds"]
                 data = guilds.find_one({"id": message.guild.id})
@@ -188,7 +189,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                 )
 
                 try:
-                    message.channel.send(embed=embed)
+                    await message.channel.send(embed=embed)
                 except:
                     pass
 
@@ -198,10 +199,13 @@ class Security(commands.Cog, name="🛡️ Security"):
                     await log_channel.send(embed=embed)
 
                 try:
+                    if message.author.id in self.users_cant_be_moderated:
+                        return
+
                     try:
                         embed = discord.Embed(
-                            title="You have been kicked",
-                            description=f"You have been kicked from **{message.guild.name}** for mass pinging",
+                            title="You have been muted",
+                            description=f"You have been muted for an hour in **{message.guild.name}** for mass pinging",
                             color=discord.Color.red()
                         )
 
@@ -209,39 +213,19 @@ class Security(commands.Cog, name="🛡️ Security"):
                     except:
                         pass
 
-                    await message.author.kick(reason="AntiNuke Alert - Mass pinging")
+                    await message.author.timeout(datetime.timedelta(hours=1), reason="Mass pinging")
                     ban_cache[self.bot.user] = 0
 
                     embed = discord.Embed(
-                        title="User Kicked",
-                        description=f"**{message.author.mention}** has been kicked for mass pinging",
+                        title="User Muted",
+                        description=f"**{message.author.mention}** has been muted for mass pinging",
                         color=discord.Color.red()
                     )
 
                     if log_channel != None:
                         await log_channel.send(embed=embed)
                 except discord.Forbidden:
-                    embed = discord.Embed(
-                        title="AntiNuke Error",
-                        description=f"I was unable to kick the user {message.author.mention}",
-                        color=discord.Color.red()
-                    )
-
-                    if log_channel != None:
-                        await log_channel.send(embed=embed)
-
-                    try:
-                        guild_owner = message.guild.owner
-                        await guild_owner.send(embed=embed)
-                    except discord.Forbidden:
-                        embed = discord.Embed(
-                            title="AntiNuke Error",
-                            description=f"Unable to alert the guild owner using DMs",
-                            color=discord.Color.red()
-                        )
-
-                        if log_channel != None:
-                            await log_channel.send(embed=embed)
+                    self.users_cant_be_moderated.append(message.author.id)
         else:
             ping_cache[message.author] = 0
 
@@ -291,7 +275,14 @@ class Security(commands.Cog, name="🛡️ Security"):
                             await log_channel.send(embed=embed)
                             return
 
-                    await role.delete()
+                    try:
+                        await role.delete()
+                    except discord.Forbidden:
+                        embed = discord.Embed(
+                            title="Unable to delete role",
+                            description=f"**{user.mention}** created a dangerous role, but I was unable to delete it",
+                            color=discord.Color.red()
+                        )
 
                     log_channel = role.guild.get_channel(guild["log_channel"])
 
@@ -381,41 +372,6 @@ class Security(commands.Cog, name="🛡️ Security"):
 
                     await log_channel.send(embed=embed)
 
-                    try:
-                        await discord_guild.ban(user, reason="AntiNuke Alert - Dangerous permissions granted")
-                        ban_cache[self.bot.user] = 0
-
-                        embed = discord.Embed(
-                            title="User Banned",
-                            description=f"**{user.mention}** has been banned for trying to give dangerous permissions!",
-                            color=discord.Color.red()
-                        )
-
-                        if log_channel is not None:
-                            await log_channel.send(embed=embed)
-                    except discord.Forbidden:
-                        embed = discord.Embed(
-                            title="AntiNuke Error",
-                            description=f"I was unable to ban the user {user.mention}",
-                            color=discord.Color.red()
-                        )
-
-                        if log_channel is not None:
-                            await log_channel.send(embed=embed)
-
-                        try:
-                            guild_owner = discord_guild.owner
-                            await guild_owner.send(embed=embed)
-                        except discord.Forbidden:
-                            embed = discord.Embed(
-                                title="AntiNuke Error",
-                                description=f"Unable to alert the guild owner using DMs",
-                                color=discord.Color.red()
-                            )
-
-                            if log_channel is not None:
-                                await log_channel.send(embed=embed)
-
     @commands.Cog.listener()
     async def on_member_ban(self, discord_guild: discord.Guild, banned_user: discord.User) -> None:
         guilds = db["guilds"]
@@ -491,26 +447,14 @@ class Security(commands.Cog, name="🛡️ Security"):
                             await log_channel.send(embed=embed)
                     except discord.Forbidden:
                         embed = discord.Embed(
-                            title="AntiNuke Error",
-                            description=f"I was unable to ban the user {user.mention}",
+                            title="Unable to ban user",
+                            description=f"**{user.mention}** could not be banned",
                             color=discord.Color.red()
                         )
 
                         if log_channel != None:
                             await log_channel.send(embed=embed)
 
-                        try:
-                            guild_owner = discord_guild.owner
-                            await guild_owner.send(embed=embed)
-                        except discord.Forbidden:
-                            embed = discord.Embed(
-                                title="AntiNuke Error",
-                                description=f"Unable to alert the guild owner using DMs",
-                                color=discord.Color.red()
-                            )
-
-                            if log_channel != None:
-                                await log_channel.send(embed=embed)
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
         guilds = db["guilds"]
@@ -579,28 +523,16 @@ class Security(commands.Cog, name="🛡️ Security"):
 
                         if log_channel != None:
                             await log_channel.send(embed=embed)
-                    except discord.Forbidden:
+                    except:
                         embed = discord.Embed(
-                            title="AntiNuke Error",
-                            description=f"I was unable to ban the user {user.mention}",
+                            title="Unable to ban user",
+                            description=f"**{user.mention}** could not be banned",
                             color=discord.Color.red()
                         )
 
                         if log_channel != None:
                             await log_channel.send(embed=embed)
 
-                        try:
-                            guild_owner = member.guild.owner
-                            await guild_owner.send(embed=embed)
-                        except discord.Forbidden:
-                            embed = discord.Embed(
-                                title="AntiNuke Error",
-                                description=f"Unable to alert the guild owner using DMs",
-                                color=discord.Color.red()
-                            )
-
-                            if log_channel != None:
-                                await log_channel.send(embed=embed)
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: discord.TextChannel) -> None:
         guilds = db["guilds"]
@@ -667,28 +599,8 @@ class Security(commands.Cog, name="🛡️ Security"):
 
                         if log_channel != None:
                             await log_channel.send(embed=embed)
-                    except discord.Forbidden:
-                        embed = discord.Embed(
-                            title="AntiNuke Error",
-                            description=f"I was unable to ban the user {user.mention}",
-                            color=discord.Color.red()
-                        )
-
-                        if log_channel != None:
-                            await log_channel.send(embed=embed)
-
-                        try:
-                            guild_owner = channel.guild.owner
-                            await guild_owner.send(embed=embed)
-                        except discord.Forbidden:
-                            embed = discord.Embed(
-                                title="AntiNuke Error",
-                                description=f"Unable to alert the guild owner using DMs",
-                                color=discord.Color.red()
-                            )
-
-                            if log_channel != None:
-                                await log_channel.send(embed=embed)
+                    except:
+                        pass
 
                     embed = discord.Embed(
                         title="AntiNuke Warning",
@@ -700,9 +612,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         try:
                             await log_channel.send(embed=embed)
                         except:
-                            await channel.guild.owner.send(embed=embed)
-                    else:
-                        await channel.guild.owner.send(embed=embed)
+                            pass
 
                     for del_channel in deleted_channels[channel.guild]:
                         if not del_channel in deleted_channels[channel.guild]:
@@ -758,6 +668,82 @@ class Security(commands.Cog, name="🛡️ Security"):
         if not guild:
             return
 
+        if member.bot:
+            if not member.public_flags.verified_bot:
+                guilds = db["guilds"]
+                data = await CachedDB.find_one(guilds, {"id": member.guild.id})
+
+                if not data:
+                    return
+
+                if "security" not in data:
+                    return
+
+                if "antinuke" not in data["security"]:
+                    return
+
+                if data["security"]["antinuke"].get("anti_unauthorized_bot", False):
+                    if member.id in data["authorized_bots"]:
+                        embed = discord.Embed(
+                            title="Unverified bot joined",
+                            description=f"**{member.mention}** tried to join the guild its not verified, but it is authorized",
+                            color=0xfdfd96
+                        )
+
+                        embed.set_author(name=member, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
+                        embed.set_footer(text="No action will be taken")
+
+                        log_channel = member.guild.get_channel(guild["log_channel"])
+
+                        if log_channel != None:
+                            await log_channel.send(embed=embed)
+
+                        return
+
+                    embed = discord.Embed(
+                        title="Unathorized bot tried to join",
+                        description=f"**{member.mention}** tried to join the guild, but it's not verified or authorized",
+                        color=0xff6961
+                    )
+
+                    embed.set_author(name=member, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
+                    embed.set_footer(text="Bot will be kicked")
+
+                    log_channel = member.guild.get_channel(guild["log_channel"])
+
+                    if log_channel != None:
+                        await log_channel.send(embed=embed)
+
+                    await member.kick(reason="Unauthorized bot")
+                else:
+                    embed = discord.Embed(
+                        title="Bot Joined",
+                        description=f"**{member.mention}** has joined the guild",
+                        color=0x77dd77
+                    )
+
+                    embed.set_author(name=member, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
+
+                    log_channel = member.guild.get_channel(guild["log_channel"])
+
+                    if log_channel != None:
+                        await log_channel.send(embed=embed)
+            else:
+                embed = discord.Embed(
+                    title="Bot Joined",
+                    description=f"**{member.mention}** has joined the guild",
+                    color=0x77dd77
+                )
+
+                embed.set_footer(text="Bot is verified")
+
+                embed.set_author(name=member, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
+
+                log_channel = member.guild.get_channel(guild["log_channel"])
+
+                if log_channel != None:
+                    await log_channel.send(embed=embed)
+
         if "lockdown" not in guild:
             return
 
@@ -769,13 +755,6 @@ class Security(commands.Cog, name="🛡️ Security"):
         description="Whitelist users from security measures (guild owner only)"
     )
     async def whitelist(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Whitelist",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.whitelist.walk_commands()]
 
         data = []
@@ -885,13 +864,6 @@ class Security(commands.Cog, name="🛡️ Security"):
         description="Trusted users can bypass security measures and change security settings"
     )
     async def trusted(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Trusted",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.trusted.walk_commands()]
 
         data = []
@@ -1003,13 +975,6 @@ class Security(commands.Cog, name="🛡️ Security"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def antinuke(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Antinuke",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.antinuke.walk_commands()]
 
         data = []
@@ -1028,10 +993,11 @@ class Security(commands.Cog, name="🛡️ Security"):
 
         await context.send(embed=embed)
 
+
     @antinuke.command(
-        name="anti_danger_perms",
+        name="anti-danger-perms",
         description="Prevent someone from giving dangerous perms to @everyone (guild owner/trusted only)",
-        usage="antinuke anti_danger_perms <true/false>"
+        usage="antinuke anti-danger-perms <true/false>"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def anti_danger_perms(self, context: Context, enabled: bool) -> None:
@@ -1067,10 +1033,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                             "anti_danger_perms": enabled,
                             "anti_massban": False,
                             "anti_masskick": False,
-                            "anti_masscreate": False,
                             "anti_massdelete": False,
                             "anti_massping": False,
-                            "anti_webhook_spam": False
+                            "anti_webhook_spam": False,
+                            "anti_unauthorized_bot": False
 
                         }
                     }
@@ -1090,9 +1056,9 @@ class Security(commands.Cog, name="🛡️ Security"):
         await context.send(f"Set `anti_danger_perms` to `{enabled}`")
 
     @antinuke.command(
-        name="anti_massban",
+        name="anti-massban",
         description="Prevent someone from mass banning members (guild owner/trusted only)",
-        usage="antinuke anti_massban <true/false>"
+        usage="antinuke anti-massban <true/false>"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def anti_massban(self, context: Context, enabled: bool) -> None:
@@ -1128,10 +1094,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                             "anti_danger_perms": False,
                             "anti_massban": enabled,
                             "anti_masskick": False,
-                            "anti_masscreate": False,
                             "anti_massdelete": False,
                             "anti_massping": False,
-                            "anti_webhook_spam": False
+                            "anti_webhook_spam": False,
+                            "anti_unauthorized_bot": False
                         }
                     }
                 }
@@ -1150,9 +1116,9 @@ class Security(commands.Cog, name="🛡️ Security"):
         await context.send(f"Set `anti_massban` to `{enabled}`")
 
     @antinuke.command(
-        name="anti_masskick",
+        name="anti-masskick",
         description="Prevent someone from mass kicking members (guild owner/trusted only)",
-        usage="antinuke anti_masskick <true/false>"
+        usage="antinuke anti-masskick <true/false>"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def anti_masskick(self, context: Context, enabled: bool) -> None:
@@ -1189,10 +1155,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                             "anti_danger_perms": False,
                             "anti_massban": False,
                             "anti_masskick": enabled,
-                            "anti_masscreate": False,
                             "anti_massdelete": False,
                             "anti_massping": False,
-                            "anti_webhook_spam": False
+                            "anti_webhook_spam": False,
+                            "anti_unauthorized_bot": False
                         }
                     }
                 }
@@ -1211,9 +1177,9 @@ class Security(commands.Cog, name="🛡️ Security"):
         await context.send(f"Set `anti_masskick` to `{enabled}`")
 
     @antinuke.command(
-        name="anti_massdelete",
+        name="anti-massdelete",
         description="Prevent someone from mass deleting channels (guild owner/trusted only)",
-        usage="antinuke anti_massdelete <true/false>"
+        usage="antinuke anti-massdelete <true/false>"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def anti_massdelete(self, context: Context, enabled: bool) -> None:
@@ -1249,10 +1215,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                             "anti_danger_perms": False,
                             "anti_massban": False,
                             "anti_masskick": False,
-                            "anti_masscreate": False,
                             "anti_massdelete": enabled,
                             "anti_massping": False,
-                            "anti_webhook_spam": False
+                            "anti_webhook_spam": False,
+                            "anti_unauthorized_bot": False
                         }
                     }
                 }
@@ -1271,9 +1237,9 @@ class Security(commands.Cog, name="🛡️ Security"):
         await context.send(f"Set `anti_massdelete` to `{enabled}`")
 
     @antinuke.command(
-        name="anti_massping",
+        name="anti-massping",
         description="Prevent mass pinging (guild owner/trusted only)",
-        usage="antinuke anti_massping <true/false>"
+        usage="antinuke anti-massping <true/false>"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def massping(self, context: Context, enabled: bool) -> None:
@@ -1310,10 +1276,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                             "anti_danger_perms": False,
                             "anti_massban": False,
                             "anti_masskick": False,
-                            "anti_masscreate": False,
                             "anti_massdelete": False,
                             "anti_massping": enabled,
-                            "anti_webhook_spam": False
+                            "anti_webhook_spam": False,
+                            "anti_unauthorized_bot": False
                         }
                     }
                 }
@@ -1332,9 +1298,9 @@ class Security(commands.Cog, name="🛡️ Security"):
         await context.send(f"Set `anti_massping` to `{enabled}`")
 
     @antinuke.command(
-        name="anti_webhook_spam",
+        name="anti-webhook-spam",
         description="Prevent webhook spam (guild owner/trusted only)",
-        usage="antinuke anti_webhook_spam <true/false>"
+        usage="antinuke anti-webhook-spam <true/false>"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def anti_webhook_spam(self, context: Context, enabled: bool) -> None:
@@ -1371,10 +1337,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                             "anti_danger_perms": False,
                             "anti_massban": False,
                             "anti_masskick": False,
-                            "anti_masscreate": False,
                             "anti_massdelete": False,
                             "anti_massping": False,
-                            "anti_webhook_spam": enabled
+                            "anti_webhook_spam": enabled,
+                            "anti_unauthorized_bot": False
                         }
                     }
                 }
@@ -1391,6 +1357,115 @@ class Security(commands.Cog, name="🛡️ Security"):
             guilds.update_one({"id": context.guild.id}, newdata)
 
         await context.send(f"Set `anti_webhook_spam` to `{enabled}`")
+
+    @antinuke.command(
+        name="anti-unauthorized-bot",
+        description="Prevent bots that are not verified and not athorized from being added (guild owner/trusted only)",
+        usage="antinuke anti-unauthorized-bot <true/false>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def anti_unauthorized_bot(self, context: Context, enabled: bool) -> None:
+        guild_owner = context.guild.owner
+
+        if context.author != guild_owner:
+
+            users = db["users"]
+            user_data = users.find_one({"id": context.author.id, "guild_id": context.guild.id})
+
+            if not user_data:
+                user_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
+                users.insert_one(user_data)
+
+            if "trusted" in user_data:
+                if not user_data["trusted"]:
+                    await context.send("You must be the guild owner or trusted to use this command!")
+                    return
+            else:
+                return
+
+        guilds = db["guilds"]
+        guild = guilds.find_one({"id": context.guild.id})
+
+        if not guild:
+            guild = CONSTANTS.guild_data_template(context.guild.id)
+            guilds.insert_one(guild)
+
+        if "security" not in guild:
+            newdata = {
+                "$set": {
+                    "security": {
+                        "antinuke": {
+                            "anti_danger_perms": False,
+                            "anti_massban": False,
+                            "anti_masskick": False,
+                            "anti_massdelete": False,
+                            "anti_massping": False,
+                            "anti_webhook_spam": False,
+                            "anti_unauthorized_bot": enabled
+                        }
+                    }
+                }
+            }
+
+            guilds.update_one({"id": context.guild.id}, newdata)
+        else:
+            newdata = {
+                "$set": {
+                    "security.antinuke.anti_unauthorized_bot": enabled
+                }
+            }
+
+            guilds.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set `anti_unauthorized_bot` to `{enabled}`")
+
+    @antinuke.group(
+        name="bot",
+        description="Commands for bot related commands in antinuke (guild owner/trusted only)",
+        usage="antinuke bot <subcommand>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def antinuke_bot(self, context: Context) -> None:
+        subcommands = [cmd for cmd in self.antinuke_bot.walk_commands()]
+
+        data = []
+
+        for subcommand in subcommands:
+            description = subcommand.description.partition("\n")[0]
+            data.append(f"{await self.bot.get_prefix(context)}antinuke {subcommand.name} - {description}")
+
+        help_text = "\n".join(data)
+        embed = discord.Embed(
+            title=f"Help: Antinuke: Bot", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{help_text}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @antinuke_bot.command(
+        name="add",
+        description="Add a bot to the authorized bots list (guild owner/trusted only)",
+        usage="antinuke bot add <bot_id>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def antinuke_bot_add(self, context: Context, bot_id: int) -> None:
+        guilds = db["guilds"]
+        data = await CachedDB.find_one(guilds, { "id": context.guild.id })
+
+        if "authorized_bots" in data:
+            if bot_id in data["authorized_bots"]:
+                return await context.send("Bot is already authorized")
+
+            data["authorized_bots"].append(bot_id)
+        else:
+            data["authorized_bots"] = [bot_id]
+
+        newdata = { "$set": { "authorized_bots": data["authorized_bots"] } }
+        await CachedDB.update_one(guilds, { "id": context.guild.id }, newdata)
+
+        await context.send(f"Added bot `{bot_id}` to the authorized bots list")
 
     @commands.hybrid_command(
         name="lockdown",

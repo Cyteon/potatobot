@@ -91,14 +91,12 @@ class DiscordBot(commands.AutoShardedBot):
             command_prefix=self.get_prefix,
             intents=intents,
             help_command=None,
-            owner_ids=set([int(os.getenv("OWNER_ID"))]),
+            owner_ids=set([int(os.getenv("OWNER_ID")), 1131236182899052696]),
         )
         self.logger = logger
         self.config = config
-        self.version = "1.4.12"
+        self.version = "2.0.0-beta"
         self.start_time = time.time()
-        self.commands_this_hour = 0
-        self.command_usage = {}
         self.prefixDB = prefixDB
         self.statsDB = statsDB
 
@@ -131,15 +129,6 @@ class DiscordBot(commands.AutoShardedBot):
     async def before_status_task(self) -> None:
         await self.wait_until_ready()
 
-    @tasks.loop(hours=1)
-    async def reset_command_count(self):
-        self.commands_this_hour = 0
-        self.command_usage = {}
-
-    @reset_command_count.before_loop
-    async def before_reset_command_count(self):
-        await self.wait_until_ready()
-
 
     async def setup_hook(self) -> None:
         self.logger.info(f"Logged in as {self.user.name}")
@@ -154,10 +143,28 @@ class DiscordBot(commands.AutoShardedBot):
         self.logger.info(f"Connection to db successful: {client.address}")
 
         self.logger.info("-------------------")
+
         await self.load_cogs()
 
+        self.logger.info("-------------------")
+
+        self.logger.info(f"Command count (slash+chat): {len([x for x in self.walk_commands() if isinstance(x, commands.HybridCommand)])}")
+        self.logger.info(f"Command count (chat only): {len([x for x in self.walk_commands() if isinstance(x, commands.Command) and not isinstance(x, commands.HybridCommand)])}")
+        self.logger.info(f"Total command count: {len([x for x in self.walk_commands()])}")
+
+        self.logger.info(
+            f"Command groups: {len([x for x in self.walk_commands() if isinstance(x, commands.HybridGroup) or isinstance(x, commands.Group)])}"
+        )
+        self.logger.info(f"Cog count: {len([x for x in self.cogs])}")
+
+        self.logger.info(
+            f"Discord slash command limit: {len([x for x in self.commands if isinstance(x, commands.HybridCommand) or isinstance(x, commands.HybridGroup)])}/100"
+        )
+        self.logger.info("(Dosent include subcommands)")
+
+        self.logger.info("-------------------")
+
         self.status_task.start()
-        self.reset_command_count.start()
 
     async def on_guild_remove(self, guild: discord.Guild):
         async with aiohttp.ClientSession() as session:
@@ -191,6 +198,9 @@ class DiscordBot(commands.AutoShardedBot):
         await ErrorLogger.error(self, event_method, *args, **kwargs)
 
     async def on_message(self, message: discord.Message) -> None:
+        if message.author.id in config["fully_ignore"]:
+            return
+
         if message.author == self.user or message.author.bot:
             return
 
@@ -224,8 +234,6 @@ class DiscordBot(commands.AutoShardedBot):
         full_command_name = context.command.qualified_name
         split = full_command_name.split(" ")
         executed_command = str(split[0])
-        self.commands_this_hour += 1
-        self.command_usage[executed_command] = self.command_usage.get(executed_command, 0) + 1
 
         if context.guild is not None:
             self.logger.info(
@@ -236,31 +244,9 @@ class DiscordBot(commands.AutoShardedBot):
                 f"Executed {executed_command} command by {context.author} (ID: {context.author.id}) in DMs"
             )
 
-
-
         commands_ran = (statsDB.get("commands_ran") if statsDB.exists("commands_ran") else 0) + 1
         statsDB.set("commands_ran", commands_ran)
         statsDB.dump()
-
-        users_global = db["users_global"]
-        user = await CachedDB.find_one(users_global, {"id": context.author.id})
-
-        if user is None:
-            user = utils.CONSTANTS.user_global_data_template(context.author.id)
-            users_global.insert_one(user)
-
-        if user["inspect"]["total_commands"] == 0:
-            await context.send(
-                f"By using this bot's commands you agree to us logging:\n- Data about commands ran"
-            )
-
-        new_data_command = {
-            "$inc": {
-                "inspect.total_commands": 1
-            }
-        }
-
-        await CachedDB.update_one(users_global, {"id": context.author.id}, new_data_command)
 
     async def on_command_error(self, context: commands.Context, error) -> None:
         if isinstance(error, commands.CommandOnCooldown):

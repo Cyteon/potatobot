@@ -5,35 +5,38 @@ import random
 import asyncio
 import discord
 import time
+
+from discord import ui
 from discord.ext import commands
 from discord.ext.commands import Context
 from utils import CONSTANTS, DBClient, CachedDB, Checks
 
 from discord.ui import Button, button, View
 
-db = DBClient.db["users"]
+db = DBClient.db
 
 class Economy(commands.Cog, name="🪙 Economy"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
     @commands.hybrid_command(
-        name="wallet",
-        aliases=["balance", "bal"],
+        name="balance",
+        aliases=["wallet", "bal"],
         description="See yours or someone else's wallet",
-        usage="wallet [optional: user]"
+        usage="balance [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.cooldown(3, 10, commands.BucketType.user)
     async def wallet(self, context: Context, user: discord.Member = None) -> None:
         if not user:
             user = context.author
 
-        #data = await CachedDB.find_one(db, {"id": user.id, "guild_id": context.guild.id})
-        data = db.find_one({"id": user.id, "guild_id": context.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": user.id, "guild_id": context.guild.id})
 
         if not data:
             data = CONSTANTS.user_data_template(user.id, context.guild.id)
-            db.insert_one(data)
+            c.insert_one(data)
         await context.send(f"**{user}** has ${data['wallet']} in their wallet")
 
     @commands.hybrid_command(
@@ -43,12 +46,12 @@ class Economy(commands.Cog, name="🪙 Economy"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def daily(self, context: Context) -> None:
-
-        data = await CachedDB.find_one(db, {"id": context.author.id, "guild_id": context.guild.id})
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
 
         if not data:
             data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
-            db.insert_one(data)
+            c.insert_one(data)
         if time.time() - data["last_daily"] < 86400:
             eta = data["last_daily"] + 86400
             await context.send(
@@ -56,7 +59,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
             )
             return
 
-        guild = DBClient.client.potatobot["guilds"]
+        guild = db["guilds"]
         guild_data = await CachedDB.find_one(guild, {"id": context.guild.id})
 
         if not guild_data:
@@ -68,9 +71,88 @@ class Economy(commands.Cog, name="🪙 Economy"):
             "$set": {"wallet": data["wallet"], "last_daily": time.time()}
         }
 
-        await CachedDB.update_one(db, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
+        await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
 
         await context.send(f"Added {guild_data['daily_cash']}$ to wallet")
+
+    @commands.hybrid_command(
+        name="rob",
+        description="Rob someone's wallet",
+        usage="rob <user>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.cooldown(1, 3600, commands.BucketType.user)
+    async def rob(self, context: Context, user: discord.Member) -> None:
+        if user == context.author:
+            await context.send("You can't rob yourself")
+            return
+
+        c = db["users"]
+        author_data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
+
+        if not author_data:
+            author_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
+            c.insert_one(author_data)
+
+        target_data = await CachedDB.find_one(c, {"id": user.id, "guild_id": context.guild.id})
+
+        if not target_data:
+            return await context.send("User has no wallet")
+
+        max_payout = target_data["wallet"] * 0.2
+
+        if target_data["last_robbed_at"] > time.time() - 10800:
+            eta = target_data["last_robbed_at"] + 10800
+            await context.send(
+                f"This user can be robbed again <t:{int(eta)}:R>"
+            )
+            return
+
+        result = random.randint(0, 2)
+        if result == 0:
+            payout = random.randint(1, max_payout)
+            author_data["wallet"] += payout
+            target_data["wallet"] -= payout
+
+            newdata = {
+                "$set": {
+                    "wallet": author_data["wallet"],
+                }
+            }
+
+            newdata2 = {
+                "$set": {
+                    "wallet": target_data["wallet"],
+                    "last_robbed_at": time.time()
+                }
+            }
+
+            await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
+            await CachedDB.update_one(c, {"id": user.id, "guild_id": context.guild.id}, newdata2)
+
+            await context.send(f"You successfully robbed {user} and got {payout}$")
+        elif result == 1:
+            payout = min(random.randint(1, max_payout//2), author_data["wallet"]//3, 10000)
+            author_data["wallet"] -= payout
+            target_data["wallet"] += payout
+
+            newdata = {
+                "$set": {
+                    "wallet": author_data["wallet"],
+                }
+            }
+
+            newdata2 = {
+                "$set": {"wallet": target_data["wallet"], "last_robbed_at": time.time()}
+            }
+
+            await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
+            await CachedDB.update_one(c, {"id": user.id, "guild_id": context.guild.id}, newdata2)
+
+            await context.send(f"You got caught by {user} and they took {payout}$")
+        else:
+            await context.send(f"You failed to rob {user}, but lost nothing")
+
 
     @commands.hybrid_command(
         name="baltop",
@@ -79,7 +161,8 @@ class Economy(commands.Cog, name="🪙 Economy"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def baltop(self, context: Context) -> None:
-        data = db.find({"guild_id": context.guild.id}).sort("wallet", -1).limit(10)
+        c = db["users"]
+        data = c.find({"guild_id": context.guild.id}).sort("wallet", -1).limit(10)
 
         embed = discord.Embed(
             title="Top Balances",
@@ -117,20 +200,21 @@ class Economy(commands.Cog, name="🪙 Economy"):
             await context.send("You can't pay yourself")
             return
 
-        data = await CachedDB.find_one(db, {"id": context.author.id, "guild_id": context.guild.id})
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
 
         if not data:
             data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
-            db.insert_one(data)
+            c.insert_one(data)
         if data["wallet"] < amount:
             await context.send("You don't have enough money")
             return
 
-        target_user_data = db.find_one({"id": user.id, "guild_id": context.guild.id})
+        target_user_data = c.find_one({"id": user.id, "guild_id": context.guild.id})
         if not target_user_data:
             target_user_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
 
-            db.insert_one(target_user_data)
+            c.insert_one(target_user_data)
         data["wallet"] -= amount
         target_user_data["wallet"] += amount
         newdata = {
@@ -140,8 +224,8 @@ class Economy(commands.Cog, name="🪙 Economy"):
             "$set": {"wallet": target_user_data["wallet"]}
         }
 
-        await CachedDB.update_one(db, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
-        await CachedDB.update_one(db, {"id": user.id, "guild_id": context.guild.id}, newdata2)
+        await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
+        await CachedDB.update_one(c, {"id": user.id, "guild_id": context.guild.id}, newdata2)
 
         await context.send(f"Paid {amount}$ to {user.mention}")
 
@@ -153,18 +237,20 @@ class Economy(commands.Cog, name="🪙 Economy"):
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
     async def set(self, context: Context, user: discord.Member, amount: int) -> None:
-        target_user_data = await CachedDB.find_one(db, {"id": user.id, "guild_id": context.guild.id})
+        c = db["users"]
+
+        target_user_data = await CachedDB.find_one(c, {"id": user.id, "guild_id": context.guild.id})
 
         if not target_user_data:
             target_user_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
 
-            db.insert_one(target_user_data)
+            c.insert_one(target_user_data)
 
         newdata = {
             "$set": {"wallet": amount}
         }
 
-        await CachedDB.update_one(db, {"id": user.id, "guild_id": context.guild.id}, newdata)
+        await CachedDB.update_one(c, {"id": user.id, "guild_id": context.guild.id}, newdata)
 
         await context.send(f"Set {user.mention}'s wallet to {amount}$")
 
@@ -179,11 +265,12 @@ class Economy(commands.Cog, name="🪙 Economy"):
             await context.send("You can't gamble a negative amount")
             return
 
-        data = await CachedDB.find_one(db, {"id": context.author.id, "guild_id": context.guild.id})
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
 
         if not data:
             data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
-            db.insert_one(data)
+            c.insert_one(data)
         if data["wallet"] < amount:
             await context.send("You don't have enough money")
             return
@@ -197,7 +284,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
             view=GamblingButton(amount, context.author.id),
         )
 
-    # TODO: MORE CACHING AFTER HERE
+    # TODO: MORE CACHING AFTER THIS POINT
 
     @commands.hybrid_command(
         name="farm",
@@ -206,10 +293,13 @@ class Economy(commands.Cog, name="🪙 Economy"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def farm(self, context: Context) -> None:
-        data = db.find_one({"id": context.author.id, "guild_id": context.guild.id})
+
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
+
         if not data:
             data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
-            db.insert_one(data)
+            c.insert_one(data)
 
         if not "farm" in data:
             data["farm"] = {
@@ -221,7 +311,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
             newdata = {
                 "$set": {"farm": data["farm"]}
             }
-            db.update_one(
+            c.update_one(
                 {"id": context.author.id, "guild_id": context.guild.id}, newdata
             )
 
@@ -268,10 +358,86 @@ class Economy(commands.Cog, name="🪙 Economy"):
         new_data = {
             "$set": {"farm": farmData}
         }
-        db.update_one(
+        c.update_one(
             {"id": context.author.id, "guild_id": context.guild.id}, new_data
         )
 
+class FarmModal(ui.Modal, title = "Buy Saplings (5$ per sapling)"):
+    def __init__(self, message):
+        super().__init__(timeout = 60)
+
+        self.message = message
+
+    amount = ui.TextInput(label = "Amount of Sapling", placeholder = "Type max to buy for all your money", style=discord.TextStyle.short, min_length = 1, max_length = 50)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        users = db["users"]
+        data = await CachedDB.find_one(users, {"id": interaction.user.id, "guild_id": interaction.guild.id})
+
+        value = self.amount.value
+
+        if value == "max":
+            value = data["wallet"] // 5
+        else:
+            if not value.isdigit():
+                await interaction.response.send_message("Please enter a valid number", ephemeral=True)
+                return
+
+        price = 5 * int(value)
+
+        if data["wallet"] < price:
+            await interaction.response.send_message(f"You cant afford {value} for ${price}", ephemeral=True)
+            return
+
+        data["wallet"] -= price
+        data["farm"]["saplings"] += int(value)
+
+        new_data = {
+            "$set": {"farm": data["farm"], "wallet": data["wallet"]}
+        }
+
+        await CachedDB.update_one(users, {"id": interaction.user.id, "guild_id": interaction.guild.id}, new_data)
+
+        await interaction.response.send_message(f"Bought {value} sapling(s) for ${price}", ephemeral=True)
+
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+
+        farmData = data["farm"]
+
+        embed = discord.Embed(
+            title="Farm",
+            description="Buy saplings to farm potatoes",
+            color=discord.Color.green(),
+        )
+
+        embed.add_field(
+            name="Saplings",
+            value=farmData["saplings"],
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Crops",
+            value=farmData["crops"],
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Harvestable",
+            value=farmData["harvestable"],
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Ready in",
+            value=f"<t:{int(farmData['ready_in'])}:R>",
+            inline=False,
+        )
+
+        embed.set_footer(text=f"Wallet: ${data['wallet']}")
+
+        await interaction.message.edit(embed=embed, view=FarmButton(interaction.user.id))
 
 
 class FarmButton(View):
@@ -280,144 +446,22 @@ class FarmButton(View):
         self.saplings = 0
         self.authorid = authorid
 
-    @button(label="Buy Saplings (100$/20)", style=discord.ButtonStyle.primary, custom_id="farm",emoji="🌱")
+    @button(label="Buy Saplings (show menu)", style=discord.ButtonStyle.primary, custom_id="farm",emoji="🌱")
     async def farm(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("You can't farm someone else's farm", ephemeral=True)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
-        if not data:
-            data = CONSTANTS.user_data_template(interaction.user.id, interaction.guild.id)
-            db.insert_one(data)
+        await interaction.response.send_modal(FarmModal(interaction.message))
 
-        if data["wallet"] < 100:
-            await interaction.response.send_message("You don't have enough money", ephemeral=True)
-            return
-
-        data["wallet"] -= 100
-
-        data["farm"]["saplings"] += 20
-        newdata = {
-            "$set": {
-                "wallet": data["wallet"],
-                "farm.saplings": data["farm"]["saplings"]
-                }
-        }
-        db.update_one(
-            {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
-        )
-
-        await interaction.response.send_message("You bought saplings for 100$", ephemeral=True)
-
-        farmData = data["farm"]
-
-        embed = discord.Embed(
-            title="Farm",
-            description="Buy saplings to farm potatoes",
-            color=discord.Color.green(),
-        )
-
-        embed.add_field(
-            name="Saplings",
-            value=farmData["saplings"],
-            inline=False,
-        )
-
-        embed.add_field(
-            name="Crops",
-            value=farmData["crops"],
-            inline=False,
-        )
-
-        embed.add_field(
-            name="Harvestable",
-            value=farmData["harvestable"],
-            inline=False,
-        )
-
-        embed.add_field(
-            name="Ready in",
-            value=f"<t:{int(farmData['ready_in'])}:R>",
-            inline=False,
-        )
-
-        embed.set_footer(text=f"Wallet: ${data['wallet']}")
-
-        await interaction.message.edit(embed=embed, view=FarmButton(self.authorid))
-
-    @button(label="Buy Saplings for all money", style=discord.ButtonStyle.primary, custom_id="farmall",emoji="🌱")
-    async def farmall(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id != self.authorid:
-            return await interaction.response.send_message("You can't farm someone else's farm", ephemeral=True)
-
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
-        if not data:
-            data = CONSTANTS.user_data_template(interaction.user.id, interaction.guild.id)
-            db.insert_one(data)
-
-        data["farm"]["saplings"] += int(0.2*data["wallet"])
-        wallet = data["wallet"]
-
-        data["wallet"] = 0
-
-
-        newdata = {
-            "$set": {
-                "wallet": data["wallet"],
-                "farm.saplings": data["farm"]["saplings"]
-                }
-        }
-        db.update_one(
-            {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
-        )
-
-        await interaction.response.send_message(f"You bought {0.2*wallet} saplings for ${wallet}", ephemeral=True)
-
-        farmData = data["farm"]
-
-        embed = discord.Embed(
-            title="Farm",
-            description="Buy saplings to farm potatoes",
-            color=discord.Color.green(),
-        )
-
-        embed.add_field(
-            name="Saplings",
-            value=farmData["saplings"],
-            inline=False,
-        )
-
-        embed.add_field(
-            name="Crops",
-            value=farmData["crops"],
-            inline=False,
-        )
-
-        embed.add_field(
-            name="Harvestable",
-            value=farmData["harvestable"],
-            inline=False,
-        )
-
-        embed.add_field(
-            name="Ready in",
-            value=f"<t:{int(farmData['ready_in'])}:R>",
-            inline=False,
-        )
-
-        embed.set_footer(text=f"Wallet: ${data['wallet']}")
-
-        await interaction.message.edit(embed=embed, view=FarmButton(self.authorid))
 
     @button(label="Plant Crops", style=discord.ButtonStyle.primary, custom_id="plant",emoji="🌾", row=1)
     async def plant(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("You can't plant someone else's crops", ephemeral=True)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
-        if not data:
-            data = CONSTANTS.user_data_template(interaction.user.id, interaction.guild.id)
-            db.insert_one(data)
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+
 
         farmData = data["farm"]
 
@@ -440,7 +484,7 @@ class FarmButton(View):
                 "farm.ready_in": farmData["ready_in"],
                 }
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -487,10 +531,8 @@ class FarmButton(View):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("You can't harvest someone else's crops", ephemeral=True)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
-        if not data:
-            data = CONSTANTS.user_data_template(interaction.user.id, interaction.guild.id)
-            db.insert_one(data)
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         farmData = data["farm"]
 
@@ -513,7 +555,7 @@ class FarmButton(View):
                 "farm.ready_in": farmData["ready_in"],
                 }
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -633,7 +675,8 @@ class BlackjackView(View):
         if self.game_over:
             return await interaction.response.send_message("The game is over", ephemeral=True)
 
-        user = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        user = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         self.player_hand.append(self.deck.pop())
         self.player_score = self.calculate_score(self.player_hand)
@@ -643,7 +686,7 @@ class BlackjackView(View):
             user["wallet"] -= self.amount
 
             newdata = {"$set": {"wallet": user["wallet"]}}
-            db.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
+            c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
 
             embed = self.update_embed()
             return await interaction.response.edit_message(content="You went over 21! You lost", embed=embed, view=self)
@@ -653,7 +696,7 @@ class BlackjackView(View):
             user["wallet"] += self.amount
 
             newdata = {"$set": {"wallet": user["wallet"]}}
-            db.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
+            c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
 
             embed = self.update_embed()
             return await interaction.response.edit_message(content="You got 21! You won", embed=embed, view=self)
@@ -669,7 +712,8 @@ class BlackjackView(View):
         if self.game_over:
             return await interaction.response.send_message("The game is over", ephemeral=True)
 
-        user = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        user = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         while self.dealer_score < 17:
             self.dealer_hand.append(self.deck.pop())
@@ -680,7 +724,7 @@ class BlackjackView(View):
             user["wallet"] += self.amount
 
             newdata = {"$set": {"wallet": user["wallet"]}}
-            db.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
+            c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
 
             embed = self.update_embed()
             return await interaction.response.edit_message(content="Dealer went over 21! You won", embed=embed, view=self)
@@ -690,7 +734,7 @@ class BlackjackView(View):
             user["wallet"] -= self.amount
 
             newdata = {"$set": {"wallet": user["wallet"]}}
-            db.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
+            c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
 
             embed = self.update_embed()
             return await interaction.response.edit_message(content="Dealer won", embed=embed, view=self)
@@ -731,7 +775,8 @@ class HeadsOrTailsButton(View):
         await asyncio.sleep(1)
         coin = random.choice(["heads", "tails"])
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if coin == "heads":
             await interaction.message.edit(content=f"The coin landed on {coin}! You won {self.amount * 2}$")
@@ -745,7 +790,7 @@ class HeadsOrTailsButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -759,7 +804,8 @@ class HeadsOrTailsButton(View):
         await asyncio.sleep(1)
         coin = random.choice(["heads", "tails"])
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if coin == "tails":
             await interaction.message.edit(content=f"The coin landed on {coin}! You won {self.amount * 2}$")
@@ -773,7 +819,7 @@ class HeadsOrTailsButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user .id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -793,7 +839,8 @@ class RollButton(View):
         await asyncio.sleep(1)
         number = random.randrange(1, 6)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if number == 1:
             await interaction.message.edit(content=f"The dice landed on {number}! You won {self.amount * 5}$")
@@ -807,7 +854,7 @@ class RollButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -820,7 +867,8 @@ class RollButton(View):
         await asyncio.sleep(1)
         number = random.randrange(1, 6)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if number == 2:
             await interaction.message.edit(content=f"The dice landed on {number}! You won {self.amount * 5}$")
@@ -834,7 +882,7 @@ class RollButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -847,7 +895,8 @@ class RollButton(View):
         await asyncio.sleep(1)
         number = random.randrange(1, 6)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if number == 3:
             await interaction.message.edit(content=f"The dice landed on {number}! You won {self.amount * 5}$")
@@ -861,7 +910,8 @@ class RollButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -874,7 +924,8 @@ class RollButton(View):
         await asyncio.sleep(1)
         number = random.randrange(1, 6)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if number == 4:
             await interaction.message.edit(content=f"The dice landed on {number}! You won {self.amount * 5}$")
@@ -888,7 +939,8 @@ class RollButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -897,12 +949,12 @@ class RollButton(View):
         if interaction.user.id != self.authorid:
             return
 
-
         await interaction.message.edit(content="Rolling the dice...", view=None)
         await asyncio.sleep(1)
         number = random.randrange(1, 6)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if number == 5:
             await interaction.message.edit(content=f"The dice landed on {number}! You won {self.amount * 5}$")
@@ -916,7 +968,7 @@ class RollButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
@@ -930,7 +982,8 @@ class RollButton(View):
         await asyncio.sleep(1)
         number = random.randrange(1, 6)
 
-        data = db.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        c = db["users"]
+        data = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
 
         if number == 6:
             await interaction.message.edit(content=f"The dice landed on {number}! You won {self.amount * 5}$")
@@ -944,12 +997,9 @@ class RollButton(View):
         newdata = {
             "$set": {"wallet": data["wallet"]}
         }
-        db.update_one(
+        c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
-
-
-
 
 async def setup(bot) -> None:
     await bot.add_cog(Economy(bot))
