@@ -121,5 +121,319 @@ class Server(commands.Cog, name="⚙️ Server"):
                 else:
                     await context.send("Failed to download the emoji")
 
+    @commands.hybrid_group(
+        name="settings",
+        description="Command to change server settings",
+        aliases=["setting"],
+        usage="settings <subcommand> [args]"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def settings(self, context: Context) -> None:
+        subcommands = [cmd for cmd in self.settings.walk_commands()]
+
+        data = []
+
+        for subcommand in subcommands:
+            description = subcommand.description.partition("\n")[0]
+            data.append(f"{await self.bot.get_prefix(context)}settings {subcommand.name} - {description}")
+
+        help_text = "\n".join(data)
+        embed = discord.Embed(
+            title=f"Help: Settings", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{help_text}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @settings.command(
+        name="show",
+        description="Show server settings",
+        usage="settings show"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def show(self, context: Context) -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        embed = discord.Embed(
+            title="Server Settings",
+            color=discord.Color.blue()
+        )
+
+        embed.add_field( name="Daily Cash", value=data["daily_cash"] )
+        embed.add_field( name="Tickets Category",
+                        value=context.guild.get_channel(data["tickets_category"]).name.capitalize() if data["tickets_category"] else "None" )
+        embed.add_field( name="Tickets Support Role",
+                        value=context.guild.get_role(data["tickets_support_role"]).mention if data["tickets_support_role"] else "None" )
+        embed.add_field( name="Log Channel", value=context.guild.get_channel(data["log_channel"]).mention if data["log_channel"] else "None" )
+        embed.add_field( name="Level Roles", value="`/setting level_roles show`")
+        embed.add_field( name="Level Announce Channel",
+                        value=context.guild.get_channel( data["level_announce_channel"]).mention if (
+                                "level_announce_channel" in data and context.guild.get_channel(data["level_announce_channel"]) != None
+                            ) else "None"
+                        )
+        embed.add_field( name="Should announce levelup", value=data["should_announce_levelup"] if "should_announce_levelup" in data else "idk")
+
+        await context.send(embed=embed)
+
+    @settings.command(
+        name="announce-levelup",
+        description="Should levelups be announced?",
+        usage="settings announce-levelup <enabled>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_roles=True)
+    async def should_announce_levelup(self, context: Context, enabled: bool) -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        newdata = { "$set": { "should_announce_levelup": enabled } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set should announce levelup to {enabled}")
+
+    @settings.command(
+        name="daily-cash",
+        description="Set daily cash amount",
+        usage="settings daily-cash <amount>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(administrator=True)
+    async def daily_cash(self, context: Context, amount: int) -> None:
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        newdata = { "$set": { "daily_cash": amount } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set daily cash to {amount}")
+
+    @settings.command(
+        name="tickets-category",
+        description="Set category where tickets are created",
+        usage="settings tickets-category <category>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(administrator=True)
+    async def tickets_category(self, context: Context, category: discord.CategoryChannel) -> None:
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        newdata = { "$set": { "tickets_category": category.id } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set tickets category to {category.mention}")
+
+    @settings.command(
+        name="level-up-channel",
+        description="Set level up announce channel",
+        usage="settings level-up-channel <channel>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def level_up_channel(self, context: Context, channel: discord.TextChannel) -> None:
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        newdata = { "$set": { "level_announce_channel": channel.id } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set level announce channel to {channel.mention}")
+
+    @settings.command(
+        name="tickets-support-role",
+        description="Set ticket support role",
+        usage="settings tickets-support-role <role>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_roles=True)
+    async def tickets_support_role(self, context: Context, role: discord.Role) -> None:
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        newdata = { "$set": { "tickets_support_role": role.id } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set tickets support role to {role.mention}")
+
+    @settings.command(
+        name="log-channel",
+        description="Set log channel",
+        usage="settings log-channel <channel>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def log_channel(self, context: Context, channel: discord.TextChannel) -> None:
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        newdata = { "$set": { "log_channel": channel.id } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set log channel to {channel.mention}")
+
+    @settings.command(
+        name="default-role",
+        description="Set default role to be given to new members",
+        usage="settings default-role <role>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_roles=True)
+    async def default_role(self, context: Context, role: discord.Role) -> None:
+        c = db["guilds"]
+
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        dangerous_permissions = [
+            "administrator",
+            "manage_guild",
+            "manage_roles",
+            "manage_channels",
+            "manage_messages",
+            "kick_members",
+            "ban_members",
+            "manage_webhooks",
+            "manage_emojis",
+            "manage_nicknames",
+        ]
+
+        for permission in dangerous_permissions:
+            if getattr(role.permissions, permission):
+                return await context.send("The role has dangerous permissions. Please choose a role without dangerous permissions.")
+
+        newdata = { "$set": { "default_role": role.id } }
+
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set default role to {role.name}")
+
+    @settings.group(
+        name="level-roles",
+        description="Commands to set up level roles",
+        usage="settings level-roles"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_roles=True)
+    async def level_roles(self, context: Context) -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        embed = discord.Embed(
+            title="Level Roles",
+            color=discord.Color.blue()
+        )
+
+
+        for r in data["level_roles"]:
+            embed.add_field(
+                name=r,
+                value=context.guild.get_role(data["level_roles"][r]).mention
+            )
+
+        await context.send(embed=embed)
+
+    @level_roles.command(
+        name="show",
+        description="Show level roles",
+        usage="settings level-roles show"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_roles=True)
+    async def show_level_roles(self, context: Context) -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        embed = discord.Embed(
+            title="Level Roles",
+            color=discord.Color.blue()
+        )
+
+        for r in data["level_roles"]:
+            embed.add_field(
+                name=r,
+                value=context.guild.get_role(data["level_roles"][r]).mention
+            )
+
+        await context.send(embed=embed)
+
+
+    @level_roles.command(
+        name="set",
+        description="Set level roles",
+        usage="settings level-roles set <level> <role>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_roles=True)
+    async def set(self, context: Context, level: int, role: discord.Role) -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.guild_data_template(context.guild.id)
+            c.insert_one(data)
+
+        level_roles = data["level_roles"]
+        level_roles[str(level)] = role.id
+
+        newdata = { "$set": { "level_roles": level_roles } }
+        c.update_one({"id": context.guild.id}, newdata)
+
+        await context.send(f"Set level {level} role to {role.name}")
+
 async def setup(bot) -> None:
     await bot.add_cog(Server(bot))
