@@ -695,7 +695,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     )
 
                     embed.set_author(name=member, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
-                    embed.set_footer(text="Bot will be kicked")
+                    embed.set_footer(text="Bot will be kicked, authorize a bot with /antinuke bot authorize <id>")
 
                     log_channel = member.guild.get_channel(guild["log_channel"])
 
@@ -1356,7 +1356,6 @@ class Security(commands.Cog, name="🛡️ Security"):
         guild_owner = context.guild.owner
 
         if context.author != guild_owner:
-
             users = db["users"]
             user_data = users.find_one({"id": context.author.id, "guild_id": context.guild.id})
 
@@ -1433,20 +1432,41 @@ class Security(commands.Cog, name="🛡️ Security"):
         await context.send(embed=embed)
 
     @antinuke_bot.command(
-        name="add",
+        name="authorize",
         description="Add a bot to the authorized bots list (guild owner/trusted only)",
-        usage="antinuke bot add <bot_id>"
+        usage="antinuke bot authorize <bot_id>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def antinuke_bot_add(self, context: Context, bot_id: int) -> None:
+    async def antinuke_bot_add(self, context: Context, bot_id: str) -> None:
+        await context.defer()
+
+        if not bot_id.isdigit():
+            await context.send("Invalid bot ID")
+            return
+
+        if context.author != context.guild.owner:
+            users = db["users"]
+            user_data = users.find_one({"id": context.author.id, "guild_id": context.guild.id})
+
+            if not user_data:
+                user_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
+                users.insert_one(user_data)
+
+            if "trusted" in user_data:
+                if not user_data["trusted"]:
+                    await context.send("You must be the guild owner or trusted to use this command!")
+                    return
+            else:
+                return
+
         guilds = db["guilds"]
         data = await CachedDB.find_one(guilds, { "id": context.guild.id })
 
         if "authorized_bots" in data:
-            if bot_id in data["authorized_bots"]:
+            if int(bot_id) in data["authorized_bots"]:
                 return await context.send("Bot is already authorized")
 
-            data["authorized_bots"].append(bot_id)
+            data["authorized_bots"].append(int(bot_id))
         else:
             data["authorized_bots"] = [bot_id]
 
