@@ -48,7 +48,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Message Deleted",
             description=f"Message sent by {message.author.mention} deleted in {message.channel.mention}",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         embed.add_field(
@@ -87,7 +87,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Message Edited",
             description=f"Message sent by {before.author.mention} edited in {before.channel.mention}",
-            color=discord.Color.orange()
+            color=0xfdfd96
         )
 
         embed.add_field(
@@ -124,7 +124,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Left",
             description=f"{user.mention} left the server",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         await log_channel.send(embed=embed)
@@ -150,7 +150,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Banned",
             description=f"{user.mention} was banned",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         await log_channel.send(embed=embed)
@@ -176,7 +176,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Unbanned",
             description=f"{user.mention} was unbanned",
-            color=discord.Color.green()
+            color=0x77dd77
         )
 
         await log_channel.send(embed=embed)
@@ -202,7 +202,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Kicked",
             description=f"{user.mention} was kicked",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         await log_channel.send(embed=embed)
@@ -264,7 +264,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Bulk Message Delete",
             description=f"{len(messages)} messages were deleted",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         c = db["guilds"]
@@ -290,7 +290,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title = "Channel Created",
             description = f"Channel {channel.mention} was created",
-            color = discord.Color.green()
+            color = 0x77dd77
         )
 
         c = db["guilds"]
@@ -315,7 +315,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title = "Channel Deleted",
             description = f"Channel {channel.mention} ({channel.name}) was deleted",
-            color = discord.Color.red()
+            color = 0xff6961
         )
 
         c = db["guilds"]
@@ -756,7 +756,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                         embed = discord.Embed(
                             title="Member Kicked",
                             description=f"{member.mention} was kicked by {context.author.mention}",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         embed.add_field(
@@ -866,7 +866,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                         embed = discord.Embed(
                             title="Member Banned",
                             description=f"{member.mention} was banned by {context.author.mention}",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         embed.add_field(
@@ -1013,7 +1013,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                             embed = discord.Embed(
                                 title="Member Unbanned",
                                 description=f"{user.mention} was unbanned by {context.author.mention}",
-                                color=discord.Color.green()
+                                color=0x77dd77
                             )
 
                             await log_channel.send(embed=embed)
@@ -1438,7 +1438,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         embed = discord.Embed(
             title=f"Warnings for {user}",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         for w in data["warnings"]:

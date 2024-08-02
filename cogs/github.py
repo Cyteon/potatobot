@@ -31,7 +31,8 @@ class Github(commands.Cog, name="🖧 Github"):
     @commands.hybrid_group(
         name="github",
         description="Commands related to GitHub",
-        usage="github <subcommand> [args]"
+        usage="github <subcommand> [args]",
+        aliases=["gh"],
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.allowed_installs(guilds=True, users=True)

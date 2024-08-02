@@ -91,7 +91,7 @@ class DiscordBot(commands.AutoShardedBot):
             command_prefix=self.get_prefix,
             intents=intents,
             help_command=None,
-            owner_ids=set([int(os.getenv("OWNER_ID")), 1131236182899052696]),
+            owner_ids=set([int(os.getenv("OWNER_ID"))]),
         )
         self.logger = logger
         self.config = config

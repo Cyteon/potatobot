@@ -563,7 +563,6 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
         await context.channel.set_permissions(member, overwrite=None)
         await context.channel.edit(name=f"closed-{context.channel.name}")
 
-
         os.remove(log_file)
 
         await context.channel.send(

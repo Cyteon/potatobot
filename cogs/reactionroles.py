@@ -12,7 +12,6 @@ db = DBClient.db
 
 from utils import Checks
 
-# Here we name the cog and create a new class for the cog.
 class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -171,6 +170,5 @@ class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
                 await CachedDB.update_one(db["reactionroles"], {"message_id": message_id}, {"$set": {"roles": message_data["roles"]}})
                 await context.send("Reaction role added.")
 
-# And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
 async def setup(bot) -> None:
     await bot.add_cog(ReactionRoles(bot))

@@ -157,7 +157,6 @@ class Economy(commands.Cog, name="🪙 Economy"):
         else:
             await context.send(f"You failed to rob {user}, but lost nothing")
 
-
     @commands.hybrid_command(
         name="baltop",
         description="See the top 10 richest users",
@@ -328,7 +327,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         embed = discord.Embed(
             title="Farm",
             description="Buy saplings to farm potatoes",
-            color=discord.Color.green(),
+            color=0x77dd77,
         )
 
         embed.add_field(
@@ -412,7 +411,7 @@ class FarmModal(ui.Modal, title = "Buy Saplings (5$ per sapling)"):
         embed = discord.Embed(
             title="Farm",
             description="Buy saplings to farm potatoes",
-            color=discord.Color.green(),
+            color=0x77dd77,
         )
 
         embed.add_field(
@@ -499,7 +498,7 @@ class FarmButton(View):
         embed = discord.Embed(
             title="Farm",
             description="Buy saplings to farm potatoes",
-            color=discord.Color.green(),
+            color=0x77dd77,
         )
 
         embed.add_field(
@@ -569,7 +568,7 @@ class FarmButton(View):
         embed = discord.Embed(
             title="Farm",
             description="Buy saplings to farm potatoes",
-            color=discord.Color.green(),
+            color=0x77dd77,
         )
 
         embed.add_field(
@@ -666,7 +665,7 @@ class BlackjackView(View):
         return score
 
     def update_embed(self):
-        embed = discord.Embed(title="Blackjack", color=discord.Color.green())
+        embed = discord.Embed(title="Blackjack", color=0x77dd77)
         embed.add_field(name="Your hand", value=f"{self.player_hand} ({self.player_score})", inline=False)
         embed.add_field(name="Dealer's hand", value=f"{self.dealer_hand[0]} and hidden", inline=False)  # Show one dealer card
         return embed

@@ -1,6 +1,5 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-
 import random
 import discord
 import os
@@ -14,21 +13,12 @@ from io import BytesIO
 from discord.ui import Button, View
 from typing import List
 
-
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageFont
 
 from utils import Checks
-
-subcommands = [
-    "blur",
-    "pixelate",
-    "trigger",
-    "jail",
-    "wasted"
-]
 
 TENOR_API_KEY = os.getenv("TENOR_API_KEY")
 

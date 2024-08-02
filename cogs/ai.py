@@ -1,9 +1,7 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 FILTER_LIST = ["@everyone", "@here", "<@&", "discord.gg", "discord.com/invite"]
-WORD_BLACKLIST = ["Nigger", "Nigga"] # REMOVED FOR UHHHHH TESTING
-AUTO_BLACKLIST_TRIGGER = ["minor", "underage", "child", "kid"]
-#WORD_BLACKLIST = ["Nigger", "Nigga", "Packi", "Blackie", "Blacky", "N*****", "Rape", "Rapist", "@everyone", "@here", "<@&"]
+WORD_BLACKLIST = ["Nigger", "Nigga"]
 
 import discord
 import requests
@@ -58,7 +56,6 @@ secret_key = os.getenv('FUSION_SECRET_KEY')
 
 ai_temp_disabled = False
 
-# Startup
 ai_channels = []
 c = db["ai_channels"]
 data = c.find_one({ "listOfChannels": True })
@@ -100,9 +97,7 @@ def prompt_ai(
     c = db["ai_convos"]
     data = {}
 
-    messageArray = [
-
-    ]
+    messageArray = []
 
     if channelId != 0:
         data = CachedDB.sync_find_one(c, { "isChannel": True, "id": channelId })
@@ -122,11 +117,6 @@ def prompt_ai(
             data = { "isChannel": False, "id": authorId, "messageArray": [], "expiresAt": time.time()+604800 }
 
             c.insert_one(data)
-
-    # add previous messages
-
-    #add prompt
-
 
     messageArray.append(
         {
@@ -204,7 +194,7 @@ def prompt_ai(
             c, { "isChannel": False, "id": authorId}, newdata
         )
 
-    ai_response = ai_response.replace("</s>", " ")
+    ai_response = ai_response.replace("</s>", " ") # It kept sending this somtimes
 
     for word in WORD_BLACKLIST:
         if word.lower() in ai_response.lower():
@@ -218,8 +208,6 @@ def prompt_ai(
         ai_response =  ai_response.replace(word, "[FILTERED]")
 
     return ai_response
-
-
 
 class Text2ImageAPI:
     def __init__(self, url):
@@ -265,7 +253,6 @@ class Text2ImageAPI:
             attempts -= 1
             time.sleep(delay)
 
-
 class Ai(commands.Cog, name="🤖 AI"):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -290,7 +277,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         if message.content.startswith(await self.bot.get_prefix(message)):
             return
 
-
         if self.ai_temp_disabled:
             await message.reply("AI is temporarily disabled due to techincal difficulties")
             return
@@ -314,7 +300,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             if user_data["blacklisted"]:
                 await message.reply("**You are blacklisted from using the bot, reason: " + user_data["blacklist_reason"] + "**")
                 return
-
 
         if retry_after:
             embed = discord.Embed(
@@ -506,7 +491,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             { "id": context.author.id }, newdata
         )
 
-
         client = Groq(api_key=get_api_key())
 
         userInfo = { "user": context.author }
@@ -562,8 +546,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         data = await loop.run_in_executor(None, functools.partial(prompt_ai, "Hello", groq_client=client))
 
         await context.channel.edit(slowmode_delay=5)
-
-        # if data is longer than 2k characters,
 
         await context.send(data)
 
@@ -673,7 +655,6 @@ class Ai(commands.Cog, name="🤖 AI"):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image(self, context: commands.Context, prompt: str) -> None:
-        # Create a separate task for the image generation
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": context.author.id})
 
@@ -709,7 +690,6 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         if user_data["inspect"]["ai_requests"] == 0:
             await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -789,7 +769,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             user_data = CONSTANTS.user_global_data_template(context.author.id)
             users_global.insert_one(user_data)
 
-
         if profanity.contains_profanity(prompt):
             newdata ={
                 "$inc": { "inspect.nsfw_requests": 1}
@@ -813,7 +792,6 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         if user_data["inspect"]["ai_requests"] == 0:
             await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -881,7 +859,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             if not context.channel.is_nsfw():
                 prompt = "NONE"
                 await context.send("The system prompt contains profanity and this channel is not marked as NSFW. Please use an NSFW channel for NSFW prompts.")
-
 
         newdata = {
                 "$set": { "system_prompt": prompt }

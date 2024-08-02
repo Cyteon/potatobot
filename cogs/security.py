@@ -1,6 +1,5 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-
 import discord
 import asyncio
 import datetime
@@ -16,7 +15,7 @@ from utils import CONSTANTS, DBClient, Checks, CachedDB
 KICK_TRESHOLD = 5
 BAN_TRESHOLD = 3
 DELETE_TRESHOLD = 2
-PING_TRESHOLD = 1
+PING_TRESHOLD = 2
 WEBHOOK_TRESHOLD = 40
 
 client = DBClient.client
@@ -99,7 +98,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="AntiSpam Warning",
                             description=f"Webhook **{message.webhook_id}** has been deleted for spamming",
-                            color=discord.Color.green()
+                            color=0x77dd77
                         )
 
                         if log_channel != None:
@@ -108,7 +107,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="AntiSpam Warning",
                             description=f"Unable to delete webhook **{message.webhook_id}** for spamming, please delete it manually",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         if log_channel != None:
@@ -118,7 +117,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="AntiSpam Warning",
                         description=f"Webhook **{message.webhook_id}** has triggered the antispam system, last message: `{message.content}`",
-                        color=discord.Color.orange()
+                        color=0xfdfd96
                     )
 
                     if log_channel != None:
@@ -131,27 +130,12 @@ class Security(commands.Cog, name="🛡️ Security"):
                 if message.author.guild_permissions.mention_everyone:
                     ping_cache[message.author] += len(message.role_mentions) * 2
 
-            if len(message.mentions) > 0:
-                if message.author == message.guild.owner:
-                    return
-
-                ping_cache[message.author] += len(message.mentions)/2
-
-                if message.author in message.mentions:
-                    ping_cache[message.author] -= 0.5
-
             if "@everyone" in message.content.lower() or "@here" in message.content.lower():
-                if message.author == message.guild.owner:
-                    return
-
                 if message.author.guild_permissions.mention_everyone:
-                    ping_cache[message.author] += 11
-
+                    ping_cache[message.author] += 1
 
             if ping_cache[message.author] > PING_TRESHOLD:
                 ping_cache[message.author] = 0
-                if message.author == message.guild.owner:
-                    return
 
                 users = db["users"]
                 user_data = await CachedDB.find_one(users, {"id": message.author.id, "guild_id": message.guild.id})
@@ -185,7 +169,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                 embed = discord.Embed(
                     title="AntiSpam Warning",
                     description=f"**{message.author.mention}** has triggered the antispam system, last message: `{message.content}`",
-                    color=discord.Color.orange()
+                    color=0xfdfd96
                 )
 
                 try:
@@ -206,7 +190,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="You have been muted",
                             description=f"You have been muted for an hour in **{message.guild.name}** for mass pinging",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         await message.author.send(embed=embed)
@@ -219,7 +203,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="User Muted",
                         description=f"**{message.author.mention}** has been muted for mass pinging",
-                        color=discord.Color.red()
+                        color=0xff6961
                     )
 
                     if log_channel != None:
@@ -228,6 +212,10 @@ class Security(commands.Cog, name="🛡️ Security"):
                     self.users_cant_be_moderated.append(message.author.id)
         else:
             ping_cache[message.author] = 0
+
+            if "@everyone" in message.content.lower() or "@here" in message.content.lower():
+                if message.author.guild_permissions.mention_everyone:
+                    ping_cache[message.author] += 1
 
     @commands.Cog.listener()
     async def on_guild_role_create(self, role: discord.Role) -> None:
@@ -264,7 +252,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                             embed = discord.Embed(
                                 title="AntiNuke Warning",
                                 description=f"**{user.mention}** created a dangerous role",
-                                color=discord.Color.orange()
+                                color=0xfdfd96
                             )
 
                             log_channel = role.guild.get_channel(guild["log_channel"])
@@ -281,7 +269,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="Unable to delete role",
                             description=f"**{user.mention}** created a dangerous role, but I was unable to delete it",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                     log_channel = role.guild.get_channel(guild["log_channel"])
@@ -292,7 +280,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="AntiNuke Alert",
                         description=f"**{user.mention}** tried to create a dangerous role!",
-                        color=discord.Color.red()
+                        color=0xff6961
                     )
 
                     await log_channel.send(embed=embed)
@@ -338,7 +326,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                             embed = discord.Embed(
                                 title="AntiNuke Warning",
                                 description=f"**{user.mention}** gave **{after.mention}** dangerous permissions",
-                                color=discord.Color.orange()
+                                color=0xfdfd96
                             )
 
                             log_channel = after.guild.get_channel(guild["log_channel"])
@@ -359,7 +347,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="AntiNuke Alert",
                         description=f"**{user.mention}** tried to give **{after.mention}** dangerous permissions!",
-                        color=discord.Color.red()
+                        color=0xff6961
                     )
 
                     await log_channel.send(embed=embed)
@@ -367,7 +355,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="Role Changes Reverted",
                         description=f"**{before.mention}** has been reverted to its previous permissions!",
-                        color=discord.Color.green()
+                        color=0x77dd77
                     )
 
                     await log_channel.send(embed=embed)
@@ -425,7 +413,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="AntiNuke Warning",
                         description=f"**{user.mention}** has triggered the antinuke system, last banned user: **{banned_user.mention}**",
-                        color=discord.Color.orange()
+                        color=0xfdfd96
                     )
 
                     log_channel = discord_guild.get_channel(guild["log_channel"])
@@ -440,7 +428,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="User Banned",
                             description=f"**{user.mention}** has been banned for trying to mass ban members!",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         if log_channel != None:
@@ -449,7 +437,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="Unable to ban user",
                             description=f"**{user.mention}** could not be banned",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         if log_channel != None:
@@ -503,7 +491,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="AntiNuke Warning",
                         description=f"**{user.mention}** has triggered the antinuke system, last kicked user: **{member.mention}**",
-                        color=discord.Color.orange()
+                        color=0xfdfd96
                     )
 
                     log_channel = member.guild.get_channel(guild["log_channel"])
@@ -518,7 +506,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="User Banned",
                             description=f"**{user.mention}** has been banned for trying to mass kick members!",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         if log_channel != None:
@@ -527,7 +515,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="Unable to ban user",
                             description=f"**{user.mention}** could not be banned",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         if log_channel != None:
@@ -594,7 +582,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                         embed = discord.Embed(
                             title="User Banned",
                             description=f"**{user.mention}** has been banned for trying to mass delete channels!",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         if log_channel != None:
@@ -605,7 +593,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                     embed = discord.Embed(
                         title="AntiNuke Warning",
                         description=f"**{user.mention}** has triggered the antinuke system, last deleted channel: **{channel.mention}** ({channel.name})",
-                        color=discord.Color.orange()
+                        color=0xfdfd96
                     )
 
                     if log_channel != None:
@@ -627,7 +615,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                             embed = discord.Embed(
                                 title="Channel Restored",
                                 description=f"**{new_channel.mention}** has been restored!",
-                                color=discord.Color.green()
+                                color=0x77dd77
                             )
 
                             if log_channel != None:
@@ -636,7 +624,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                             embed = discord.Embed(
                                 title="This channel was nuked",
                                 description=f"**{new_channel.mention}** was nuked by **{user.mention}**, channel is restored but message log is gone",
-                                color=discord.Color.red()
+                                color=0xff6961
                             )
 
                             await new_channel.send(embed=embed)
@@ -647,7 +635,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                             embed = discord.Embed(
                                 title="Error",
                                 description=f"An error occured while trying to restore channel **{del_channel.name}**",
-                                color=discord.Color.red()
+                                color=0xff6961
                             )
 
                             embed.add_field(
@@ -1502,7 +1490,7 @@ class Security(commands.Cog, name="🛡️ Security"):
         embed = discord.Embed(
             title = "Confirm Action",
             description = "Are you sure you want to lockdown the server?",
-            color = discord.Color.red()
+            color = 0xff6961
         )
 
         await context.send(embed=embed, view=ConfirmView("lockdown", context.author))
