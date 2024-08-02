@@ -158,6 +158,8 @@ def prompt_ai(
         }
     )
 
+    ai_response = ""
+
     for model in models:
         try:
             ai_response = groq_client.chat.completions.create(
@@ -167,7 +169,7 @@ def prompt_ai(
 
             break
         except Exception as e:
-            pass
+            ai_response = f"Error: {e}"
 
     messageArray.append(
         {

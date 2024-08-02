@@ -23,6 +23,7 @@ def guild_data_template(guild_id):
         "default_role": 0,
         "lockdown": False,
         "oldperms": {},
+        "fakeperms": {},
         "authorized_bots": [],
         "disabled_commands": [], # I might add this later
         "starboard": {

@@ -48,6 +48,7 @@ class Owner(commands.Cog, name="owner"):
         usage="test-error <message>",
     )
     @commands.is_owner()
+    @Checks.has_perm(manage_channels=True)
     async def test_error(self, context: Context, *, message: str) -> None:
         raise Exception(message)
 
