@@ -88,18 +88,22 @@ class Economy(commands.Cog, name="🪙 Economy"):
             return
 
         c = db["users"]
+
+        target_data = await CachedDB.find_one(c, {"id": user.id, "guild_id": context.guild.id})
+
+        if not target_data:
+            return await context.send("User has no money")
+
+        if target_data["wallet"] == 0:
+            return await context.send("User has no money")
+
         author_data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
 
         if not author_data:
             author_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
             c.insert_one(author_data)
 
-        target_data = await CachedDB.find_one(c, {"id": user.id, "guild_id": context.guild.id})
-
-        if not target_data:
-            return await context.send("User has no wallet")
-
-        max_payout = target_data["wallet"] * 0.2
+        max_payout = target_data["wallet"] // 5
 
         if target_data["last_robbed_at"] > time.time() - 10800:
             eta = target_data["last_robbed_at"] + 10800
