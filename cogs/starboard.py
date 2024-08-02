@@ -141,8 +141,6 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
 
             await starboard_message.edit(content=label, embed=embed, view=JumpToMessageView(message))
 
-
-
     @commands.hybrid_group(
         name="starboard",
         description="Commands for managing the starboard.",

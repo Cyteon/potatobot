@@ -341,6 +341,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.command(
         name="prefix",
         description="Change the bot prefix",
+        usage="prefix <symbol>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -358,7 +359,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="groq-api-key",
-        description="Set API key for AI"
+        description="Set API key for AI (run in private channel please)",
+        usage="groq-api-key <key>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -390,6 +392,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         name="settings",
         description="Command to change server settings",
         aliases=["setting"],
+        usage="settings <subcommand> [args]"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -414,7 +417,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @settings.command(
         name="show",
-        description="Show server settings"
+        description="Show server settings",
+        usage="settings show"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -430,12 +434,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
             title="Server Settings",
             color=discord.Color.blue()
         )
-
-        #for s in subcommands:
-            #embed.add_field(
-                #name=s,
-                #value=str(data[s])
-            #)
 
         embed.add_field( name="Daily Cash", value=data["daily_cash"] )
         embed.add_field( name="Tickets Category",
@@ -454,8 +452,9 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await context.send(embed=embed)
 
     @settings.command(
-        name="should-announce-levelup",
-        description="Should announce levelup"
+        name="announce-levelup",
+        description="Should levelups be announced?",
+        usage="settings announce-levelup <enabled>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
@@ -475,7 +474,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @settings.command(
         name="daily-cash",
-        description="Set daily cash amount"
+        description="Set daily cash amount",
+        usage="settings daily-cash <amount>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(administrator=True)
@@ -494,11 +494,10 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         await context.send(f"Set daily cash to {amount}")
 
-
-
     @settings.command(
         name="tickets-category",
-        description="Set category where tickets are created"
+        description="Set category where tickets are created",
+        usage="settings tickets-category <category>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(administrator=True)
@@ -519,7 +518,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @settings.command(
         name="level-up-channel",
-        description="Set level up announce channel"
+        description="Set level up announce channel",
+        usage="settings level-up-channel <channel>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -540,7 +540,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @settings.command(
         name="tickets-support-role",
-        description="Set ticket support role"
+        description="Set ticket support role",
+        usage="settings tickets-support-role <role>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
@@ -561,7 +562,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @settings.command(
         name="log-channel",
-        description="Set log channel"
+        description="Set log channel",
+        usage="settings log-channel <channel>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -582,7 +584,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @settings.command(
         name="default-role",
-        description="Set default role to be given to new members"
+        description="Set default role to be given to new members",
+        usage="settings default-role <role>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
@@ -621,6 +624,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @settings.group(
         name="level-roles",
         description="Commands to set up level roles",
+        usage="settings level-roles"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
@@ -648,7 +652,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @level_roles.command(
         name="show",
-        description="Show level roles"
+        description="Show level roles",
+        usage="settings level-roles show"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
@@ -676,7 +681,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @level_roles.command(
         name="set",
-        description="Set level roles"
+        description="Set level roles",
+        usage="settings level-roles set <level> <role>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
@@ -699,14 +705,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="kick",
         description="Kick a user out of the server.",
+        usage="kick <user> [reason]",
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    @app_commands.describe(
-        user="The user that should be kicked.",
-        reason="The reason why the user should be kicked.",
-    )
     async def kick(
         self, context: Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
@@ -1151,7 +1154,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="lock",
-        description="Lock a channel."
+        description="Lock a channel.",
+        usage="lock [optional: channel]"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
@@ -1398,7 +1402,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @warnings.command(
         name="add",
-        description="Warn a user."
+        description="Warn a user."m
+        usage="warnings add <user> <reason>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
@@ -1423,7 +1428,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @warnings.command(
         name="list",
-        description="Get a user's warnings."
+        description="Get a user's warnings.",
+        usage="warnings list <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
@@ -1452,7 +1458,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @warnings.command(
         name="clear",
-        description="Clear a user's warnings."
+        description="Clear a user's warnings.",
+        usage="warnings clear <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
@@ -1473,12 +1480,15 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="recreate",
         description="Recreates channel with same settings",
-        usage="recreate"
+        usage="recreate [optional: channel]"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_channels=True)
     @commands.bot_has_permissions(manage_channels=True)
-    async def recreate(self, context: Context) -> None:
+    async def recreate(self, context: Context, channel: discord.TextChannel = None) -> None:
+        if not channel:
+            channel = context.channel
+
         await context.send("Are you sure you want to recreate this channel?", view=deleteconfirm(context.author, context.channel))
 
 class deleteconfirm(discord.ui.View):
