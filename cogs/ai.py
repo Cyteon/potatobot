@@ -366,7 +366,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await message.reply("By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity")
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await message.reply(embed=embed)
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -474,8 +477,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await context.send(embed=embed)
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -691,7 +696,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await context.reply(embed=embed)
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -793,8 +801,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await context.reply(embed=embed)
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
         }
