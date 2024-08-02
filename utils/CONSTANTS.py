@@ -15,7 +15,7 @@ def guild_data_template(guild_id):
         "tickets_support_role": 0,
         "log_channel": 0,
         "ai_access": False,
-        "should_announce_levelup": True,
+        "should_announce_levelup": False,
         "groq_api_key": "NONE",
         "level_announce_channel": 0,
         "jail_role": 0,

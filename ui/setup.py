@@ -394,7 +394,7 @@ class LoggingSetupView(discord.ui.View):
 
         embed = discord.Embed(
             title="Setup complete!",
-            description="The setup has been completed.",
+            description="We recommend you move the role 'Potato Bot' high up on the role list to make sure all features works properly",
             color=0x2F3136
         )
 
@@ -404,7 +404,7 @@ class LoggingSetupView(discord.ui.View):
     async def no(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         embed = discord.Embed(
             title="Setup complete!",
-            description="The setup has been completed.",
+            description="We recommend you move the role 'Potato Bot' high up on the role list to make sure all features works properly",
             color=0x2F3136
         )
 
