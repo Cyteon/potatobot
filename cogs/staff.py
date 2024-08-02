@@ -829,12 +829,17 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
             else:
                 messaged = False
                 try:
-                    await member.send(
-                        f"You were banned by **{context.author}** from **{context.guild.name}**!\nReason: {reason}"
+                    embed = discord.Embed(
+                        title="You were banned!",
+                        description=f"You were banned from **{context.guild.name}**",
+                        color=0xff6961
                     )
+
+                    embed.add_field(name="Reason", value=reason)
+
+                    await member.send(embed=embed)
                     messaged = True
                 except:
-                    # Couldn't send a message in the private messages of the user
                     pass
 
                 await member.ban(reason=reason, delete_message_days=0)
@@ -949,11 +954,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
             await context.guild.ban(user, reason="Softban", delete_message_days=7)
             await context.guild.unban(user, reason="Softban")
+
             embed = discord.Embed(
                 description=f"**{user}** was softbanned by **{context.author}**!",
                 color=0xBEBEFE,
             )
             await context.send(embed=embed)
+
         except Exception as e:
             embed = discord.Embed(
                 description="An error occurred while trying to softban the user, " + str(e),
@@ -982,11 +989,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                     await context.send(embed=embed)
 
                     try:
-                        await user.send(
-                            f"You were unbanned by **{context.author}** from **{context.guild.name}**!"
+                        embed = discord.Embed(
+                            title="You were unbanned!",
+                            description=f"You were unbanned from **{context.guild.name}**",
+                            color=0x77dd77
                         )
+
+                        await user.send(embed=embed)
                     except:
-                        # Couldn't send a message in the private messages of the user
                         pass
 
                     guilds = db["guilds"]
