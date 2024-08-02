@@ -1,0 +1,40 @@
+[project]
+name = "potatobot"
+version = "2.0.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "cyteon"},
+]
+dependencies = [
+    "aiohttp",
+    "redis",
+    "pillow==9.5.0",
+    "discord-py",
+    "python-dotenv",
+    "easy-pil",
+    "pymongo",
+    "lavalink==5.3.0",
+    "groq==0.5.0",
+    "better-profanity",
+    "pickledb",
+    "cryptography",
+    "deep-translator",
+    "discord-interactions-py",
+    "discord-ui",
+    "gtts",
+    "asyncpraw",
+    "fastapi",
+    "uvicorn",
+    "aioredis",
+    "asteval",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "GPLv3"}
+
+[tool.pdm]
+distribution = false
+ignore_package_warnings = true
+
+[tool.pdm.scripts]
+start = "python main.py"
