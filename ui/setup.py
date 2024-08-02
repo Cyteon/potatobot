@@ -1,36 +1,8 @@
-# This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
-
 import discord
 import asyncio
-from discord.ext import commands
-from discord.ext.commands import Context
 from utils import CONSTANTS, DBClient, Checks
 
-client = DBClient.client
-db = client.potatobot
-
-class SetupMenu(commands.Cog, name="✅ Setup"):
-    def __init__(self, bot) -> None:
-        self.bot = bot
-
-    @commands.hybrid_command(
-        name="setup",
-        description="It's setup time!!!!!!",
-        usage="testcommand"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    async def setup(self, context: Context) -> None:
-        if context.author.id != context.guild.owner.id:
-            await context.send("You must be the owner of the server to run this command.")
-            return
-
-        embed = discord.Embed(
-            title="Setup",
-            description="Let's set up your server!",
-            color=0x2F3136
-        )
-
-        await context.send(embed=embed, view=StartSetupView(context.guild.id))
+db = DBClient.db
 
 class StartSetupView(discord.ui.View):
     def __init__(self, server_id) -> None:
@@ -437,6 +409,3 @@ class LoggingSetupView(discord.ui.View):
         )
 
         await interaction.response.edit_message(embed=embed)
-
-async def setup(bot) -> None:
-    await bot.add_cog(SetupMenu(bot))

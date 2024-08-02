@@ -10,6 +10,8 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 from utils import Checks, DBClient, CachedDB, CONSTANTS
+from ui.setup import StartSetupView
+
 
 db = DBClient.db
 
@@ -17,6 +19,25 @@ class Server(commands.Cog, name="⚙️ Server"):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.prefixDB = bot.prefixDB
+
+    @commands.hybrid_command(
+        name="setup",
+        description="It's setup time!!!!!!",
+        usage="testcommand"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    async def setup(self, context: Context) -> None:
+        if context.author.id != context.guild.owner.id:
+            await context.send("You must be the owner of the server to run this command.")
+            return
+
+        embed = discord.Embed(
+            title="Setup",
+            description="Let's set up your server!",
+            color=0x2F3136
+        )
+
+        await context.send(embed=embed, view=StartSetupView(context.guild.id))
 
     @commands.command(
         name="prefix",
@@ -410,7 +431,6 @@ class Server(commands.Cog, name="⚙️ Server"):
             )
 
         await context.send(embed=embed)
-
 
     @level_roles.command(
         name="set",
