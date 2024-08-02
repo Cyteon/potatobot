@@ -6,6 +6,7 @@ Invite: https://discord.com/oauth2/authorize?client_id=1226487228914602005
 
 
 ## Run Locally
+Make sure you have [PDM](https://pdm-project.org/) installed.
 
 1. Clone the project
 
@@ -22,7 +23,7 @@ Invite: https://discord.com/oauth2/authorize?client_id=1226487228914602005
 3. Install python dependencies
 
 ```bash
-  pip install -r requirements.txt
+  pdm install
 ```
 
 4. Rename `.env.example` to `.env`, and populate the required values
@@ -31,5 +32,5 @@ Invite: https://discord.com/oauth2/authorize?client_id=1226487228914602005
 6. Run the bot
 
 ```bash
-  python main.py
+  pdm start
 ```
