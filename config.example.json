@@ -6,5 +6,6 @@
   "join_leave_webhooks": "",
   "origins": ["http://localhost", "http://localhost:3000"],
   "ssl_keyfile": "./ssl/example.com.key",
-  "ssl_certfile": "./ssl/example.com.pem"
+  "ssl_certfile": "./ssl/example.com.pem",
+  "bug_report_channel": "0000000000000000000"
 }
