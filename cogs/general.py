@@ -33,6 +33,10 @@ reddit = asyncpraw.Reddit(
     user_agent="PotatoBot",
 )
 
+# prolly safe to load a config.json
+with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json") as file:
+    config = json.load(file)
+
 class General(commands.Cog, name="⬜ General"):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -218,7 +222,7 @@ class General(commands.Cog, name="⬜ General"):
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(5, 3600, commands.BucketType.user)
     async def bug(self, context: Context, *, bug: str) -> None:
-        channel = self.bot.get_channel(1244584577989873684)
+        channel = self.bot.get_channel(int(config["bug_report_channel"]))
         embed = discord.Embed(
         	title="Bug Report",
             description=bug,
