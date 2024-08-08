@@ -3,7 +3,7 @@
 FILTER_LIST = ["@everyone", "@here", "<@&", "discord.gg", "discord.com/invite"]
 WORD_BLACKLIST = ["Nigger", "Nigga"] # REMOVED FOR UHHHHH TESTING
 AUTO_BLACKLIST_TRIGGER = ["minor", "underage", "child", "kid"]
-#WORD_BLACKLIST = ["Nigger", "Nigga", "Packi", "Blackie", "Blacky", "N*****", "Rape", "Rapist", "@everyone", "@here", "<@&"]
+#WORD_BLACKLIST = ["Nigger", "Nigga", "Packi", "Blackie", "Blacky", "N*****", "Rape", "Rapist", "@everyone", "@here", "<@&", "faggot", "fag", "tranny"]
 
 import discord
 import requests
