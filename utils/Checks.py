@@ -25,8 +25,7 @@ async def is_not_blacklisted(context: Context):
     else:
         return True
 
-# TODO: Make this
-# Coming soon
+# TODO: Add fakeperms
 def has_perm(**perms):
     def predicate(context: commands.Context):
         author_permissions = context.channel.permissions_for(context.author)

@@ -1,7 +1,7 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 FILTER_LIST = ["@everyone", "@here", "<@&", "discord.gg", "discord.com/invite"]
-WORD_BLACKLIST = ["Nigger", "Nigga"]
+WORD_BLACKLIST = ["nigger", "nigga", "n i g g e r"]
 
 import discord
 import requests
@@ -136,7 +136,7 @@ def prompt_ai(
         "instance owner/dev ID": os.getenv("OWNER_ID"),
         "support_server": "https://discord.gg/df8eCZDvxB",
         "website": "https://potato.cyteon.tech",
-        "bot_invite": "https://discord.com/oauth2/authorize?client_id=1226487228914602005",
+        "bot_invite": config["invite_link"],
         "source_code": "https://github.com/cyteon/potatobot",
         "special_emojis": "<:joos:1254878760218529873>",
         "notes": {
@@ -205,6 +205,7 @@ def prompt_ai(
 
     for word in FILTER_LIST:
         if word == "discord.gg":
+            # TODO: Fix where if someone makes ai say support server invite and another invite it dosent get filtered
             if systemInfo["support_server"] in ai_response:
                 continue
         ai_response =  ai_response.replace(word, "[FILTERED]")
@@ -719,8 +720,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         try:
             data = await loop.run_in_executor(None, functools.partial(self.generate_image, context, prompt))
         except Exception as e:
-            await msg.edit(content="An error occurred while generating the image: " + str(e))
-            return
+            await msg.edit(content="An error occurred while generating the image")
+            raise e
 
         for image in data:
             attachments.append(discord.File(BytesIO(base64.b64decode(image)), "ai_image.png"))

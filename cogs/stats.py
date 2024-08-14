@@ -5,6 +5,9 @@ import os
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 from datetime import datetime
+
+from easy_pil import Font
+
 from PIL import Image, ImageDraw, ImageFont
 import pickledb
 
@@ -98,7 +101,7 @@ class Stats(commands.Cog, name="📈 Stats"):
 
         img = Image.new('RGB', (1600, 800), color=(32, 34, 38))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype("Arial.ttf", 20)
+        font = Font.poppins(size=20)
 
         max_count = max(message_counts) if message_counts else 1
         max_count = max_count if max_count != 0 else 1  # Ensure max_count is never zero
@@ -153,7 +156,7 @@ class Stats(commands.Cog, name="📈 Stats"):
 
         img = Image.new('RGB', (1600, 800), color=(32, 34, 38))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype("Arial.ttf", 20)
+        font = Font.poppins(size=20)
 
         max_count = max(user_counts) if user_counts else 1
         max_count = max_count if max_count != 0 else 1

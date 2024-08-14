@@ -82,7 +82,7 @@ class General(commands.Cog, name="⬜ General"):
                 return
 
             embed = discord.Embed(
-                title=f"Help for {cmd.name}",
+                title=f"Command: {cmd.name}",
                 description=cmd.description,
                 color=0xBEBEFE
             )
@@ -129,9 +129,9 @@ class General(commands.Cog, name="⬜ General"):
             for name, param in params.items():
                 if name not in ["self", "context"]:
                     if param.default == inspect.Parameter.empty:
-                        param_list.append(f"{name}: Required")
+                        param_list.append(f"{name}: <Required>")
                     else:
-                        param_list.append(f"{name}: Optional, default: '{param.default}'")
+                        param_list.append(f"{name}: [Optional, default: '{param.default}']")
 
             params_str = "\n".join(param_list) if param_list else "None"
             embed.add_field(
