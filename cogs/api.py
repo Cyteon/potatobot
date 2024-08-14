@@ -16,7 +16,7 @@ class Api(commands.Cog, name="🌐 API"):
     @commands.hybrid_group(
         name="api",
         description="Commands for diffrent APIs",
-        usage="api <subcommand> <subcommand>",
+        usage="api <subcommand> [args]",
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -37,6 +37,7 @@ class Api(commands.Cog, name="🌐 API"):
 
     @api.command(
         name="minecraft",
+        aliases=["mc"],
         description="Get someones minecraft character",
         usage="api minecraft <username>"
     )
