@@ -217,7 +217,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
 
         target_user_data = c.find_one({"id": user.id, "guild_id": context.guild.id})
         if not target_user_data:
-            target_user_data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
+            target_user_data = CONSTANTS.user_data_template(user.id, context.guild.id)
 
             c.insert_one(target_user_data)
         data["wallet"] -= amount
