@@ -42,23 +42,38 @@ class Owner(commands.Cog, name="owner"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
-    @commands.command(
-        name="test-error",
-        description="Test error handling",
-        usage="test-error <message>",
+    @commands.hybrid_group(
+        name="dev",
+        description="Commands for devs",
+        usage="dev <subcommand> [args]",
     )
-    @commands.is_owner()
-    async def test_error(self, context: Context, *, message: str) -> None:
-        raise Exception(message)
+    @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def dev(self, context: Context) -> None:
+        prefix = await self.bot.get_prefix(context)
 
-    @commands.command(
+        cmds = "\n".join([f"{prefix}dev {cmd.name} - {cmd.description}" for cmd in self.dev.walk_commands()])
+
+        embed = discord.Embed(
+            title=f"Help: Dev", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{cmds}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @dev.command(
         name="sync",
         description="Sync the slash commands.",
-        usage="sync guild/global"
+        usage="dev sync guild/global"
     )
     @app_commands.describe(scope="The scope of the sync. Can be `global` or `guild`")
     @commands.is_owner()
     async def sync(self, context: Context, scope: str) -> None:
+        await context.defer()
+
         if scope == "global":
             await context.bot.tree.sync()
             embed = discord.Embed(
@@ -81,13 +96,15 @@ class Owner(commands.Cog, name="owner"):
         )
         await context.send(embed=embed)
 
-    @commands.command(
+    @dev.command(
         name="unsync",
         description="Unsync the slash commands",
-        usage="unsync guild/global"
+        usage="dev unsync guild/global"
     )
     @commands.is_owner()
     async def unsync(self, context: Context, scope: str) -> None:
+        await context.defer()
+
         if scope == "global":
             context.bot.tree.clear_commands(guild=None)
             await context.bot.tree.sync()
@@ -111,10 +128,10 @@ class Owner(commands.Cog, name="owner"):
         )
         await context.send(embed=embed)
 
-    @commands.command(
+    @dev.command(
         name="sudo",
         description="sus",
-        usage="sudo <user> <command> [args...]",
+        usage="dev sudo <user> <command> [args...]",
     )
     @commands.is_owner()
     async def sudo(self, context: Context, user: discord.Member, *, command: str) -> None:
@@ -123,10 +140,10 @@ class Owner(commands.Cog, name="owner"):
         message.content = context.prefix + command
         await self.bot.process_commands(message)
 
-    @commands.hybrid_command(
+    @dev.command(
         name="load",
         description="Load a cog",
-        usage="load <cog>",
+        usage="dev load <cog>",
     )
     @commands.is_owner()
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -145,10 +162,10 @@ class Owner(commands.Cog, name="owner"):
         )
         await context.send(embed=embed)
 
-    @commands.hybrid_command(
+    @dev.command(
         name="unload",
         description="Unloads a cog.",
-        usage="unload <cog>",
+        usage="dev unload <cog>",
     )
     @commands.is_owner()
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -167,10 +184,10 @@ class Owner(commands.Cog, name="owner"):
         )
         await context.send(embed=embed)
 
-    @commands.hybrid_command(
+    @dev.command(
         name="reload",
         description="Reloads a cog",
-        usage="reload <cog>",
+        usage="dev reload <cog>",
     )
     @app_commands.describe(cog="The name of the cog to reload")
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -190,10 +207,10 @@ class Owner(commands.Cog, name="owner"):
         )
         await context.send(embed=embed)
 
-    @commands.hybrid_command(
+    @dev.command(
         name="shutdown",
         description="bye",
-        usage="shutdown"
+        usage="dev shutdown"
     )
     @commands.is_owner()
     async def shutdown(self, context: Context) -> None:
@@ -201,7 +218,7 @@ class Owner(commands.Cog, name="owner"):
         await context.send(embed=embed)
         sys.exit(0)
 
-    @commands.hybrid_command(
+    @commands.command(
         name="say",
         description="talk",
         usage="say <message>",
@@ -210,12 +227,13 @@ class Owner(commands.Cog, name="owner"):
     async def say(self, context: Context, *, message: str) -> None:
         await context.channel.send(message)
 
-    @commands.hybrid_command(
+    @commands.command(
         name="embed",
         description="say smth in embed",
+        usage="embed <title> <description> [footer]",
     )
     @commands.is_owner()
-    async def embed(self, context: Context, title: str, description: str, footer: str = "") -> None:
+    async def embed(self, context: Context, description: str = "", title: str = "", footer: str = "") -> None:
         embed = discord.Embed(
             title=title, description=description, color=0xBEBEFE
         )
@@ -230,12 +248,10 @@ class Owner(commands.Cog, name="owner"):
         usage="reply <channel_id> <message_id> <reply>",
     )
     @commands.is_owner()
-    async def reply(self, context: Context, channel_id: int, message_id: int, *, reply: str) -> None:
-        channel = self.bot.get_channel(channel_id)
-        message = await channel.fetch_message(message_id)
+    async def reply(self, context: Context, message: discord.Message, *, reply: str) -> None:
         await message.reply(reply)
 
-    @commands.hybrid_command(
+    @dev.command(
         name="eval",
         description=":D",
         usage="eval <code>",
@@ -273,10 +289,10 @@ class Owner(commands.Cog, name="owner"):
         await context.send(result)
 
 
-    @commands.command(
-        name="enable_ai",
+    @dev.command(
+        name="enable-ai",
         description="Give server AI access",
-        usage="enable_ai [optional: server id]",
+        usage="dev enable-ai [optional: server id]",
     )
     @commands.is_owner()
     async def enable_ai(self, context, server: int = 0):
@@ -298,14 +314,13 @@ class Owner(commands.Cog, name="owner"):
 
         await context.send("AI access have been enabled in this server")
 
-    @commands.command(
-        name="disable_ai",
+    @dev.command(
+        name="disable-ai",
         description="Disable server AI access",
-        usage="disable_ai [optional: server id]",
+        usage="dev disable-ai [optional: server id]",
     )
     @commands.is_owner()
     async def disable_ai(self, context, server_id: int = 0):
-
         c = db["guilds"]
 
         data = c.find_one(
@@ -324,10 +339,10 @@ class Owner(commands.Cog, name="owner"):
 
         await context.send("AI access have been disabled in this server")
 
-    @commands.hybrid_command(
+    @dev.command(
         name="blacklist",
         description="Blacklist a user",
-        usage="blacklist <user> [reason: optional]",
+        usage="dev blacklist <user> [reason: optional]",
     )
     @commands.is_owner()
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -362,10 +377,10 @@ class Owner(commands.Cog, name="owner"):
         except Exception as e:
             await context.send(f"Could not send message to {user.mention} due to: {e}")
 
-    @commands.hybrid_command(
+    @dev.command(
         name="unblacklist",
         description="Unblacklist a user",
-        usage="unblacklist <user>",
+        usage="dev unblacklist <user>",
     )
     @commands.is_owner()
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -567,10 +582,10 @@ class Owner(commands.Cog, name="owner"):
 
                 await channel.send(embed=embed)
 
-    @commands.hybrid_command(
+    @dev.command(
         name="copy-db-to-backup",
         description="Copy the database to a backup",
-        usage="copy-db-to-backup"
+        usage="dev copy-db-to-backup"
     )
     @commands.is_owner()
     async def copy_db_to_backup(self, context):
@@ -858,6 +873,7 @@ class Owner(commands.Cog, name="owner"):
     @commands.command(
         name="dm",
         description="DM a user",
+        usage="dev dm <user> <message>"
     )
     @commands.is_owner()
     async def dm(self, context: Context, user: discord.User, *, message: str) -> None:
@@ -867,9 +883,10 @@ class Owner(commands.Cog, name="owner"):
         except Exception as e:
             await context.send(f"Could not send message to {user.mention} due to: {e}")
 
-    @commands.command(
+    @dev.command(
         name="simulate-level-up",
-        description=""
+        description="",
+        usage="dev simulate-level-up"
     )
     @commands.is_owner()
     async def simulate_level_up(self, context: Context):
