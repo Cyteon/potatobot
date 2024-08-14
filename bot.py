@@ -168,7 +168,7 @@ class DiscordBot(commands.AutoShardedBot):
 
     async def on_guild_remove(self, guild: discord.Guild):
         async with aiohttp.ClientSession() as session:
-            to_send = Webhook.from_url(config["join_leave_webhooks"], session=session)
+            to_send = Webhook.from_url(config["join_leave_webhook"], session=session)
 
             embed = discord.Embed(
                 title="Bot left a guild!",
@@ -182,7 +182,7 @@ class DiscordBot(commands.AutoShardedBot):
 
     async def on_guild_join(self, guild: discord.Guild):
         async with aiohttp.ClientSession() as session:
-            to_send = Webhook.from_url(config["join_leave_webhooks"], session=session)
+            to_send = Webhook.from_url(config["join_leave_webhook"], session=session)
 
             embed = discord.Embed(
                 title="Bot joined a guild!",
