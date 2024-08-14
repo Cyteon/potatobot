@@ -65,9 +65,9 @@ class General(commands.Cog, name="⬜ General"):
 
     @commands.hybrid_command(
         name="help",
-        aliases=["h"],
+        aliases=["h", "commands", "cmds"],
         description="Get help with commands",
-        usage="help"
+        usage="help [optional: command]"
     )
     @commands.check(Checks.is_not_blacklisted)
     async def help(self, context: Context, *, command: str = "none") -> None:
@@ -77,16 +77,21 @@ class General(commands.Cog, name="⬜ General"):
                 await context.send("Command not found")
                 return
 
+            if cmd.cog_name == "owner" and not context.author.id in self.bot.owner_ids:
+                await context.send("Command not found")
+                return
+
             embed = discord.Embed(
                 title=f"Help for {cmd.name}",
                 description=cmd.description,
                 color=0xBEBEFE
             )
 
-            usage = cmd.usage if cmd.usage else "Not Found"
+            usage = cmd.usage if cmd.usage else "Not Set"
+            example = cmd.extras["example"] if "example" in cmd.extras else "Not Set"
             embed.add_field(
                 name="Usage",
-                value=f"```{usage}```",
+                value=f"```Syntax: {usage}\nExample: {example}```",
                 inline=False
             )
 
@@ -103,14 +108,30 @@ class General(commands.Cog, name="⬜ General"):
                 inline=True
             )
 
+            cmd_type = ""
+
+            if isinstance(cmd, commands.HybridGroup):
+                cmd_type = "Command Group"
+            elif isinstance(cmd, commands.HybridCommand):
+                cmd_type = "Chat+Slash Command"
+            elif isinstance(cmd, commands.Command):
+                cmd_type = "Chat Only Command"
+
+
+            embed.add_field(
+                name="Type",
+                value=f"```{cmd_type}```",
+                inline=True
+            )
+
             params = inspect.signature(cmd.callback).parameters
             param_list = []
             for name, param in params.items():
                 if name not in ["self", "context"]:
                     if param.default == inspect.Parameter.empty:
-                        param_list.append(f"{name}: {param.annotation.__name__} <Required>")
+                        param_list.append(f"{name}: Required")
                     else:
-                        param_list.append(f"{name}: {param.annotation.__name__} [Optional, default: '{param.default}']")
+                        param_list.append(f"{name}: Optional, default: '{param.default}'")
 
             params_str = "\n".join(param_list) if param_list else "None"
             embed.add_field(
