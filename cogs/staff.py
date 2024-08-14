@@ -13,6 +13,8 @@ from discord.ext.commands import Context
 
 from utils import DBClient, CONSTANTS, Checks, CachedDB
 
+from ui.recreate import deleteconfirm
+
 client = DBClient.client
 db = client.potatobot
 
@@ -340,8 +342,10 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="kick",
+        aliases=["k", "yeet"],
         description="Kick a user out of the server.",
         usage="kick <user> [reason]",
+        extras={"example":"kick @user advertising"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(kick_members=True)
@@ -416,17 +420,15 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         name="nick",
         aliases=["n"],
         description="Change the nickname of a user on a server.",
-        usage="nick <user> <nickname>"
+        usage="nick <user> <nickname>",
+        extras={"example":"nick @user new nickname"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nick(
-        self, context: Context, user: discord.User, *, nickname: str = None
+        self, context: Context, member: discord.Member, *, nickname: str = None
     ) -> None:
-        member = context.guild.get_member(user.id) or await context.guild.fetch_member(
-            user.id
-        )
         try:
             await member.edit(nick=nickname)
             embed = discord.Embed(
@@ -443,8 +445,10 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="ban",
+        aliases=["b"],
         description="Bans a user from the server.",
-        usage="ban <user> [reason]"
+        usage="ban <user> [reason]",
+        extras={"example": "ban @user spamming"},
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(ban_members=True)
@@ -526,6 +530,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         name="hackban",
         description="Ban a user that is not in the server",
         usage="hackban <user> [reason]",
+        extras={"example": "hackban 1226487228914602005 spamming"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(ban_members=True)
@@ -571,7 +576,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="softban",
         description="Bans and unbans a user from the server to delete messages",
-        usage="softban <user>"
+        usage="softban <user>",
+        extras={"example": "softban @user"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(ban_members=True)
@@ -611,6 +617,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="unban",
         description="Unban a user from the server.",
+        usage="unban <user>",
+        extras={"example": "unban 1226487228914602005"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(ban_members=True)
@@ -671,18 +679,17 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="purge",
+        aliases=["clear"],
         description="Delete a number of messages.",
+        usage="purge <amount>",
+        extras={"example": "purge 10"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
     @app_commands.describe(amount="The amount of messages that should be deleted.")
     async def purge(self, context: Context, amount: int) -> None:
-
-
-        await context.send(
-            "Deleting messages..."
-        )  # Bit of a hacky way to make sure the bot responds to the interaction and doens't get a "Unknown Interaction" response
+        await context.defer()
         purged_messages = await context.channel.purge(limit=amount + 1)
         embed = discord.Embed(
             description=f"**{context.author}** cleared **{len(purged_messages)-1}** messages!",
@@ -693,6 +700,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="archive",
         description="Archives in a text file the last messages with a chosen limit of messages.",
+        usage="archive <limit>",
+        extras={"example": "archive 10"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_messages=True)
@@ -726,6 +735,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         aliases=["timeout"],
         description="Mute a user in the server.",
         usage="mute <user> <time> [reason]",
+        extras={"example": "mute @user 1d spamming in #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(moderate_members=True)
@@ -733,7 +743,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     async def mute(self, context: Context, user: discord.Member, time: str, *, reason: str = "Not specified") -> None:
         if user == self.bot.user:
             return await context.send("what did i do :C")
-
         try:
             # Try to parse the string as a datetime
             dt = datetime.fromisoformat(time)
@@ -774,6 +783,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         aliases=["untimeout"],
         description="Unmute a user in the server.",
         usage="unmute <user> [reason]",
+        extras={"example": "unmute @user spamming in #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(moderate_members=True)
@@ -790,7 +800,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="lock",
         description="Lock a channel.",
-        usage="lock [optional: channel]"
+        usage="lock [optional: channel]",
+        extras={"example": "lock #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_channels=True)
@@ -812,7 +823,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="unlock",
         description="Unlock a channel.",
-        usage="unlock [channel]"
+        usage="unlock [channel]",
+        extras={"example": "unlock #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_channels=True)
@@ -834,7 +846,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="jail",
         description="Jail a user.",
-        usage="jail <user> [reason]"
+        usage="jail <user> [reason]",
+        extras={"example": "jail @user admin abusing"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
@@ -932,7 +945,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="unjail",
         description="Unjail a user.",
-        usage="unjail <user>"
+        usage="unjail <user>",
+        extras={"example": "unjail @user"}
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
@@ -1063,7 +1077,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="recreate",
         description="Recreates channel with same settings",
-        usage="recreate [optional: channel]"
+        usage="recreate [optional: channel]",
     )
     @commands.check(Checks.is_not_blacklisted)
     @Checks.has_perm(manage_channels=True)
@@ -1073,31 +1087,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
             channel = context.channel
 
         await context.send("Are you sure you want to recreate this channel?", view=deleteconfirm(context.author, context.channel))
-
-class deleteconfirm(discord.ui.View):
-    def __init__(self, user, channel):
-        super().__init__(timeout=None)
-        self.user = user
-        self.channel = channel
-
-    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.red)
-    async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user != self.user:
-            return
-
-        old_channel = self.channel
-
-        await self.channel.delete()
-
-        new_channel = await old_channel.clone()
-
-        await new_channel.edit(position=old_channel.position)
-
-        await new_channel.send("Channel has been recreated")
-
-    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.green)
-    async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.message.delete()
 
 async def setup(bot) -> None:
     await bot.add_cog(Staff(bot))
