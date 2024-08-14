@@ -5,6 +5,8 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from utils import CONSTANTS, DBClient, Checks, CachedDB
 
+from ui.starboard import JumpToMessageView
+
 client = DBClient.client
 db = client.potatobot
 
@@ -262,22 +264,6 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
 
         await CachedDB.update_one(col, {"id": context.guild.id}, newdata)
         await context.send("Starboard enabled.")
-
-class JumpToMessageButton(discord.ui.Button):
-    def __init__(self, message: discord.message) -> None:
-        super().__init__(
-            style=discord.ButtonStyle.link,
-            label="Jump to message",
-            url=f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
-        )
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        pass
-
-class JumpToMessageView(discord.ui.View):
-    def __init__(self, message: discord.message) -> None:
-        super().__init__()
-        self.add_item(JumpToMessageButton(message))
 
 async def setup(bot) -> None:
     await bot.add_cog(Starboard(bot))
