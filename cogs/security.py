@@ -220,6 +220,9 @@ class Security(commands.Cog, name="🛡️ Security"):
     @commands.Cog.listener()
     async def on_guild_role_create(self, role: discord.Role) -> None:
         if role.permissions.administrator:
+            if not role.guild:
+                return
+
             guilds = db["guilds"]
             guild = guilds.find_one({"id": role.guild.id})
 

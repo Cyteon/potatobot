@@ -1,13 +1,11 @@
 import discord
-import time
 import asyncio
 import random
 
 from discord import ui
-from discord.ext import commands
 from discord.ui import Button, button, View
 
-from utils import DBClient, CachedDB
+from utils import DBClient
 
 db = DBClient.db
 

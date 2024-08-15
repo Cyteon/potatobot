@@ -1,15 +1,12 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-from datetime import datetime
 import random
-import asyncio
 import discord
 import time
 
 from discord import ui
 from discord.ext import commands
 from discord.ext.commands import Context
-from discord.ui import Button, button, View
 
 from utils import CONSTANTS, DBClient, CachedDB, Checks
 from ui.farm import FarmButton

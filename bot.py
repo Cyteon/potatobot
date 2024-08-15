@@ -10,9 +10,6 @@ import random
 import sys
 import time
 import aiohttp
-import threading
-from fastapi import FastAPI
-import uvicorn
 
 import pickledb
 import pymongo
@@ -20,12 +17,11 @@ import pymongo
 import discord
 from discord import Webhook
 from discord.ext import commands, tasks
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 load_dotenv()
 
-import utils
-from utils import CONSTANTS, CachedDB, ErrorLogger
+from utils import ErrorLogger
 
 if not os.path.isfile(f"{os.path.realpath(os.path.dirname(__file__))}/config.json"):
     sys.exit("'config.json' not found! Please add it and try again.")

@@ -1,6 +1,7 @@
 import discord
 import asyncio
-from utils import CONSTANTS, DBClient, Checks
+
+from utils import DBClient
 
 db = DBClient.db
 

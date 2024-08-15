@@ -9,7 +9,7 @@ from cryptography.fernet import Fernet
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from utils import Checks, DBClient, CachedDB, CONSTANTS
+from utils import Checks, DBClient, CONSTANTS
 from ui.setup import StartSetupView
 
 

@@ -1,24 +1,18 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 import discord
-import asyncio
 import ast
-import inspect
-import traceback
 import os
 import sys
 import pymongo
 from datetime import datetime
 
-
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
-import contextlib
-import io
 
-from utils import CONSTANTS, DBClient, Checks, ErrorLogger, CachedDB
+from utils import CONSTANTS, DBClient, Checks, CachedDB
 
 client = DBClient.client
 db = client.potatobot

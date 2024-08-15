@@ -4,7 +4,6 @@ import os
 
 import re
 from datetime import datetime, timedelta
-import aiohttp
 
 import discord
 from discord import app_commands
@@ -124,7 +123,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         embed = discord.Embed(
             title="Member Left",
-            description=f"{user.mention} left the server",
+            description=f"{user.mention} ({user}) left the server",
             color=0xff6961
         )
 

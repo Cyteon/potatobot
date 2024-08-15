@@ -1,7 +1,6 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 import discord
-import random
 
 from discord import app_commands
 from discord.ext import commands

@@ -2,13 +2,13 @@
 
 import discord
 import os
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord.ext.commands import Context
 from datetime import datetime
 
 from easy_pil import Font
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 import pickledb
 
 from utils import Checks

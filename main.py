@@ -12,7 +12,6 @@ from typing import Optional
 import ssl
 
 from fastapi import FastAPI
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
 from bot import DiscordBot

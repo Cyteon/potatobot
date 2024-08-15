@@ -2,10 +2,9 @@ import discord
 import time
 
 from discord import ui
-from discord.ext import commands
-from discord.ui import Button, button, View, Modal
+from discord.ui import button, View, Modal
 
-from utils import CONSTANTS, DBClient, CachedDB
+from utils import DBClient, CachedDB
 
 db = DBClient.db
 

@@ -1,22 +1,17 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-
-import platform
 import random
 import os
-import asyncio
 import aiohttp
 import time
 import asyncpraw
 import inspect
-
 
 from asteval import Interpreter
 aeval = Interpreter()
 
 import logging
 logger = logging.getLogger("discord_bot")
-
 
 import discord
 from discord import app_commands

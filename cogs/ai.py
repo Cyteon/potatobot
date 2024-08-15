@@ -7,8 +7,6 @@ import discord
 import requests
 import os
 
-import re
-
 import time
 import asyncio
 import functools

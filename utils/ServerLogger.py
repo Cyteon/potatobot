@@ -2,7 +2,7 @@
 
 import discord
 
-from utils import CONSTANTS, DBClient
+from utils import DBClient
 client = DBClient.client
 db = client.potatobot
 

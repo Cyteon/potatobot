@@ -1,9 +1,6 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 import discord
-import os
-import sys
-import json
 
 from utils import DBClient, CONSTANTS, CachedDB
 
