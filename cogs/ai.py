@@ -163,6 +163,7 @@ def prompt_ai(
             ai_response = groq_client.chat.completions.create(
                 messages=newMessageArray,
                 model=model,
+                max_tokens=300,
             ).choices[0].message.content
 
             break
