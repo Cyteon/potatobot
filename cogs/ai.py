@@ -250,10 +250,15 @@ class Text2ImageAPI:
         while attempts > 0:
             response = requests.get(self.URL + 'key/api/v1/text2image/status/' + request_id, headers=AUTH_HEADERS)
             data = response.json()
+
+            logger.info(data)
+
             if data['status'] == 'DONE':
                 return data['images']
             attempts -= 1
             time.sleep(delay)
+
+        raise Exception("An error occured while generating the image")
 
 class Ai(commands.Cog, name="🤖 AI"):
     def __init__(self, bot) -> None:
@@ -721,6 +726,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         except Exception as e:
             await msg.edit(content="An error occurred while generating the image")
             raise e
+
+        logger.info(data)
 
         for image in data:
             attachments.append(discord.File(BytesIO(base64.b64decode(image)), "ai_image.png"))
