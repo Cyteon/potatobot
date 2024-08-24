@@ -6,6 +6,8 @@ import aiohttp
 import time
 import asyncpraw
 import inspect
+import json
+import sys
 
 from asteval import Interpreter
 aeval = Interpreter()
@@ -29,6 +31,12 @@ reddit = asyncpraw.Reddit(
     client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
     user_agent="PotatoBot",
 )
+
+if not os.path.isfile(f"./config.json"):
+    sys.exit("'config.json' not found! Please add it and try again.")
+else:
+    with open(f"./config.json") as file:
+        config = json.load(file)
 
 class General(commands.Cog, name="⬜ General"):
     def __init__(self, bot) -> None:
@@ -245,7 +253,8 @@ class General(commands.Cog, name="⬜ General"):
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.cooldown(5, 3600, commands.BucketType.user)
     async def bug(self, context: Context, *, bug: str) -> None:
-        channel = self.bot.get_channel(1244584577989873684)
+        id = int(config["bug_channel"])
+        channel = self.bot.get_channel(id)
         embed = discord.Embed(
         	title="Bug Report",
             description=bug,

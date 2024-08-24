@@ -4,6 +4,7 @@
   "command_error_webhook": "",
   "error_webhooks": "",
   "join_leave_webhook": "",
+  "bug_channel": "1244584577989873684",
   "origins": ["http://localhost", "http://localhost:3000"],
   "ssl_keyfile": "./ssl/example.com.key",
   "ssl_certfile": "./ssl/example.com.pem",
