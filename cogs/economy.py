@@ -348,7 +348,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         )
 
         embed.add_field(
-            name="Ready in",
+            name="Ready",
             value=f"<t:{int(farmData['ready_in'])}:R>",
             inline=False,
         )
