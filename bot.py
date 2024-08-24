@@ -91,7 +91,7 @@ class DiscordBot(commands.AutoShardedBot):
         )
         self.logger = logger
         self.config = config
-        self.version = "2.0.0-beta"
+        self.version = "2.0.0"
         self.start_time = time.time()
         self.prefixDB = prefixDB
         self.statsDB = statsDB
