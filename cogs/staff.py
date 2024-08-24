@@ -1,11 +1,9 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-from cryptography.fernet import Fernet
 import os
 
 import re
 from datetime import datetime, timedelta
-import aiohttp
 
 import discord
 from discord import app_commands
@@ -13,6 +11,8 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 from utils import DBClient, CONSTANTS, Checks, CachedDB
+
+from ui.recreate import deleteconfirm
 
 client = DBClient.client
 db = client.potatobot
@@ -48,7 +48,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Message Deleted",
             description=f"Message sent by {message.author.mention} deleted in {message.channel.mention}",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         embed.add_field(
@@ -87,7 +87,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Message Edited",
             description=f"Message sent by {before.author.mention} edited in {before.channel.mention}",
-            color=discord.Color.orange()
+            color=0xfdfd96
         )
 
         embed.add_field(
@@ -123,8 +123,8 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         embed = discord.Embed(
             title="Member Left",
-            description=f"{user.mention} left the server",
-            color=discord.Color.red()
+            description=f"{user.mention} ({user}) left the server",
+            color=0xff6961
         )
 
         await log_channel.send(embed=embed)
@@ -150,7 +150,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Banned",
             description=f"{user.mention} was banned",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         await log_channel.send(embed=embed)
@@ -176,7 +176,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Unbanned",
             description=f"{user.mention} was unbanned",
-            color=discord.Color.green()
+            color=0x77dd77
         )
 
         await log_channel.send(embed=embed)
@@ -202,7 +202,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Kicked",
             description=f"{user.mention} was kicked",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         await log_channel.send(embed=embed)
@@ -264,11 +264,10 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Bulk Message Delete",
             description=f"{len(messages)} messages were deleted",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         c = db["guilds"]
-        #data = c.find_one({"id": messages[0].guild.id})
         data = await CachedDB.find_one(c, {"id": messages[0].guild.id})
 
         if not data:
@@ -290,7 +289,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title = "Channel Created",
             description = f"Channel {channel.mention} was created",
-            color = discord.Color.green()
+            color = 0x77dd77
         )
 
         c = db["guilds"]
@@ -315,7 +314,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title = "Channel Deleted",
             description = f"Channel {channel.mention} ({channel.name}) was deleted",
-            color = discord.Color.red()
+            color = 0xff6961
         )
 
         c = db["guilds"]
@@ -338,379 +337,18 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         except:
             pass
 
-    @commands.command(
-        name="prefix",
-        description="Change the bot prefix",
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def prefix(self, context: commands.Context, prefix: str = "none"):
-        if prefix == "none":
-            return await context.send("Current prefix is: `" + self.prefixDB.get(str(context.guild.id)) + "`")
-
-        if prefix == "/":
-            return await context.send("Prefix cannot be `/`")
-
-        guild_id = str(context.guild.id)
-        self.prefixDB.set(guild_id, prefix)
-        self.prefixDB.dump()
-        await context.send(f"Prefix set to {prefix}")
-
-    @commands.hybrid_command(
-        name="groq_api_key",
-        description="Set API key for AI"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def groq_api_key(self, context: commands.Context, key: str):
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        cipher_suite = Fernet(os.getenv("HASHING_SECRET"))
-        cipher_text = cipher_suite.encrypt(key.encode())
-
-        await context.send(key)
-
-        #await context.message.delete()
-
-        newdata = { "$set": { "groq_api_key": cipher_text } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set groq api key")
-
-    @commands.hybrid_group(
-        name="settings",
-        description="Command to change server settings",
-        aliases=["setting"],
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def settings(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Settings",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
-        subcommands = [cmd for cmd in self.settings.walk_commands()]
-
-        data = []
-
-        for subcommand in subcommands:
-            description = subcommand.description.partition("\n")[0]
-            data.append(f"{await self.bot.get_prefix(context)}settings {subcommand.name} - {description}")
-
-        help_text = "\n".join(data)
-        embed = discord.Embed(
-            title=f"Help: Settings", description="List of available commands:", color=0xBEBEFE
-        )
-        embed.add_field(
-            name="Commands", value=f"```{help_text}```", inline=False
-        )
-
-        await context.send(embed=embed)
-
-    @settings.command(
-        name="show",
-        description="Show server settings"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def show(self, context: Context) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        embed = discord.Embed(
-            title="Server Settings",
-            color=discord.Color.blue()
-        )
-
-        #for s in subcommands:
-            #embed.add_field(
-                #name=s,
-                #value=str(data[s])
-            #)
-
-        embed.add_field( name="Daily Cash", value=data["daily_cash"] )
-        embed.add_field( name="Tickets Category",
-                        value=context.guild.get_channel(data["tickets_category"]).name.capitalize() if data["tickets_category"] else "None" )
-        embed.add_field( name="Tickets Support Role",
-                        value=context.guild.get_role(data["tickets_support_role"]).mention if data["tickets_support_role"] else "None" )
-        embed.add_field( name="Log Channel", value=context.guild.get_channel(data["log_channel"]).mention if data["log_channel"] else "None" )
-        embed.add_field( name="Level Roles", value="`/setting level_roles show`")
-        embed.add_field( name="Level Announce Channel",
-                        value=context.guild.get_channel( data["level_announce_channel"]).mention if (
-                                "level_announce_channel" in data and context.guild.get_channel(data["level_announce_channel"]) != None
-                            ) else "None"
-                        )
-        embed.add_field( name="Should announce levelup", value=data["should_announce_levelup"] if "should_announce_levelup" in data else "idk")
-
-        await context.send(embed=embed)
-
-    @settings.command(
-        name="should_announce_levelup",
-        description="Should announce levelup"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
-    async def should_announce_levelup(self, context: Context, enabled: bool) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        newdata = { "$set": { "should_announce_levelup": enabled } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set should announce levelup to {enabled}")
-
-    @settings.command(
-        name="daily_cash",
-        description="Set daily cash amount"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(administrator=True)
-    async def daily_cash(self, context: Context, amount: int) -> None:
-        c = db["guilds"]
-
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        newdata = { "$set": { "daily_cash": amount } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set daily cash to {amount}")
-
-
-
-    @settings.command(
-        name="tickets_category",
-        description="Set category where tickets are created"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(administrator=True)
-    async def tickets_category(self, context: Context, category: discord.CategoryChannel) -> None:
-        c = db["guilds"]
-
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        newdata = { "$set": { "tickets_category": category.id } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set tickets category to {category.mention}")
-
-    @settings.command(
-        name="level_up_channel",
-        description="Set level up announce channel"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def level_up_channel(self, context: Context, channel: discord.TextChannel) -> None:
-        c = db["guilds"]
-
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        newdata = { "$set": { "level_announce_channel": channel.id } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set level announce channel to {channel.mention}")
-
-    @settings.command(
-        name="tickets_support_role",
-        description="Set ticket support role"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
-    async def tickets_support_role(self, context: Context, role: discord.Role) -> None:
-        c = db["guilds"]
-
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        newdata = { "$set": { "tickets_support_role": role.id } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set tickets support role to {role.mention}")
-
-    @settings.command(
-        name="log_channel",
-        description="Set log channel"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def log_channel(self, context: Context, channel: discord.TextChannel) -> None:
-        c = db["guilds"]
-
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        newdata = { "$set": { "log_channel": channel.id } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set log channel to {channel.mention}")
-
-    @settings.command(
-        name="default_role",
-        description="Set default role to be given to new members"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
-    async def default_role(self, context: Context, role: discord.Role) -> None:
-        c = db["guilds"]
-
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        dangerous_permissions = [
-            "administrator",
-            "manage_guild",
-            "manage_roles",
-            "manage_channels",
-            "manage_messages",
-            "kick_members",
-            "ban_members",
-            "manage_webhooks",
-            "manage_emojis",
-            "manage_nicknames",
-        ]
-
-        for permission in dangerous_permissions:
-            if getattr(role.permissions, permission):
-                return await context.send("The role has dangerous permissions. Please choose a role without dangerous permissions.")
-
-        newdata = { "$set": { "default_role": role.id } }
-
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set default role to {role.name}")
-
-    @settings.group(
-        name="level_roles",
-        description="Commands to set up level roles",
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
-    async def level_roles(self, context: Context) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        embed = discord.Embed(
-            title="Level Roles",
-            color=discord.Color.blue()
-        )
-
-
-        for r in data["level_roles"]:
-            embed.add_field(
-                name=r,
-                value=context.guild.get_role(data["level_roles"][r]).mention
-            )
-
-        await context.send(embed=embed)
-
-    @level_roles.command(
-        name="show",
-        description="Show level roles"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
-    async def show_level_roles(self, context: Context) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        embed = discord.Embed(
-            title="Level Roles",
-            color=discord.Color.blue()
-        )
-
-        for r in data["level_roles"]:
-            embed.add_field(
-                name=r,
-                value=context.guild.get_role(data["level_roles"][r]).mention
-            )
-
-        await context.send(embed=embed)
-
-
-    @level_roles.command(
-        name="set",
-        description="Set level roles"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_roles=True)
-    async def set(self, context: Context, level: int, role: discord.Role) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        if not data:
-            data = CONSTANTS.guild_data_template(context.guild.id)
-            c.insert_one(data)
-
-        level_roles = data["level_roles"]
-        level_roles[str(level)] = role.id
-
-        newdata = { "$set": { "level_roles": level_roles } }
-        c.update_one({"id": context.guild.id}, newdata)
-
-        await context.send(f"Set level {level} role to {role.mention}")
+    ###
 
     @commands.hybrid_command(
         name="kick",
+        aliases=["k", "yeet"],
         description="Kick a user out of the server.",
+        usage="kick <user> [reason]",
+        extras={"example":"kick @user advertising"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(kick_members=True)
+    @Checks.has_perm(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    @app_commands.describe(
-        user="The user that should be kicked.",
-        reason="The reason why the user should be kicked.",
-    )
     async def kick(
         self, context: Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
@@ -760,7 +398,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                         embed = discord.Embed(
                             title="Member Kicked",
                             description=f"{member.mention} was kicked by {context.author.mention}",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         embed.add_field(
@@ -779,21 +417,17 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="nick",
+        aliases=["n"],
         description="Change the nickname of a user on a server.",
+        usage="nick <user> <nickname>",
+        extras={"example":"nick @user new nickname"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_nicknames=True)
+    @Checks.has_perm(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
-    @app_commands.describe(
-        user="The user that should have a new nickname.",
-        nickname="The new nickname that should be set.",
-    )
     async def nick(
-        self, context: Context, user: discord.User, *, nickname: str = None
+        self, context: Context, member: discord.Member, *, nickname: str = None
     ) -> None:
-        member = context.guild.get_member(user.id) or await context.guild.fetch_member(
-            user.id
-        )
         try:
             await member.edit(nick=nickname)
             embed = discord.Embed(
@@ -810,15 +444,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="ban",
+        aliases=["b"],
         description="Bans a user from the server.",
+        usage="ban <user> [reason]",
+        extras={"example": "ban @user spamming"},
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(ban_members=True)
+    @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    @app_commands.describe(
-        user="The user that should be banned.",
-        reason="The reason why the user should be banned.",
-    )
     async def ban(
         self, context: Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
@@ -838,12 +471,17 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
             else:
                 messaged = False
                 try:
-                    await member.send(
-                        f"You were banned by **{context.author}** from **{context.guild.name}**!\nReason: {reason}"
+                    embed = discord.Embed(
+                        title="You were banned!",
+                        description=f"You were banned from **{context.guild.name}**",
+                        color=0xff6961
                     )
+
+                    embed.add_field(name="Reason", value=reason)
+
+                    await member.send(embed=embed)
                     messaged = True
                 except:
-                    # Couldn't send a message in the private messages of the user
                     pass
 
                 await member.ban(reason=reason, delete_message_days=0)
@@ -870,7 +508,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                         embed = discord.Embed(
                             title="Member Banned",
                             description=f"{member.mention} was banned by {context.author.mention}",
-                            color=discord.Color.red()
+                            color=0xff6961
                         )
 
                         embed.add_field(
@@ -889,21 +527,23 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="hackban",
-        description="Ban a user that is not in the server"
+        description="Ban a user that is not in the server",
+        usage="hackban <user> [reason]",
+        extras={"example": "hackban 1226487228914602005 spamming"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(ban_members=True)
+    @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def hackban(self, context: Context, user: discord.User, reason: str = "Not specified"):
+    async def hackban(self, context: Context, user: discord.User, *, reason: str = "Not specified"):
         if user == self.bot.user:
             return await context.send("what did i do :C")
 
         try:
-            context.guild.ban(user, reason=reason)
+            await context.guild.ban(user, reason=reason, delete_message_days=0)
 
             embed = discord.Embed(
-                title="User Banned",
-                description=f"**{user}** was banned by **{context.author}**!",
+                title="User Hackbanned",
+                description=f"**{user}** was hackbanned by **{context.author}**!",
                 color=0xBEBEFE,
             )
 
@@ -935,9 +575,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="softban",
         description="Bans and unbans a user from the server to delete messages",
+        usage="softban <user>",
+        extras={"example": "softban @user"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(ban_members=True)
+    @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def softban(self, context: Context, user: discord.User):
         if user == self.bot.user:
@@ -956,11 +598,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
             await context.guild.ban(user, reason="Softban", delete_message_days=7)
             await context.guild.unban(user, reason="Softban")
+
             embed = discord.Embed(
                 description=f"**{user}** was softbanned by **{context.author}**!",
                 color=0xBEBEFE,
             )
             await context.send(embed=embed)
+
         except Exception as e:
             embed = discord.Embed(
                 description="An error occurred while trying to softban the user, " + str(e),
@@ -972,9 +616,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="unban",
         description="Unban a user from the server.",
+        usage="unban <user>",
+        extras={"example": "unban 1226487228914602005"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(ban_members=True)
+    @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def unban(self, context: Context, user: discord.User):
         try:
@@ -989,11 +635,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                     await context.send(embed=embed)
 
                     try:
-                        await user.send(
-                            f"You were unbanned by **{context.author}** from **{context.guild.name}**!"
+                        embed = discord.Embed(
+                            title="You were unbanned!",
+                            description=f"You were unbanned from **{context.guild.name}**",
+                            color=0x77dd77
                         )
+
+                        await user.send(embed=embed)
                     except:
-                        # Couldn't send a message in the private messages of the user
                         pass
 
                     guilds = db["guilds"]
@@ -1010,7 +659,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                             embed = discord.Embed(
                                 title="Member Unbanned",
                                 description=f"{user.mention} was unbanned by {context.author.mention}",
-                                color=discord.Color.green()
+                                color=0x77dd77
                             )
 
                             await log_channel.send(embed=embed)
@@ -1029,18 +678,17 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="purge",
+        aliases=["clear"],
         description="Delete a number of messages.",
+        usage="purge <amount>",
+        extras={"example": "purge 10"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_guild_permissions(manage_messages=True)
+    @Checks.has_perm(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
     @app_commands.describe(amount="The amount of messages that should be deleted.")
     async def purge(self, context: Context, amount: int) -> None:
-
-
-        await context.send(
-            "Deleting messages..."
-        )  # Bit of a hacky way to make sure the bot responds to the interaction and doens't get a "Unknown Interaction" response
+        await context.defer()
         purged_messages = await context.channel.purge(limit=amount + 1)
         embed = discord.Embed(
             description=f"**{context.author}** cleared **{len(purged_messages)-1}** messages!",
@@ -1048,16 +696,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         )
         await context.channel.send(embed=embed)
 
-
     @commands.hybrid_command(
         name="archive",
         description="Archives in a text file the last messages with a chosen limit of messages.",
+        usage="archive <limit>",
+        extras={"example": "archive 10"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
-    @app_commands.describe(
-        limit="The limit of messages that should be archived.",
-    )
+    @Checks.has_perm(manage_messages=True)
     async def archive(self, context: Context, limit: int = 10) -> None:
         os.makedirs("logs", exist_ok=True)
         log_file = f"logs/{context.channel.id}.log"
@@ -1086,14 +732,16 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="mute",
         aliases=["timeout"],
-        description="Mute a user in the server."
+        description="Mute a user in the server.",
+        usage="mute <user> <time> [reason]",
+        extras={"example": "mute @user 1d spamming in #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @Checks.has_perm(moderate_members=True)
+    @commands.bot_has_permissions(moderate_members=True)
     async def mute(self, context: Context, user: discord.Member, time: str, *, reason: str = "Not specified") -> None:
         if user == self.bot.user:
             return await context.send("what did i do :C")
-
         try:
             # Try to parse the string as a datetime
             dt = datetime.fromisoformat(time)
@@ -1132,10 +780,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="unmute",
         aliases=["untimeout"],
-        description="Unmute a user in the server."
+        description="Unmute a user in the server.",
+        usage="unmute <user> [reason]",
+        extras={"example": "unmute @user spamming in #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @Checks.has_perm(moderate_members=True)
+    @commands.bot_has_permissions(moderate_members=True)
     async def unmute(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await user.timeout(None, reason=reason)
         await context.send(f"{user.mention} has been unmuted")
@@ -1147,10 +798,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="lock",
-        description="Lock a channel."
+        description="Lock a channel.",
+        usage="lock [optional: channel]",
+        extras={"example": "lock #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
+    @Checks.has_perm(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def lockdown(self, context: Context, channel: discord.TextChannel = None) -> None:
         if not channel:
             channel = context.channel
@@ -1167,10 +821,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="unlock",
-        description="Unlock a channel."
+        description="Unlock a channel.",
+        usage="unlock [channel]",
+        extras={"example": "unlock #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
+    @Checks.has_perm(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
     async def unlock(self, context: Context, channel: discord.TextChannel = None) -> None:
         if not channel:
             channel = context.channel
@@ -1186,59 +843,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         await channel.send(f"# 🔓 This channel has been unlocked by staff")
 
     @commands.hybrid_command(
-        name="stealemoji",
-        description="Steal an emoji from another server."
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_emojis=True)
-    async def stealemoji(self, context: Context, emoji: discord.PartialEmoji, name: str) -> None:
-        try:
-            emoji_bytes = await emoji.read()
-            await context.guild.create_custom_emoji(
-                name=name if name else emoji.name,
-                image=emoji_bytes,
-                reason=f"Emoji yoinked by {context.author} VIA {context.guild.me.name}",
-            )
-            await context.send(
-                embed=discord.Embed(
-                    description=f"Emoji Stolen",
-                    color=discord.Color.random(),
-                ).set_image(url=emoji.url)
-            )
-        except Exception as e:
-            await context.send(str(e))
-
-    @commands.hybrid_command(
-        name="emojifromurl",
-        description="Add an emoji from a URL."
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_emojis=True)
-    async def emojifromurl(self, context: Context, url: str, name: str) -> None:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    emoji_bytes = await response.read()
-                    await context.guild.create_custom_emoji(
-                        name=name,
-                        image=emoji_bytes,
-                        reason=f"Emoji added by {context.author} VIA {context.guild.me.name}",
-                    )
-                    await context.send(
-                        embed=discord.Embed(
-                            description=f"Emoji added",
-                            color=discord.Color.random(),
-                        ).set_image(url=url)
-                    )
-                else:
-                    await context.send("Failed to download the emoji")
-
-    @commands.hybrid_command(
         name="jail",
-        description="Jail a user."
+        description="Jail a user.",
+        usage="jail <user> [reason]",
+        extras={"example": "jail @user admin abusing"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(administrator=True)
+    @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
+    @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def jail(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         await context.send("Jailing user... please wait")
         guilds = db["guilds"]
@@ -1331,10 +943,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @commands.hybrid_command(
         name="unjail",
-        description="Unjail a user."
+        description="Unjail a user.",
+        usage="unjail <user>",
+        extras={"example": "unjail @user"}
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(administrator=True)
+    @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
+    @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def unjail(self, context: Context, user: discord.Member):
         guilds = db["guilds"]
         data = guilds.find_one({"id": context.guild.id})
@@ -1363,13 +978,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     async def warnings(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Warnings",
-            description="Commands"
-        )
-
-        # get all subcommands in group
-
         subcommands = [cmd for cmd in self.warnings.walk_commands()]
 
         data = []
@@ -1390,10 +998,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @warnings.command(
         name="add",
-        description="Warn a user."
+        description="Warn a user.",
+        usage="warnings add <user> <reason>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @Checks.has_perm(manage_messages=True)
     async def warn(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         users = db["users"]
         data = users.find_one({"id": user.id, "guild_id": context.guild.id})
@@ -1415,10 +1024,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @warnings.command(
         name="list",
-        description="Get a user's warnings."
+        description="Get a user's warnings.",
+        usage="warnings list <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @Checks.has_perm(manage_messages=True)
     async def listwarnings(self, context: Context, user: discord.Member) -> None:
         users = db["users"]
         data = users.find_one({"id": user.id, "guild_id": context.guild.id})
@@ -1430,7 +1040,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
         embed = discord.Embed(
             title=f"Warnings for {user}",
-            color=discord.Color.red()
+            color=0xff6961
         )
 
         for w in data["warnings"]:
@@ -1444,10 +1054,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
 
     @warnings.command(
         name="clear",
-        description="Clear a user's warnings."
+        description="Clear a user's warnings.",
+        usage="warnings clear <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @Checks.has_perm(manage_messages=True)
     async def clearwarnings(self, context: Context, user: discord.Member) -> None:
         users = db["users"]
         data = users.find_one({"id": user.id, "guild_id": context.guild.id})
@@ -1465,37 +1076,16 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.hybrid_command(
         name="recreate",
         description="Recreates channel with same settings",
-        usage="recreate"
+        usage="recreate [optional: channel]",
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_channels=True)
-    async def recreate(self, context: Context) -> None:
+    @Checks.has_perm(manage_channels=True)
+    @commands.bot_has_permissions(manage_channels=True)
+    async def recreate(self, context: Context, channel: discord.TextChannel = None) -> None:
+        if not channel:
+            channel = context.channel
+
         await context.send("Are you sure you want to recreate this channel?", view=deleteconfirm(context.author, context.channel))
-
-class deleteconfirm(discord.ui.View):
-    def __init__(self, user, channel):
-        super().__init__(timeout=None)
-        self.user = user
-        self.channel = channel
-
-    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.red)
-    async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user != self.user:
-            return
-
-        old_channel = self.channel
-
-        await self.channel.delete()
-
-        new_channel = await old_channel.clone()
-
-        await new_channel.edit(position=old_channel.position)
-
-        await new_channel.send("Channel has been recreated")
-
-    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.green)
-    async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.message.delete()
 
 async def setup(bot) -> None:
     await bot.add_cog(Staff(bot))

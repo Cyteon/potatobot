@@ -31,32 +31,22 @@ class Github(commands.Cog, name="🖧 Github"):
     @commands.hybrid_group(
         name="github",
         description="Commands related to GitHub",
+        usage="github <subcommand> [args]",
+        aliases=["gh"],
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def github(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Github",
-            description="Commands"
-        )
+        prefix = await self.bot.get_prefix(context)
 
-        # get all subcommands in group
+        cmds = "\n".join([f"{prefix}github {cmd.name} - {cmd.description}" for cmd in self.github.walk_commands()])
 
-        subcommands = [cmd for cmd in self.github.walk_commands()]
-
-        data = []
-
-        for subcommand in subcommands:
-            description = subcommand.description.partition("\n")[0]
-            data.append(f"{await self.bot.get_prefix(context)}github {subcommand.name} - {description}")
-
-        help_text = "\n".join(data)
         embed = discord.Embed(
             title=f"Help: Github", description="List of available commands:", color=0xBEBEFE
         )
         embed.add_field(
-            name="Commands", value=f"```{help_text}```", inline=False
+            name="Commands", value=f"```{cmds}```", inline=False
         )
 
         await context.send(embed=embed)
@@ -103,7 +93,6 @@ class Github(commands.Cog, name="🖧 Github"):
             embed.add_field(
                 name="Website 🖥️: ", value=f"{person['blog']}", inline=True
             )
-
 
             await context.send(embed=embed, view=ProfileButton(url=person["html_url"]))
 

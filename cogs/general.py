@@ -1,20 +1,17 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-
-import platform
 import random
 import os
-import asyncio
 import aiohttp
 import time
 import asyncpraw
+import inspect
 
 from asteval import Interpreter
 aeval = Interpreter()
 
 import logging
 logger = logging.getLogger("discord_bot")
-
 
 import discord
 from discord import app_commands
@@ -46,12 +43,6 @@ class General(commands.Cog, name="⬜ General"):
     async def remove_spoilers(
         self, interaction: discord.Interaction, message: discord.Message
     ) -> None:
-        """
-        Removes the spoilers from the message. This command requires the MESSAGE_CONTENT intent to work properly.
-
-        :param interaction: The application command interaction.
-        :param message: The message that is being interacted with.
-        """
         spoiler_attachment = None
         for attachment in message.attachments:
             if attachment.is_spoiler():
@@ -69,21 +60,92 @@ class General(commands.Cog, name="⬜ General"):
 
     @commands.hybrid_command(
         name="help",
+        aliases=["h", "commands", "cmds"],
         description="Get help with commands",
-        usage="help"
+        usage="help [optional: command]"
     )
     @commands.check(Checks.is_not_blacklisted)
-    async def help(self, context: Context) -> None:
-        """Sends a message with our dropdown containing cogs"""
+    async def help(self, context: Context, *, command: str = "none") -> None:
+        if command != "none":
+            cmd = self.bot.get_command(command)
+            if cmd is None:
+                await context.send("Command not found")
+                return
+
+            if cmd.cog_name == "owner" and not context.author.id in self.bot.owner_ids:
+                await context.send("Command not found")
+                return
+
+            embed = discord.Embed(
+                title=f"Command: {cmd.name}",
+                description=cmd.description,
+                color=0xBEBEFE
+            )
+
+            usage = cmd.usage if cmd.usage else "Not Set"
+            example = cmd.extras["example"] if "example" in cmd.extras else "Not Set"
+            embed.add_field(
+                name="Usage",
+                value=f"```Syntax: {usage}\nExample: {example}```",
+                inline=False
+            )
+
+            aliases = ", ".join(cmd.aliases) if cmd.aliases else "None"
+            embed.add_field(
+                name="Aliases",
+                value=f"```{aliases}```",
+                inline=True
+            )
+
+            embed.add_field(
+                name="Category",
+                value=f"```{cmd.cog_name}```",
+                inline=True
+            )
+
+            cmd_type = ""
+
+            if isinstance(cmd, commands.HybridGroup):
+                cmd_type = "Command Group"
+            elif isinstance(cmd, commands.HybridCommand):
+                cmd_type = "Chat+Slash Command"
+            elif isinstance(cmd, commands.Command):
+                cmd_type = "Chat Only Command"
+
+
+            embed.add_field(
+                name="Type",
+                value=f"```{cmd_type}```",
+                inline=True
+            )
+
+            params = inspect.signature(cmd.callback).parameters
+            param_list = []
+            for name, param in params.items():
+                if name not in ["self", "context"]:
+                    if param.default == inspect.Parameter.empty:
+                        param_list.append(f"{name}: <Required>")
+                    else:
+                        param_list.append(f"{name}: [Optional, default: '{param.default}']")
+
+            params_str = "\n".join(param_list) if param_list else "None"
+            embed.add_field(
+                name="Parameters",
+                value=f"```{params_str}```",
+                inline=False
+            )
+
+            if isinstance(cmd, commands.HybridGroup):
+                    subcommands = ", ".join([sub.name for sub in cmd.commands])
+                    embed.add_field(
+                        name="Subcommands",
+                        value=f"```{subcommands}```",
+                        inline=False
+                    )
+
+            return await context.send(embed=embed)
 
         cogs = []
-        required_permissions = [
-            discord.Permissions.administrator, discord.Permissions.manage_guild,
-            discord.Permissions.manage_channels, discord.Permissions.manage_messages,
-            discord.Permissions.kick_members, discord.Permissions.ban_members,
-            discord.Permissions.manage_roles, discord.Permissions.manage_channels,
-            discord.Permissions.manage_webhooks, discord.Permissions.manage_emojis,
-            ]  # Replace with the permissions you want to check
 
         for cog in self.bot.cogs:
             if cog.startswith("-"):
@@ -95,14 +157,10 @@ class General(commands.Cog, name="⬜ General"):
             if "staff" in cog:
                 author_permissions = context.author.guild_permissions
 
-                if not any(discord.utils.get(author_permissions) for permission in required_permissions):
-                    continue
-
             cogs.append(cog)
 
         view = CogSelectView(cogs, context.author)
 
-        # Sending a message containing our view
         await context.send('Pick a cog:', view=view)
 
     @commands.command(
@@ -139,51 +197,20 @@ class General(commands.Cog, name="⬜ General"):
 
         embed = discord.Embed(title=f'{self.bot.user.name} - Stats', color = discord.Color.blurple())
 
+        command_count = len([command for command in self.bot.walk_commands()])
+
         embed.add_field(name="Bot Version:", value=self.bot.version)
         embed.add_field(name="Discord.Py Version:", value=dpyVersion)
         embed.add_field(name="Ping:", value=f"{round(self.bot.latency * 1000)}ms")
         embed.add_field(name="Total Guilds:", value=serverCount)
         embed.add_field(name="Total Users:", value=memberCount)
-        embed.add_field(name="Total Commands:", value=len(self.bot.commands))
+        embed.add_field(name="Total Commands:", value=command_count)
         embed.add_field(name="Shard ID:", value=shard_id)
         embed.add_field(name="Shard Ping:", value=f"{round(shard_ping * 1000)}ms")
         embed.add_field(name="Shard Servers:", value=shard_servers)
         embed.add_field(name="Shard Count:", value=shard_count)
 
         embed.set_footer(text="Bot made by Cyteon @ https://github.com/cyteon")
-        await context.send(embed=embed)
-
-    @commands.hybrid_command(
-        name="cmdstats",
-        description="Show stats about commands",
-        usage="cmdstats"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def cmdstats(self, context: Context) -> None:
-        sorted_commands = sorted(self.bot.command_usage.items(), key=lambda x: x[1], reverse=True)
-        embed = discord.Embed(title="Command Statistics", color=0x00ff00)
-
-        rank = 1
-        command_stats = []
-        for command, count in sorted_commands:
-            if rank == 1:
-                emoji = "🥇"
-            elif rank == 2:
-                emoji = "🥈"
-            elif rank == 3:
-                emoji = "🥉"
-            else:
-                emoji = "🏅"
-
-            command_stats.append(f"{emoji} **/{command.capitalize()}** ({count} times)")
-            if rank == 10:
-                break
-            rank += 1
-
-        embed.description = "\n".join(command_stats)
-        embed.set_footer(text=f"Total commands this hour: {self.bot.commands_this_hour}")
         await context.send(embed=embed)
 
     @commands.hybrid_command(
@@ -262,12 +289,6 @@ class General(commands.Cog, name="⬜ General"):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def eight_ball(self, context: Context, *, question: str) -> None:
-        """
-        Ask any question to the bot.
-
-        :param context: The hybrid command context.
-        :param question: The question that should be asked by the user.
-        """
         answers = [
             "It is certain.",
             "It is decidedly so.",
@@ -289,6 +310,7 @@ class General(commands.Cog, name="⬜ General"):
             "My sources say no.",
             "Outlook not so good.",
             "Very doubtful.",
+            "Potato"
         ]
         embed = discord.Embed(
             title="**My Answer:**",
@@ -453,7 +475,7 @@ class VoteButton(discord.ui.Button):
 
 class VoteView(discord.ui.View):
     def __init__(self):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(VoteButton())
 
 class CogSelect(discord.ui.Select):
@@ -486,11 +508,10 @@ class CogSelect(discord.ui.Select):
         embed.add_field(
             name=cog_name.capitalize(), value=f"```{help_text}```", inline=False
         )
-        embed.set_footer(text=f"Requested by {interaction.user}")
+        embed.set_footer(text=f"To get more info on a command, use {await interaction.client.get_prefix(interaction)}help <command>")
 
         # Edit the original message instead of sending a new one
         await interaction.message.edit(embed=embed)
-
 
 class CogSelectView(discord.ui.View):
     def __init__(self, cogs, author):
@@ -499,3 +520,4 @@ class CogSelectView(discord.ui.View):
 
 async def setup(bot) -> None:
     await bot.add_cog(General(bot))
+    bot.add_view(VoteView())

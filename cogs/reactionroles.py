@@ -1,7 +1,6 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 import discord
-import random
 
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -12,7 +11,6 @@ db = DBClient.db
 
 from utils import Checks
 
-# Here we name the cog and create a new class for the cog.
 class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -102,11 +100,6 @@ class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
     async def reactionroles(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Reaction Roles",
-            description="Commands"
-        )
-
         subcommands = [cmd for cmd in self.reactionroles.walk_commands()]
 
         data = []
@@ -176,6 +169,5 @@ class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
                 await CachedDB.update_one(db["reactionroles"], {"message_id": message_id}, {"$set": {"roles": message_data["roles"]}})
                 await context.send("Reaction role added.")
 
-# And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
 async def setup(bot) -> None:
     await bot.add_cog(ReactionRoles(bot))

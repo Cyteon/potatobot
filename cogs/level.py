@@ -2,7 +2,6 @@
 
 import random
 import pymongo
-import os
 
 import discord
 from discord.ext import commands
@@ -12,7 +11,7 @@ from easy_pil import *
 
 from utils import CONSTANTS, DBClient, Checks, CachedDB
 
-db = DBClient.db["users"]  # Use a single collection called "users"
+db = DBClient.db
 
 class Level(commands.Cog, name="🚀 Level"):
     def __init__(self, bot) -> None:
@@ -24,17 +23,13 @@ class Level(commands.Cog, name="🚀 Level"):
         usage="level [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.cooldown(3, 10, commands.BucketType.user)
     async def level(self, context: Context, user: discord.Member = None) -> None:
-        """
-        See yours or someone elses current level and xp
-
-        :param context: The application command context.
-        """
-
         if not user:
             user = context.author
 
-        data = await CachedDB.find_one(db, {"id": user.id, "guild_id": context.guild.id})
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": user.id, "guild_id": context.guild.id})
 
         if data:
             xp_for_next_level = CONSTANTS.LEVELS_AND_XP[data["level"] + 1]
@@ -72,9 +67,10 @@ class Level(commands.Cog, name="🚀 Level"):
         usage="leaderboard"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def leaderboard(self, context: Context) -> None:
-        data = db.find({"guild_id": context.guild.id}).sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
-
+        c = db["users"]
+        data = c.find({"guild_id": context.guild.id}).sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
 
         embed = discord.Embed(
             title="Leaderboard",
@@ -97,21 +93,17 @@ class Level(commands.Cog, name="🚀 Level"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        """
-        The code in this event is executed every time someone sends a message, with or without the prefix
-
-        :param message: The message that was sent.
-        """
         if message.author == self.bot or message.author.bot:
             return
 
         author = message.author
 
-        data = await CachedDB.find_one(db, {"id": author.id, "guild_id": message.guild.id})
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": author.id, "guild_id": message.guild.id})
 
         if not data:
             data = CONSTANTS.user_data_template(author.id, message.guild.id)
-            db.insert_one(data)
+            c.insert_one(data)
 
         if data["level"] >= CONSTANTS.MAX_LEVEL:
             return
@@ -122,7 +114,7 @@ class Level(commands.Cog, name="🚀 Level"):
         data["xp"] += random.randint(1, 3)
 
         if data["xp"] >= CONSTANTS.LEVELS_AND_XP[data["level"] + 1]:
-            guilds = DBClient.client.potatobot["guilds"]
+            guilds = db["guilds"]
             guild_data = await CachedDB.find_one(guilds, {"id": message.guild.id})
 
             if not guild_data:
@@ -150,50 +142,44 @@ class Level(commands.Cog, name="🚀 Level"):
 
         newdata = {"$set": {"xp": data["xp"], "level": data["level"]}}
 
-        #db.update_one({"id": author.id, "guild_id": message.guild.id}, newdata)
-        await CachedDB.update_one(db, {"id": author.id, "guild_id": message.guild.id}, newdata)
+        await CachedDB.update_one(c, {"id": author.id, "guild_id": message.guild.id}, newdata)
 
     @commands.hybrid_command(
-        name="create_level_roles",
+        name="create-level-roles",
         description="Create roles for levels (manage_roles permission)",
-        usage="create_level_roles"
+        usage="create-level-roles"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
     async def create_level_roles(self, context: Context):
         # create role for level 1/3/5/10/15/20
 
-        guilds = DBClient.client.potatobot["guilds"]
-        #guild_data = guilds.find_one({"id": context.guild.id})
+        guilds = db["guilds"]
         guild_data = await CachedDB.find_one(guilds, {"id": context.guild.id})
 
         if not guild_data:
             guild_data = CONSTANTS.guild_data_template(context.guild.id)
             guilds.insert_one(guild_data)
 
-        for level in CONSTANTS.LEVELS_AND_XP:
+        for level in [1, 3, 5, 10, 15, 20]:
             if str(level) not in guild_data["level_roles"]:
-                if level not in [1, 3, 5, 10, 15, 20]:
-                    continue
-
                 role = await context.guild.create_role(name=f"Level {level}")
                 guild_data["level_roles"][str(level)] = role.id
 
         newdata = {"$set": {"level_roles": guild_data["level_roles"]}}
 
-        #guilds.update_one({"id": context.guild.id}, newdata)
         await CachedDB.update_one(guilds, {"id": context.guild.id}, newdata)
         await context.send("Roles created!")
 
     @commands.hybrid_command(
-        name="delete_level_roles",
+        name="delete-level-roles",
         description="Delete roles for levels",
+        usage="delete-level-roles"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_roles=True)
     async def delete_level_roles(self, context: Context):
-        guilds = DBClient.client.potatobot["guilds"]
-        #guild_data = guilds.find_one({"id": context.guild.id})
+        guilds = db["guilds"]
         guild_data = await CachedDB.find_one(guilds, {"id": context.guild.id})
 
         if not guild_data:
@@ -209,7 +195,7 @@ class Level(commands.Cog, name="🚀 Level"):
                     pass
 
         newdata = {"$set": {"level_roles": {}}}
-        #guilds.update_one({"id": context.guild.id}, newdata)
+
         await CachedDB.update_one(guilds, {"id": context.guild.id}, newdata)
         await context.send("Roles deleted!")
 

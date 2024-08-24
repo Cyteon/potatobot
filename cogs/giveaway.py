@@ -8,17 +8,9 @@ from discord.ext.commands import Context
 
 from utils import Checks
 
-subcommands = [
-    "start",
-    "end"
-]
-
-# Here we name the cog and create a new class for the cog.
 class Giveaway(commands.Cog, name="🎁 Giveaway"):
     def __init__(self, bot) -> None:
         self.bot = bot
-
-    # Here you can just add your own commands, you'll always need to provide "self" as first parameter.
 
     @commands.hybrid_group(
         name="giveaway",
@@ -28,31 +20,18 @@ class Giveaway(commands.Cog, name="🎁 Giveaway"):
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
     async def giveaway(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Giveaway",
-            description="Commands"
-        )
+        prefix = await self.bot.get_prefix(context)
 
-        # get all subcommands in group
+        cmds = "\n".join([f"{prefix}giveaway {cmd.name} - {cmd.description}" for cmd in self.giveaway.walk_commands()])
 
-        subcommands = [cmd for cmd in self.giveaway.walk_commands()]
-
-        data = []
-
-        for subcommand in subcommands:
-            description = subcommand.description.partition("\n")[0]
-            data.append(f"{await self.bot.get_prefix(context)}giveaway {subcommand.name} - {description}")
-
-        help_text = "\n".join(data)
         embed = discord.Embed(
             title=f"Help: Giveaway", description="List of available commands:", color=0xBEBEFE
         )
         embed.add_field(
-            name="Commands", value=f"```{help_text}```", inline=False
+            name="Commands", value=f"```{cmds}```", inline=False
         )
 
         await context.send(embed=embed)
-
 
     @giveaway.command(
         name="start",
@@ -80,8 +59,6 @@ class Giveaway(commands.Cog, name="🎁 Giveaway"):
 
         message = await context.fetch_message(message_id)
 
-        #random user from reactions
-
         users = []
 
         async for u in message.reactions[0].users():
@@ -94,6 +71,5 @@ class Giveaway(commands.Cog, name="🎁 Giveaway"):
 
         await message.reply(winner.mention, embed=embed)
 
-# And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
 async def setup(bot) -> None:
     await bot.add_cog(Giveaway(bot))

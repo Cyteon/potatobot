@@ -4,9 +4,12 @@ import discord
 
 from utils import DBClient, CONSTANTS, CachedDB
 
+from discord.ext import commands
+from discord.ext.commands import Context
+
 db = DBClient.db
 
-async def is_not_blacklisted(context):
+async def is_not_blacklisted(context: Context):
     users_global = db["users_global"]
     user = await CachedDB.find_one(users_global, {"id": context.author.id}, ex=120)
 
@@ -18,3 +21,15 @@ async def is_not_blacklisted(context):
         raise discord.ext.commands.CommandError("You are blacklisted from using the bot, reason: **" + (user["blacklist_reason"] if user["blacklist_reason"] else "Not Specified") + "**")
     else:
         return True
+
+# TODO: Add fakeperms
+def has_perm(**perms):
+    def predicate(context: commands.Context):
+        author_permissions = context.channel.permissions_for(context.author)
+
+        for perm, value in perms.items():
+            if getattr(author_permissions, perm, None) != value:
+                raise discord.ext.commands.MissingPermissions([perm])
+        return True
+
+    return commands.check(predicate)

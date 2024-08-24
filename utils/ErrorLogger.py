@@ -17,7 +17,7 @@ else:
 
 async def command_error(error, context):
     async with aiohttp.ClientSession() as session:
-        command_error_webhook = Webhook.from_url(config["command_error_webhooks"], session=session)
+        command_error_webhook = Webhook.from_url(config["command_error_webhook"], session=session)
 
         embed = discord.Embed(
             title="An error occurred!",
@@ -28,20 +28,38 @@ async def command_error(error, context):
         embed.add_field(
             name="Author",
             value=f"{context.author.mention}",
-            inline=False
+            inline=True
         )
 
-        embed.add_field(
-            name="Guild",
-            value=f"`{context.guild.name}` (`{context.guild.id}`)",
-            inline=False
-        )
+        if context.guild:
+            embed.add_field(
+                name="Guild",
+                value=f"`{context.guild.name}` (`{context.guild.id}`)",
+                inline=True
+            )
 
         if context.command:
             embed.add_field(
                 name="Command",
                 value=f"`{context.command.name}`",
-                inline=False
+                inline=True
+            )
+
+        if context.message.content != "":
+            embed.add_field(
+                name="Message",
+                value=f"```{context.message.content}```",
+                inline=True
+            )
+
+        if context.interaction:
+            options = context.interaction.data["options"]
+            options = json.dumps(options, indent=2)
+
+            embed.add_field(
+                name="Interaction Options",
+                value=f"```{options}```",
+                inline=True
             )
 
         await command_error_webhook.send(embed=embed, username = "PotatoBot - Error Logger")
@@ -51,7 +69,7 @@ async def error(self, event_method, *args, **kwargs):
 
         embed = discord.Embed(
             title="An error occurred!",
-            description=f"```{traceback.format_exc()}```",
+            description=f"```{traceback.format_exc().replace('```', '``')}```",
             color=discord.Color.red()
         )
 

@@ -11,9 +11,7 @@ from typing import Optional
 
 import ssl
 
-from pydantic import BaseModel
 from fastapi import FastAPI
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
 from bot import DiscordBot
@@ -128,32 +126,6 @@ async def get_guild(id: int):
     }
 
     return guild
-
-class UpdateModel(BaseModel):
-    author: int
-    newdata: str
-
-@app.put("/api/guild/{id}/update", response_model=UpdateModel)
-async def update_guild(id: int, data: UpdateModel):
-    return {"message": "This endpoint is disabled for security reasons", "status": 501}
-
-    data = jsonable_encoder(data)
-
-    guild = bot.get_guild(id)
-
-    if guild.get_member(data["author"]).guild_permissions.administrator:
-        guilds = db["guilds"]
-        guild_data = guilds.find_one({"id": guild.id})
-
-        if guild_data is None:
-            guild_data = CONSTANTS.guild_data_template(id)
-            guilds.insert_one(guild_data)
-
-        guilds.update_one({"id": guild.id}, {"$set": json.loads(data["newdata"])})
-
-        return data
-    else:
-        return {"message": "You do not have the required permissions.", "status": 403}
 
 
 @app.get("/api/user/{id}")

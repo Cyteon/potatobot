@@ -1,15 +1,11 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
 FILTER_LIST = ["@everyone", "@here", "<@&", "discord.gg", "discord.com/invite"]
-WORD_BLACKLIST = ["Nigger", "Nigga"] # REMOVED FOR UHHHHH TESTING
-AUTO_BLACKLIST_TRIGGER = ["minor", "underage", "child", "kid"]
-#WORD_BLACKLIST = ["Nigger", "Nigga", "Packi", "Blackie", "Blacky", "N*****", "Rape", "Rapist", "@everyone", "@here", "<@&"]
+WORD_BLACKLIST = ["nigger", "nigga", "n i g g e r"]
 
 import discord
 import requests
 import os
-
-import re
 
 import time
 import asyncio
@@ -58,7 +54,6 @@ secret_key = os.getenv('FUSION_SECRET_KEY')
 
 ai_temp_disabled = False
 
-# Startup
 ai_channels = []
 c = db["ai_channels"]
 data = c.find_one({ "listOfChannels": True })
@@ -100,9 +95,7 @@ def prompt_ai(
     c = db["ai_convos"]
     data = {}
 
-    messageArray = [
-
-    ]
+    messageArray = []
 
     if channelId != 0:
         data = CachedDB.sync_find_one(c, { "isChannel": True, "id": channelId })
@@ -123,11 +116,6 @@ def prompt_ai(
 
             c.insert_one(data)
 
-    # add previous messages
-
-    #add prompt
-
-
     messageArray.append(
         {
             "role": "user",
@@ -146,7 +134,7 @@ def prompt_ai(
         "instance owner/dev ID": os.getenv("OWNER_ID"),
         "support_server": "https://discord.gg/df8eCZDvxB",
         "website": "https://potato.cyteon.tech",
-        "bot_invite": "https://discord.com/oauth2/authorize?client_id=1226487228914602005",
+        "bot_invite": config["invite_link"],
         "source_code": "https://github.com/cyteon/potatobot",
         "special_emojis": "<:joos:1254878760218529873>",
         "notes": {
@@ -168,16 +156,19 @@ def prompt_ai(
         }
     )
 
+    ai_response = ""
+
     for model in models:
         try:
             ai_response = groq_client.chat.completions.create(
                 messages=newMessageArray,
                 model=model,
+                max_tokens=300,
             ).choices[0].message.content
 
             break
         except Exception as e:
-            pass
+            ai_response = f"Error: {e}"
 
     messageArray.append(
         {
@@ -204,7 +195,7 @@ def prompt_ai(
             c, { "isChannel": False, "id": authorId}, newdata
         )
 
-    ai_response = ai_response.replace("</s>", " ")
+    ai_response = ai_response.replace("</s>", " ") # It kept sending this somtimes
 
     for word in WORD_BLACKLIST:
         if word.lower() in ai_response.lower():
@@ -213,13 +204,12 @@ def prompt_ai(
 
     for word in FILTER_LIST:
         if word == "discord.gg":
+            # TODO: Fix where if someone makes ai say support server invite and another invite it dosent get filtered
             if systemInfo["support_server"] in ai_response:
                 continue
         ai_response =  ai_response.replace(word, "[FILTERED]")
 
     return ai_response
-
-
 
 class Text2ImageAPI:
     def __init__(self, url):
@@ -260,11 +250,15 @@ class Text2ImageAPI:
         while attempts > 0:
             response = requests.get(self.URL + 'key/api/v1/text2image/status/' + request_id, headers=AUTH_HEADERS)
             data = response.json()
+
+            logger.info(data)
+
             if data['status'] == 'DONE':
                 return data['images']
             attempts -= 1
             time.sleep(delay)
 
+        raise Exception("An error occured while generating the image")
 
 class Ai(commands.Cog, name="🤖 AI"):
     def __init__(self, bot) -> None:
@@ -290,7 +284,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         if message.content.startswith(await self.bot.get_prefix(message)):
             return
 
-
         if self.ai_temp_disabled:
             await message.reply("AI is temporarily disabled due to techincal difficulties")
             return
@@ -314,7 +307,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             if user_data["blacklisted"]:
                 await message.reply("**You are blacklisted from using the bot, reason: " + user_data["blacklist_reason"] + "**")
                 return
-
 
         if retry_after:
             embed = discord.Embed(
@@ -379,7 +371,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await message.reply("By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity")
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await message.reply(embed=embed)
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -389,10 +384,8 @@ class Ai(commands.Cog, name="🤖 AI"):
             { "id": message.author.id }, newdata
         )
 
-
         c = db["guilds"]
         data = c.find_one({"id": message.guild.id})
-
 
         if not data:
             data = CONSTANTS.guild_data_template(message.guild.id)
@@ -410,7 +403,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             client = Groq(api_key=key)
 
         c = db["users"]
-        #userInfo = c.find_one({"id": message.author.id, "guild_id": message.guild.id})
         userInfo = await CachedDB.find_one(c, {"id": message.author.id, "guild_id": message.guild.id})
 
         if not userInfo:
@@ -426,9 +418,10 @@ class Ai(commands.Cog, name="🤖 AI"):
                 systemPrompt = data["system_prompt"]
 
             if profanity.contains_profanity(systemPrompt):
-                if not message.channel.is_nsfw():
-                    await message.reply("The system prompt contains profanity and this channel is not marked as NSFW. **Using default system prompt**")
-                    systemPrompt = "NONE"
+                if hasattr(message.channel, "is_nsfw"):
+                    if not message.channel.is_nsfw():
+                        await message.reply("The system prompt contains profanity and this channel is not marked as NSFW. **Using default system prompt**")
+                        systemPrompt = "NONE"
 
         loop = asyncio.get_running_loop()
         try:
@@ -489,8 +482,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await context.send(embed=embed)
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -507,7 +502,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         users_global.update_one(
             { "id": context.author.id }, newdata
         )
-
 
         client = Groq(api_key=get_api_key())
 
@@ -532,9 +526,9 @@ class Ai(commands.Cog, name="🤖 AI"):
             await context.reply(err)
 
     @commands.hybrid_command(
-        name="set_ai_channel",
+        name="set-ai-channel",
         description="Set current channel as an AI channel",
-        usage="set_ai_channel"
+        usage="set-ai-channel"
     )
     @commands.has_permissions(manage_channels=True)
     @commands.check(Checks.is_not_blacklisted)
@@ -565,8 +559,6 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         await context.channel.edit(slowmode_delay=5)
 
-        # if data is longer than 2k characters,
-
         await context.send(data)
 
         ai_channels.append(context.channel.id)
@@ -583,9 +575,9 @@ class Ai(commands.Cog, name="🤖 AI"):
         )
 
     @commands.hybrid_command(
-        name="unset_ai_channel",
+        name="unset-ai-channel",
         description="Unset current channel as an AI channel",
-        usage="unset_ai_channel"
+        usage="unset-ai-channel"
     )
     @commands.has_permissions(manage_channels=True)
     @commands.check(Checks.is_not_blacklisted)
@@ -608,7 +600,7 @@ class Ai(commands.Cog, name="🤖 AI"):
 
     @commands.cooldown(1, 30, commands.BucketType.user)
     @commands.hybrid_command(
-        name="create_ai_thread",
+        name="create-ai-thread",
         description="Create AI thread so u dont have to do !ai",
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -667,94 +659,14 @@ class Ai(commands.Cog, name="🤖 AI"):
         await context.send("Thread created: " + newChannel.mention)
 
     @commands.hybrid_command(
-        name="ai_image_old",
+        name="ai-image",
         description="Generate an ai image",
-        usage="ai_image_old <prompt>"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def ai_image_old(self, context: Context, *, prompt: str) -> None:
-        users_global = db["users_global"]
-        user_data = users_global.find_one({"id": context.author.id})
-
-        if not user_data:
-            user_data = CONSTANTS.user_global_data_template(context.author.id)
-            users_global.insert_one(user_data)
-
-        if user_data:
-            if user_data["ai_ignore"]:
-                await context.reply("**You are being ignored by the AI, reason: " + user_data["ai_ignore_reason"] + "**")
-                return
-
-        users_global = db["users_global"]
-
-        user_data = users_global.find_one({"id": context.author.id})
-
-        if not user_data:
-            user_data = CONSTANTS.user_global_data_template(context.author.id)
-            users_global.insert_one(user_data)
-
-
-        if profanity.contains_profanity(prompt):
-            newdata ={
-                "$inc": { "inspect.nsfw_requests": 1}
-            }
-
-            users_global.update_one(
-                { "id": context.author.id }, newdata
-            )
-
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW requests are not allowed in non NSFW channels!", ephemeral=True)
-
-        if not "ai_requests" in user_data["inspect"]:
-            newdata = {
-                "$set": { "inspect.ai_requests": 0}
-            }
-            users_global.update_one(
-                { "id": context.author.id }, newdata
-            )
-
-        if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
-
-        newdata ={
-            "$inc": { "inspect.ai_requests": 1}
-        }
-
-        users_global.update_one(
-            { "id": context.author.id }, newdata
-        )
-
-        ETA = int(time.time() + 15)
-        msg = await context.send(
-            f"This might take a bit of time... ETA: <t:{ETA}:R>"
-        )
-
-        async with aiohttp.ClientSession() as session:
-            api_key = os.getenv("HF_API_KEY")
-
-            response = await session.post(
-                "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-                json={"inputs": prompt},
-                headers={"Authorization": f"Bearer {api_key}"},
-            )
-            images = [discord.File(BytesIO(await response.read()), "ai_image.png")]
-
-            await msg.edit(attachments=images, content="Here you go!")
-
-    @commands.hybrid_command(
-        name="ai_image",
-        description="Generate an ai image",
-        usage="ai_image <prompt>"
+        usage="ai-image <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image(self, context: commands.Context, prompt: str) -> None:
-        # Create a separate task for the image generation
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": context.author.id})
 
@@ -776,8 +688,9 @@ class Ai(commands.Cog, name="🤖 AI"):
                 { "id": context.author.id }, newdata
             )
 
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW requests are not allowed in non nsfw channels!", ephemeral=True)
+            if hasattr(context.channel, "is_nsfw"):
+                if not context.channel.is_nsfw():
+                    return await context.send(f"NSFW requests are not allowed in non nsfw channels!", ephemeral=True)
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -788,8 +701,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await context.reply(embed=embed)
 
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
@@ -809,8 +724,10 @@ class Ai(commands.Cog, name="🤖 AI"):
         try:
             data = await loop.run_in_executor(None, functools.partial(self.generate_image, context, prompt))
         except Exception as e:
-            await msg.edit(content="An error occurred while generating the image: " + str(e))
-            return
+            await msg.edit(content="An error occurred while generating the image")
+            raise e
+
+        logger.info(data)
 
         for image in data:
             attachments.append(discord.File(BytesIO(base64.b64decode(image)), "ai_image.png"))
@@ -852,8 +769,9 @@ class Ai(commands.Cog, name="🤖 AI"):
             return await context.send("Invalid model. Available models: " + ", ".join(options.keys()))
 
         if model in nsfw_options:
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW models are not allowed in non NSFW channels!", ephemeral=True)
+            if hasattr(context.channel, "is_nsfw"):
+                if not context.channel.is_nsfw():
+                    return await context.send(f"NSFW models are not allowed in non NSFW channels!", ephemeral=True)
 
         if user_data:
             if user_data["ai_ignore"]:
@@ -868,7 +786,6 @@ class Ai(commands.Cog, name="🤖 AI"):
             user_data = CONSTANTS.user_global_data_template(context.author.id)
             users_global.insert_one(user_data)
 
-
         if profanity.contains_profanity(prompt):
             newdata ={
                 "$inc": { "inspect.nsfw_requests": 1}
@@ -878,8 +795,9 @@ class Ai(commands.Cog, name="🤖 AI"):
                 { "id": context.author.id }, newdata
             )
 
-            if not context.channel.is_nsfw():
-                return await context.send(f"NSFW requests are not allowed in non NSFW channels!", ephemeral=True)
+            if hasattr(context.channel, "is_nsfw"):
+                if not context.channel.is_nsfw():
+                    return await context.send(f"NSFW requests are not allowed in non NSFW channels!", ephemeral=True)
 
         if not "ai_requests" in user_data["inspect"]:
             newdata = {
@@ -890,9 +808,10 @@ class Ai(commands.Cog, name="🤖 AI"):
             )
 
         if user_data["inspect"]["ai_requests"] == 0:
-            await context.send("By using the AI you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to they AI in order to give the AI memory, theese messages will be deleted after 7 days of inactivity")
-
-
+            embed = discord.Embed(
+                description="By interacting with the ai in any way you agree to the following:\n- We will log: amount of ai requests, times you get flagged, nsfw request count\n- We will also store all messages you send to the AI in order to give the AI memory, these messages will be deleted after 7 days of inactivity and will not be seen by anyone other than the ai itself."
+            )
+            await context.reply(embed=embed)
         newdata ={
             "$inc": { "inspect.ai_requests": 1}
         }
@@ -938,20 +857,27 @@ class Ai(commands.Cog, name="🤖 AI"):
         return images_data
 
     @commands.hybrid_command(
-        name="system_prompt",
+        name="system-prompt",
         description="Set the system prompt for the AI",
-        usage="system_prompt <prompt>"
+        usage="system-prompt <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
-    async def system_prompt(self, context: Context, *, prompt: str) -> None:
+    async def system_prompt(self, context: Context, *, prompt: str = "") -> None:
+        c = db["guilds"]
+        data = c.find_one({"id": context.guild.id})
+
+        if prompt == "":
+            if data:
+                if "system_prompt" in data:
+                    return await context.send("Current system prompt: " + data["system_prompt"])
+                else:
+                    return await context.send("No system prompt set.")
+
         if profanity.contains_profanity(prompt):
             if not context.channel.is_nsfw():
                 prompt = "NONE"
                 await context.send("The system prompt contains profanity and this channel is not marked as NSFW. Please use an NSFW channel for NSFW prompts.")
-
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
 
         newdata = {
                 "$set": { "system_prompt": prompt }
@@ -964,20 +890,9 @@ class Ai(commands.Cog, name="🤖 AI"):
         await context.send("System prompt set to: " + prompt)
 
     @commands.hybrid_command(
-        name="get_system_prompt",
-        description="Get the system prompt for the AI",
-        usage="get_system_prompt"
-    )
-    async def get_system_prompt(self, context: Context) -> None:
-        c = db["guilds"]
-        data = c.find_one({"id": context.guild.id})
-
-        await context.send("System prompt is: " + data["system_prompt"])
-
-    @commands.hybrid_command(
-        name="reset_ai",
+        name="reset-ai",
         description="Reset AI data",
-        usage="reset_ai"
+        usage="reset-ai"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.has_permissions(manage_messages=True)
@@ -986,8 +901,8 @@ class Ai(commands.Cog, name="🤖 AI"):
         c.delete_one({"id": context.channel.id})
         await context.send("AI data reset for " + context.channel.mention)
 
-    @commands.hybrid_command(
-        name="toggle_ai",
+    @commands.command(
+        name="toggle-ai",
         description="Reset AI data (owner only)",
     )
     @commands.is_owner()

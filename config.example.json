@@ -1,10 +1,11 @@
 {
   "prefix": ",",
   "invite_link": "https://discord.com/oauth2/authorize?client_id=1226487228914602005&scope=bot&permissions=8",
-  "command_error_webhooks": "",
+  "command_error_webhook": "",
   "error_webhooks": "",
-  "join_leave_webhooks": "",
+  "join_leave_webhook": "",
   "origins": ["http://localhost", "http://localhost:3000"],
   "ssl_keyfile": "./ssl/example.com.key",
-  "ssl_certfile": "./ssl/example.com.pem"
+  "ssl_certfile": "./ssl/example.com.pem",
+  "fully_ignore": []
 }
