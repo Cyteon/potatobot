@@ -550,6 +550,9 @@ class Security(commands.Cog, name="🛡️ Security"):
                 if not user:
                     return
 
+                if user == self.bot.user:
+                    return
+
                 if user == channel.guild.owner:
                     pass
 

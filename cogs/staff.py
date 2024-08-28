@@ -1085,7 +1085,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         if not channel:
             channel = context.channel
 
-        await context.send("Are you sure you want to recreate this channel?", view=deleteconfirm(context.author, context.channel))
+        await context.send(f"Are you sure you want to recreate {channel.mention}", view=deleteconfirm(context.author, channel))
 
 async def setup(bot) -> None:
     await bot.add_cog(Staff(bot))
