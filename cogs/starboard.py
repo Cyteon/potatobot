@@ -149,6 +149,7 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
         usage="starboard <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def starboard(self, context: Context) -> None:
         subcommands = [cmd for cmd in self.starboard.walk_commands()]
 
@@ -175,6 +176,7 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
         usage="starboard channel <channel>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_channels=True)
     async def set_starboard(self, context: Context, channel: discord.TextChannel) -> None:
         col = db["guilds"]
@@ -199,6 +201,7 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
         usage="starboard threshold <threshold>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_channels=True)
     async def set_threshold(self, context: Context, threshold: int) -> None:
         col = db["guilds"]
@@ -223,6 +226,7 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
         usage="starboard disable"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_channels=True)
     async def disable_starboard(self, context: Context) -> None:
         col = db["guilds"]
@@ -247,6 +251,8 @@ class Starboard(commands.Cog, name="⭐ Starboard"):
         usage="starboard enable"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+
     @commands.has_permissions(manage_channels=True)
     async def enable_starboard(self, context: Context) -> None:
         col = db["guilds"]

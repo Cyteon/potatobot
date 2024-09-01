@@ -180,6 +180,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="play <query or link>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def play(self, context, *, query: str):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -220,6 +221,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="skip"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def skip(self, context):
         await self.bot.lavalink.player_manager.get(context.guild.id).skip()
@@ -230,6 +232,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="pause"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def pause(self, context):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -244,6 +247,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="resume"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def resume(self, context):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -259,6 +263,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="loop"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def loop(self, context):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -272,6 +277,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="filter <filter> <args>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def filter(self, context: Context) -> None:
         prefix = await self.bot.get_prefix(context)
 
@@ -292,6 +298,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="filer lowpass <strength>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def lowpass(self, context, strength: float = 0.0):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -325,6 +332,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="filter pitch <pitch>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def pitch(self, context: Context, pitch: float):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -345,6 +353,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="filter speed <speed>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def speed(self, context: Context, speed: float):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -364,6 +373,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="disconnect"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def disconnect(self, context):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
@@ -380,6 +390,7 @@ class Music(commands.Cog, name="🎵 Music"):
         usage="volume <volume>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.check(create_player)
     async def volume(self, context: Context, volume: int):
         player = self.bot.lavalink.player_manager.get(context.guild.id)

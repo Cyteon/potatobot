@@ -23,6 +23,7 @@ class Level(commands.Cog, name="🚀 Level"):
         usage="level [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.cooldown(3, 10, commands.BucketType.user)
     async def level(self, context: Context, user: discord.Member = None) -> None:
         if not user:
@@ -67,6 +68,7 @@ class Level(commands.Cog, name="🚀 Level"):
         usage="leaderboard"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def leaderboard(self, context: Context) -> None:
         c = db["users"]
@@ -150,6 +152,7 @@ class Level(commands.Cog, name="🚀 Level"):
         usage="create-level-roles"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_roles=True)
     async def create_level_roles(self, context: Context):
         # create role for level 1/3/5/10/15/20
@@ -177,6 +180,7 @@ class Level(commands.Cog, name="🚀 Level"):
         usage="delete-level-roles"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_roles=True)
     async def delete_level_roles(self, context: Context):
         guilds = db["guilds"]

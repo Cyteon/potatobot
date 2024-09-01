@@ -25,6 +25,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="balance [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.cooldown(3, 10, commands.BucketType.user)
     async def wallet(self, context: Context, user: discord.Member = None) -> None:
         if not user:
@@ -44,6 +45,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="daily"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def daily(self, context: Context) -> None:
         c = db["users"]
         data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
@@ -80,6 +82,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="rob <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, context: Context, user: discord.Member) -> None:
         if user == context.author:
@@ -162,6 +165,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="baltop"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def baltop(self, context: Context) -> None:
         c = db["users"]
         data = c.find({"guild_id": context.guild.id}).sort("wallet", -1).limit(10)
@@ -193,6 +197,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="pay <user> <amount>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def pay(self, context: Context, user: discord.Member, amount: int) -> None:
         if amount < 0:
             await context.send("You can't pay a negative amount")
@@ -237,6 +242,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="set <user> <amount>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_messages=True)
     async def set(self, context: Context, user: discord.Member, amount: int) -> None:
         c = db["users"]
@@ -262,6 +268,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="gamble <amount>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def gamble(self, context: Context, amount: int) -> None:
         if amount < 0:
             await context.send("You can't gamble a negative amount")
@@ -294,6 +301,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         usage="farm"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def farm(self, context: Context) -> None:
 
         c = db["users"]

@@ -62,6 +62,7 @@ class Stats(commands.Cog, name="📈 Stats"):
         usage="chart"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def chart(self, context: Context) -> None:
         subcommands = [cmd for cmd in self.chart.walk_commands()]
 
@@ -87,6 +88,7 @@ class Stats(commands.Cog, name="📈 Stats"):
         usage="chart messages"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def messages(self, context: Context) -> None:
         guild_id = str(context.guild.id)
         if not db.exists(guild_id):
@@ -144,6 +146,7 @@ class Stats(commands.Cog, name="📈 Stats"):
         usage="chart members"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def members(self, context: Context) -> None:
         guild_id = str(context.guild.id)
         if not db.exists(guild_id):

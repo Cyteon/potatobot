@@ -9,7 +9,7 @@ from cryptography.fernet import Fernet
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from utils import Checks, DBClient, CONSTANTS
+from utils import CachedDB, Checks, DBClient, CONSTANTS
 from ui.setup import StartSetupView
 
 
@@ -454,6 +454,88 @@ class Server(commands.Cog, name="⚙️ Server"):
         c.update_one({"id": context.guild.id}, newdata)
 
         await context.send(f"Set level {level} role to {role.name}")
+
+    @commands.hybrid_group(
+        name="command",
+        description="Commands to re-enable/disable commands",
+        aliases=["cmd"],
+        usage="Command <subcommand> [args]"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(manage_channels=True)
+    async def cmd(self, context: Context) -> None:
+        prefix = await self.bot.get_prefix(context)
+
+        cmds = "\n".join([f"{prefix}cmd {cmd.name} - {cmd.description}" for cmd in self.cmd.walk_commands()])
+
+        embed = discord.Embed(
+            title=f"Help: Command", description="List of available commands:", color=0xBEBEFE
+        )
+        embed.add_field(
+            name="Commands", value=f"```{cmds}```", inline=False
+        )
+
+        await context.send(embed=embed)
+
+    @cmd.command(
+        name="disable",
+        description="Disable a command",
+        usage="cmd disable <command>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(administrator=True)
+    async def disable(self, context: Context, *, command: str) -> None:
+        cmd = self.bot.get_command(command)
+
+        if not cmd:
+            return await context.send("Command not found")
+
+        if cmd.qualified_name.startswith("command") or cmd.qualified_name.startswith("cmd"):
+            return await context.send("You cannot disable this command")
+
+        guild = await CachedDB.find_one(db["guilds"], {"id": context.guild.id})
+
+        if not guild:
+            guild = CONSTANTS.guild_data_template(context.guild.id)
+            db["guilds"].insert_one(guild)
+
+        if cmd.qualified_name in guild["disabled_commands"]:
+            return await context.send(f"The command `{cmd.qualified_name}` is already disabled")
+
+        guild["disabled_commands"].append(cmd.qualified_name)
+
+        await CachedDB.update_one(db["guilds"], {"id": context.guild.id}, {"$set": {"disabled_commands": guild["disabled_commands"]}})
+
+        await context.send(f"Disabled the command `{cmd.qualified_name}`")
+
+    @cmd.command(
+        name="enable",
+        description="Re-enable a command",
+        usage="cmd enable <command>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.has_permissions(administrator=True)
+    async def cmd_enable(self, context: Context, *, command: str) -> None:
+        cmd = self.bot.get_command(command)
+
+        if not cmd:
+            return await context.send("Command not found")
+
+        guild = await CachedDB.find_one(db["guilds"], {"id": context.guild.id})
+
+        if not guild:
+            guild = CONSTANTS.guild_data_template(context.guild.id)
+            db["guilds"].insert_one(guild)
+
+        if command not in guild["disabled_commands"]:
+            return await context.send(f"The command `{cmd.qualified_name}` is not disabled")
+
+        guild["disabled_commands"].remove(cmd.qualified_name)
+
+        await CachedDB.update_one(db["guilds"], {"id": context.guild.id}, {"$set": {"disabled_commands": guild["disabled_commands"]}})
+
+        await context.send(f"Re-enabled the command `{cmd.qualified_name}`")
+
 
 async def setup(bot) -> None:
     await bot.add_cog(Server(bot))

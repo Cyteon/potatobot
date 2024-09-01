@@ -35,6 +35,7 @@ class Github(commands.Cog, name="🖧 Github"):
         aliases=["gh"],
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def github(self, context: Context) -> None:
@@ -58,6 +59,7 @@ class Github(commands.Cog, name="🖧 Github"):
         usage="github user <username>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def ghuser(self, context, user: str):
         async with aiohttp.ClientSession() as session:
             person_raw = await session.get(
@@ -103,6 +105,7 @@ class Github(commands.Cog, name="🖧 Github"):
         usage="github repo <repo>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def ghsearchrepo(self, context, query: str):
         pages = 1
         url = f"https://api.github.com/search/repositories?q={query}&{pages}"

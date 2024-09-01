@@ -25,7 +25,7 @@ def guild_data_template(guild_id):
         "oldperms": {},
         "fakeperms": {},
         "authorized_bots": [],
-        "disabled_commands": [], # I might add this later
+        "disabled_commands": [],
         "starboard": {
             "channel": 0,
             "threshold": 5,

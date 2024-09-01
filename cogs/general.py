@@ -177,6 +177,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="uptime"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def uptime(self, context: Context):
@@ -190,6 +191,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="botinfo"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def botinfo(self, context: Context) -> None:
@@ -227,14 +229,10 @@ class General(commands.Cog, name="⬜ General"):
         usage="ping"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ping(self, context: Context) -> None:
-        """
-        Check if the bot is alive.
-
-        :param context: The hybrid command context.
-        """
         embed = discord.Embed(
             title="🏓 Pong!",
             description=f"The bot latency is {round(self.bot.latency * 1000)}ms.",
@@ -272,6 +270,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="translate <text> <language>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.describe(text="The text you want to translate.")
     @app_commands.describe(language="The language you want to translate the text to.")
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -294,6 +293,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="8ball <question>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.describe(question="The question you want to ask.")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
@@ -334,10 +334,9 @@ class General(commands.Cog, name="⬜ General"):
         description="Support Server.",
         usage="support"
     )
-    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def support(self, context: commands.Context) -> None:
-
-        message = await context.send(f"https://discord.gg/ZcFsFb9RJU")
+        message = await context.send("https://discord.gg/wtur9j8uVP")
 
     @commands.hybrid_command(
         name="urban-dictionary",
@@ -346,6 +345,7 @@ class General(commands.Cog, name="⬜ General"):
         aliases=["urban"]
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def urban_dict(self, context: Context, *, term: str):
@@ -372,6 +372,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="reddit [optional: subreddit]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def reddit(self, context: Context, subreddit: str = "") -> None:
@@ -441,6 +442,7 @@ class General(commands.Cog, name="⬜ General"):
         description="Vote for the bot on top.gg",
         usage="vote"
     )
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def vote(self, context: Context):
@@ -459,6 +461,7 @@ class General(commands.Cog, name="⬜ General"):
         usage="calc <expression>",
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def calc(self, context: Context, *, expression: str) -> None:

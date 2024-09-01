@@ -98,7 +98,8 @@ class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
         aliases=["rr"]
     )
     @commands.check(Checks.is_not_blacklisted)
-    @commands.has_permissions(manage_messages=True)
+    @commands.check(Checks.command_not_disabled)
+    @commands.has_permissions(manage_roles=True)
     async def reactionroles(self, context: Context) -> None:
         subcommands = [cmd for cmd in self.reactionroles.walk_commands()]
 
@@ -124,6 +125,7 @@ class ReactionRoles(commands.Cog, name="🇺🇸 Reaction Roles"):
         usage="reactionroles add <message_id> <role_id> <emoji>",
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_roles=True)
     async def add(self, context: commands.Context, message_id: str, role: discord.Role, emoji: str):
         try:

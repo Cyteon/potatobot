@@ -347,6 +347,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example":"kick @user advertising"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     async def kick(
@@ -423,6 +424,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example":"nick @user new nickname"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nick(
@@ -450,6 +452,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "ban @user spamming"},
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def ban(
@@ -532,6 +535,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "hackban 1226487228914602005 spamming"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def hackban(self, context: Context, user: discord.User, *, reason: str = "Not specified"):
@@ -579,6 +583,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "softban @user"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def softban(self, context: Context, user: discord.User):
@@ -620,6 +625,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "unban 1226487228914602005"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def unban(self, context: Context, user: discord.User):
@@ -684,6 +690,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "purge 10"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
     @app_commands.describe(amount="The amount of messages that should be deleted.")
@@ -703,6 +710,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "archive 10"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_messages=True)
     async def archive(self, context: Context, limit: int = 10) -> None:
         os.makedirs("logs", exist_ok=True)
@@ -737,6 +745,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "mute @user 1d spamming in #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(moderate_members=True)
     @commands.bot_has_permissions(moderate_members=True)
     async def mute(self, context: Context, user: discord.Member, time: str, *, reason: str = "Not specified") -> None:
@@ -785,6 +794,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "unmute @user spamming in #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(moderate_members=True)
     @commands.bot_has_permissions(moderate_members=True)
     async def unmute(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
@@ -803,6 +813,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "lock #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_channels=True)
     @commands.bot_has_permissions(manage_channels=True)
     async def lockdown(self, context: Context, channel: discord.TextChannel = None) -> None:
@@ -826,6 +837,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "unlock #general"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_channels=True)
     @commands.bot_has_permissions(manage_channels=True)
     async def unlock(self, context: Context, channel: discord.TextChannel = None) -> None:
@@ -849,6 +861,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "jail @user admin abusing"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def jail(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
@@ -948,6 +961,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         extras={"example": "unjail @user"}
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def unjail(self, context: Context, user: discord.Member):
@@ -1002,6 +1016,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         usage="warnings add <user> <reason>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_messages=True)
     async def warn(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
         users = db["users"]
@@ -1028,6 +1043,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         usage="warnings list <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_messages=True)
     async def listwarnings(self, context: Context, user: discord.Member) -> None:
         users = db["users"]
@@ -1058,6 +1074,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         usage="warnings clear <user>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_messages=True)
     async def clearwarnings(self, context: Context, user: discord.Member) -> None:
         users = db["users"]
@@ -1079,6 +1096,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         usage="recreate [optional: channel]",
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(manage_channels=True)
     @commands.bot_has_permissions(manage_channels=True)
     async def recreate(self, context: Context, channel: discord.TextChannel = None) -> None:

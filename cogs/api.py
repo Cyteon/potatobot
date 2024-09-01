@@ -18,6 +18,7 @@ class Api(commands.Cog, name="🌐 API"):
         usage="api <subcommand> [args]",
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def api(self, context: Context) -> None:
@@ -41,6 +42,7 @@ class Api(commands.Cog, name="🌐 API"):
         usage="api minecraft <username>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def api_minecraft(self, context: Context, *, username: str) -> None:
         embed = discord.Embed(title=f"Minecraft character for {username}", color=0xBEBEFE)
         embed.set_image(url=f"https://mc-heads.net/body/{username}")

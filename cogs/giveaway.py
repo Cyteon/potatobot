@@ -18,6 +18,7 @@ class Giveaway(commands.Cog, name="🎁 Giveaway"):
         usage="giveaway"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_messages=True)
     async def giveaway(self, context: Context) -> None:
         prefix = await self.bot.get_prefix(context)
@@ -39,6 +40,7 @@ class Giveaway(commands.Cog, name="🎁 Giveaway"):
         usage="giveaway start <reward>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_messages=True)
     async def giveaway_start(self, context: Context, *, reward: str) -> None:
         embed = discord.Embed(title="Giveaway!", description=reward, color=0xBEBEFE)
@@ -53,6 +55,7 @@ class Giveaway(commands.Cog, name="🎁 Giveaway"):
         usage = "giveaway end <message_id>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_messages=True)
     async def giveaway_end(self, context: Context, message_id) -> None:
         message_id = int(message_id)

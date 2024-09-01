@@ -21,7 +21,7 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 load_dotenv()
 
-from utils import ErrorLogger
+from utils import ErrorLogger, Errors
 
 if not os.path.isfile(f"{os.path.realpath(os.path.dirname(__file__))}/config.json"):
     sys.exit("'config.json' not found! Please add it and try again.")
@@ -304,6 +304,20 @@ class DiscordBot(commands.AutoShardedBot):
                 color=0xE02B2B
             )
 
+            await context.send(embed=embed)
+        elif isinstance(error, Errors.CommandDisabled):
+            embed = discord.Embed(
+                title="Error!",
+                description=str(error).capitalize(),
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+        elif isinstance(error, Errors.UserBlacklisted):
+            embed = discord.Embed(
+                title="Error!",
+                description=str(error).capitalize(),
+                color=0xE02B2B,
+            )
             await context.send(embed=embed)
         elif isinstance(error, commands.CommandError):
             embed = discord.Embed(

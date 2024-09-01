@@ -451,6 +451,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai(self, context: Context, *, prompt: str) -> None:
@@ -532,6 +533,7 @@ class Ai(commands.Cog, name="🤖 AI"):
     )
     @commands.has_permissions(manage_channels=True)
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def set_ai_channel(self, context: Context):
         c = db["guilds"]
         data = c.find_one({"id": context.guild.id})
@@ -581,6 +583,7 @@ class Ai(commands.Cog, name="🤖 AI"):
     )
     @commands.has_permissions(manage_channels=True)
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def unset_ai_channel(self, context: Context):
         c = db["ai_channels"]
 
@@ -604,6 +607,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         description="Create AI thread so u dont have to do !ai",
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def create_ai_thread(self, context: Context, *, prompt = "Hello") -> None:
         c = db["guilds"]
         data = c.find_one({"id": context.guild.id})
@@ -664,6 +668,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="ai-image <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai_image(self, context: commands.Context, prompt: str) -> None:
@@ -740,6 +745,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="imagine <model (run command with no arguments for list)> <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def imagine(self, context: commands.Context, model: str = "none", *, prompt: str = "potato") -> None:
@@ -862,6 +868,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="system-prompt <prompt>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_messages=True)
     async def system_prompt(self, context: Context, *, prompt: str = "") -> None:
         c = db["guilds"]
@@ -895,6 +902,7 @@ class Ai(commands.Cog, name="🤖 AI"):
         usage="reset-ai"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_messages=True)
     async def reset_ai(self, context: Context) -> None:
         c = db["ai_convos"]

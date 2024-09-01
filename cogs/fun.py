@@ -100,6 +100,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="joos",
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def joos(self, context: Context) -> None:
         await context.send("<:joos:1254878760218529873>")
 
@@ -109,6 +110,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="http <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def http(self, context: Context) -> None:
@@ -131,6 +133,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="http cat <code>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def cat(self, context: Context, code) -> None:
         await context.send(f"https://http.cat/{code}.jpg")
 
@@ -140,6 +143,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="http dog <code>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def dog(self, context: Context, code) -> None:
         await context.send(f"https://http.dog/{code}.jpg")
 
@@ -149,6 +153,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="http fish <code>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def fish(self, context: Context, code) -> None:
         await context.send(f"https://http.fish/{code}.jpg")
 
@@ -157,6 +162,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         description="Get an activity if you are bored"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def bored(self, context: Context) -> None:
@@ -192,6 +198,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="advice"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def advice(self, context: Context) -> None:
@@ -206,6 +213,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         description="Get an insult"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def insult(self, context: Context) -> None:
@@ -222,6 +230,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="gif [optional: query]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def gif(self, context: Context, *, query="NONE") -> None:
@@ -269,6 +278,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def avatar(self, context: Context) -> None:
@@ -291,6 +301,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar get [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def get(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -310,6 +321,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar blur [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def blur(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -328,6 +340,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar pixelate [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def pixelate(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -346,6 +359,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar trigger [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def trigger(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -364,6 +378,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar jail [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def jail(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -382,6 +397,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar wasted [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def wasted(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -400,6 +416,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar passed [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def passed(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -418,6 +435,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="avatar trans [optional: user]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def trans(self, context: Context, user: discord.User = None) -> None:
         if not user:
             user = context.author
@@ -436,6 +454,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="image random <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random(self, context: Context) -> None:
@@ -458,12 +477,11 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random coffee"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_cat(self, context: Context) -> None:
-
         async with aiohttp.ClientSession() as session:
-
 
             img = await session.get(
                 "https://coffee.alexflipnote.dev/random"
@@ -478,6 +496,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random cat"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_cat(self, context: Context) -> None:
@@ -497,10 +516,10 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random dog"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_dog(self, context: Context) -> None:
-
         async with aiohttp.ClientSession() as session:
             data = await session.get(
                 "https://some-random-api.com/animal/dog"
@@ -516,6 +535,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random bird"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_bird(self, context: Context) -> None:
@@ -535,6 +555,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random fox"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_fox(self, context: Context) -> None:
@@ -554,6 +575,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random kangaroo"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_kangaroo(self, context: Context) -> None:
@@ -573,6 +595,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random koala"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_koala(self, context: Context) -> None:
@@ -591,6 +614,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random panda"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_panda(self, context: Context) -> None:
@@ -610,6 +634,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random raccoon"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_raccoon(self, context: Context) -> None:
@@ -629,6 +654,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random red-panda"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_red_panda(self, context: Context) -> None:
@@ -648,6 +674,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="random potato"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_potato(self, context: Context) -> None:
@@ -666,6 +693,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="image <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def image(self, context: Context) -> None:
@@ -688,6 +716,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="image youtube <user> <text>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def youtube(self, context: Context, user: discord.User, *, text: str) -> None:
         if not user:
             user = context.author
@@ -706,6 +735,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="image tweet <user> <text>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def tweet(self, context: Context, user: discord.User, *, tweet: str) -> None:
         async with aiohttp.ClientSession() as session:
             nick = user.nick if hasattr(user, 'nick') else user.display_name
@@ -726,6 +756,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         usage="ttt <opponent>"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def tictactoe(self, context: Context, opponent: discord.User) -> None:
@@ -741,6 +772,5 @@ class Fun(commands.Cog, name="🎉 Fun"):
 
         await context.send(f"{context.author.mention} vs {opponent.mention}!", view=TicTacToeView(context.author, opponent))
 
-# And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
 async def setup(bot) -> None:
     await bot.add_cog(Fun(bot))

@@ -22,6 +22,7 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
         usage="ticketembed"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(administrator=True)
     async def ticketembed(self, context):
         await context.send(
@@ -38,6 +39,7 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
         usage="open"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def open(self, context: Context):
         c = db["guilds"]
 
@@ -105,6 +107,7 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
         usage="ticket"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def ticket(self, context: Context):
         subcommands = [cmd for cmd in self.ticket.walk_commands()]
 
@@ -124,8 +127,13 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
 
         await context.send(embed=embed)
 
-    @ticket.command(name="upgrade", description="Remove support role access from the ticket", usage="ticket upgrade")
+    @ticket.command(
+        name="upgrade",
+        description="Remove support role access from the ticket",
+        usage="ticket upgrade"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_channels=True)
     async def upgrade(self, context: Context):
         try:
@@ -159,6 +167,7 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
 
     @ticket.command(name="downgrade", description="Restore support role access to the ticket", usage="ticket downgrade")
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     @commands.has_permissions(manage_channels=True)
     async def downgrade(self, context: Context):
         try:
@@ -190,8 +199,13 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             channel=context.channel
         )
 
-    @ticket.command(name="add", description="Add a user to the ticket", usage="ticket add <user>")
+    @ticket.command(
+        name="add",
+        description="Add a user to the ticket",
+        usage="ticket add <user>"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def add(self, context: Context, user: discord.Member):
         try:
             int(context.channel.topic.split()[0])
@@ -217,8 +231,13 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             channel=context.channel
         )
 
-    @ticket.command(name="remove", description="Remove a user from the ticket", usage="ticket remove <user>")
+    @ticket.command(
+        name="remove",
+        description="Remove a user from the ticket",
+        usage="ticket remove <user>"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def remove(self, context: Context, user: discord.Member):
         try:
             int(context.channel.topic.split()[0])
@@ -247,8 +266,13 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             channel=context.channel
         )
 
-    @ticket.command(name="claim", description="Claim the ticket", usage="ticket claim")
+    @ticket.command(
+        name="claim",
+        description="Claim the ticket",
+        usage="ticket claim"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def claim(self, context: Context):
         try:
             int(context.channel.topic.split()[0])
@@ -285,8 +309,13 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
                 channel=context.channel
             )
 
-    @ticket.command(name="unclaim", description="Unclaim the ticket", usage="ticket unclaim")
+    @ticket.command(
+        name="unclaim",
+        description="Unclaim the ticket",
+        usage="ticket unclaim"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def unclaim(self, context: Context):
         try:
             int(context.channel.topic.split()[0])
@@ -316,8 +345,13 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             await context.send(embed=embed)
 
 
-    @ticket.command(name="close", description="Close the ticket", usage="ticket close")
+    @ticket.command(
+        name="close",
+        description="Close the ticket",
+        usage="ticket close"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
     async def close(self, context: Context):
         try:
             int(context.channel.topic.split()[0])
@@ -393,8 +427,14 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             view = TrashButton()
         )
 
-    @ticket.command(name="delete", description="Delete the ticket", usage="ticket delete")
+    @ticket.command(
+        name="delete",
+        description="Delete the ticket",
+        usage="ticket delete"
+    )
     @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+
     @commands.has_permissions(manage_channels=True)
     async def delete(self, context: Context):
         if not context.channel.name.startswith("closed-"):
