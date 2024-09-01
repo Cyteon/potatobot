@@ -1444,7 +1444,10 @@ class Security(commands.Cog, name="🛡️ Security"):
     async def unlockdown(self, context: Context) -> None:
         guild_owner = context.guild.owner
 
-        await context.send("Starting Unlockdown")
+        try:
+            await context.send("Starting Unlockdown")
+        except:
+            pass
 
         if context.author != guild_owner:
             users = db["users"]
@@ -1470,18 +1473,22 @@ class Security(commands.Cog, name="🛡️ Security"):
 
         if "oldperms" in guild_data:
             for channel in context.guild.text_channels:
-                channel_id_str = str(channel.id)
-                if channel_id_str in guild_data["oldperms"]:
-                    # Deserialize the permissions
-                    perms_dict = guild_data["oldperms"][channel_id_str]
-                    overwrite = discord.PermissionOverwrite(**perms_dict)
+                try:
+                    channel_id_str = str(channel.id)
+                    if channel_id_str in guild_data["oldperms"]:
+                        # Deserialize the permissions
+                        perms_dict = guild_data["oldperms"][channel_id_str]
+                        overwrite = discord.PermissionOverwrite(**perms_dict)
 
-                    await channel.set_permissions(context.guild.default_role, overwrite=overwrite)
+                        await channel.set_permissions(context.guild.default_role, overwrite=overwrite)
+                except:
+                    try:
+                        await context.send("Failed to change perms for channel " + channel.name)
+                    except:
+                        pass
 
-            # Clear oldperms after restoring
             guilds.update_one({"id": context.guild.id}, {"$unset": {"oldperms": ""}})
 
-        # Update the guild document to indicate the lockdown is over
         guilds.update_one({"id": context.guild.id}, {"$set": {"lockdown": False}})
         await context.send("Server unlockdown complete.")
 
