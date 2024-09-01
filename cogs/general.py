@@ -42,13 +42,19 @@ class General(commands.Cog, name="⬜ General"):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.context_menu_message = app_commands.ContextMenu(
-            name="Remove spoilers", callback=self.remove_spoilers
+            name="Remove spoilers", callback=self.ctx_remove_spoilers
+        )
+        self.context_menu_message = app_commands.ContextMenu(
+            name="Translate",
+            callback=self.ctx_translate,
+            allowed_contexts=app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
+            allowed_installs=app_commands.AppInstallationType(guild=True, user=True)
         )
         self.bot.tree.add_command(self.context_menu_message)
         self.get_prefix = bot.get_prefix
 
     # Message context menu command
-    async def remove_spoilers(
+    async def ctx_remove_spoilers(
         self, interaction: discord.Interaction, message: discord.Message
     ) -> None:
         spoiler_attachment = None
@@ -65,6 +71,22 @@ class General(commands.Cog, name="⬜ General"):
             embed.set_image(url=attachment.url)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    async def ctx_translate(
+        self, interaction: discord.Interaction, message: discord.Message
+    ) -> None:
+        if message.content:
+            translated = GoogleTranslator(source="auto", target="en").translate(message.content)
+            embed = discord.Embed(
+                title="Translation",
+                description=translated,
+                color=0xBEBEFE,
+            )
+
+            embed.set_footer(text=f"Original: {message.content}")
+
+            await interaction.response.send_message(embed=embed, ephemeral=False)
+        else:
+            await interaction.response.send_message("No text to translate", ephemeral=False)
 
     @commands.hybrid_command(
         name="help",
