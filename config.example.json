@@ -8,5 +8,7 @@
   "origins": ["http://localhost", "http://localhost:3000"],
   "ssl_keyfile": "./ssl/example.com.key",
   "ssl_certfile": "./ssl/example.com.pem",
+  "use_ssl": false,
+  "port": 80,
   "fully_ignore": []
 }

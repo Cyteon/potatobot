@@ -33,9 +33,6 @@ else:
     with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json") as file:
         config = json.load(file)
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain(config["ssl_certfile"], config["ssl_keyfile"])
-
 origins = config["origins"]
 
 app.add_middleware(
@@ -170,20 +167,24 @@ async def get_stats():
         "users": len(set(bot.get_all_members())),
         "ai_requests": bot.statsDB.get("ai_requests"),
     }
-# Function to run FastAPI
-def run_fastapi():
-    uvicorn.run(
-        app, host="0.0.0.0",
-        port=443,
-        ssl_keyfile=config["ssl_keyfile"],
-        ssl_certfile=config["ssl_certfile"],
-        ssl_version=ssl.PROTOCOL_TLS
-    )
 
-# Run FastAPI in a separate thread
+def run_fastapi():
+    if config["use_ssl"]:
+        uvicorn.run(
+            app, host="0.0.0.0",
+            port=config["port"],
+            ssl_keyfile=config["ssl_keyfile"],
+            ssl_certfile=config["ssl_certfile"],
+            ssl_version=ssl.PROTOCOL_TLS
+        )
+    else:
+        uvicorn.run(
+            app, host="0.0.0.0",
+            port=config["port"],
+        )
+
 thread = threading.Thread(target=run_fastapi)
 thread.start()
 
-# Run the Discord bot
 TOKEN = os.getenv("TOKEN")
 bot.run(TOKEN)
