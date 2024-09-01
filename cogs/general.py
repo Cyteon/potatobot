@@ -84,9 +84,9 @@ class General(commands.Cog, name="⬜ General"):
 
             embed.set_footer(text=f"Original: {message.content}")
 
-            await interaction.response.send_message(embed=embed, ephemeral=False)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
-            await interaction.response.send_message("No text to translate", ephemeral=False)
+            await interaction.response.send_message("No text to translate", ephemeral=True)
 
     @commands.hybrid_command(
         name="help",
