@@ -23,6 +23,7 @@ from discord.ext.commands import Context
 from deep_translator import GoogleTranslator
 
 from utils import DBClient, Checks
+from ui import translate
 
 db = DBClient.db
 
@@ -75,16 +76,7 @@ class General(commands.Cog, name="⬜ General"):
         self, interaction: discord.Interaction, message: discord.Message
     ) -> None:
         if message.content:
-            translated = GoogleTranslator(source="auto", target="en").translate(message.content)
-            embed = discord.Embed(
-                title="Translation",
-                description=translated,
-                color=0xBEBEFE,
-            )
-
-            embed.set_footer(text=f"Original: {message.content}")
-
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_modal(translate.TranslateModal(message))
         else:
             await interaction.response.send_message("No text to translate", ephemeral=True)
 
