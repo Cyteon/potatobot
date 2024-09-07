@@ -63,15 +63,15 @@ async def read_api_root():
 @app.get("/api/commands/{cog}")
 async def get_commands(cog: Optional[str] = "all"):
     if cog == "all":
-        # Get all commands
         all_commands = [
             {
                 "name": (cmd.parent.name + " " if cmd.parent else "") + cmd.name,
                 "description": cmd.description,
                 "cog": cmd.cog_name,
                 "usage": cmd.usage, "aliases": cmd.aliases,
-                "subcommand": cmd.parent != None
-            } for cmd in bot.walk_commands() if not "owner" in cmd.cog_name.lower()
+                "subcommand": cmd.parent != None,
+                "extras": cmd.extras
+            } for cmd in bot.walk_commands() if not "owner" in cmd.cog_name
         ]
         return all_commands
     else:
@@ -86,7 +86,8 @@ async def get_commands(cog: Optional[str] = "all"):
                 "name": (cmd.parent.name + " " if cmd.parent else "") + cmd.name,
                 "description": cmd.description,
                 "usage": cmd.usage, "aliases": cmd.aliases,
-                "subcommand": cmd.parent != None
+                "subcommand": cmd.parent != None,
+                "extras": cmd.extras
             } for cmd in bot.get_cog(cog).walk_commands()
         ]
 
