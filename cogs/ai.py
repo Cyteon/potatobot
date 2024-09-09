@@ -434,8 +434,7 @@ class Ai(commands.Cog, name="🤖 AI"):
                 self.statsDB.dump()
 
         except Exception as e:
-            err = f"An error in the AI has occured {e}"
-            await message.reply(err)
+            await message.reply("An error in the AI has occured")
 
         logger.info(f"AI replied to {message.author} in {message.guild.name} ({message.guild.id})")
 
@@ -523,8 +522,7 @@ class Ai(commands.Cog, name="🤖 AI"):
             self.statsDB.set("ai_requests", ai_requests)
             self.statsDB.dump()
         except Exception as e:
-            err = f"An error in the AI has occured: {e}"
-            await context.reply(err)
+            await context.reply("An error in the AI has occured")
 
     @commands.hybrid_command(
         name="set-ai-channel",
