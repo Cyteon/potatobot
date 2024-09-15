@@ -215,7 +215,7 @@ class Owner(commands.Cog, name="owner"):
     @dev.command(
         name="say",
         description="talk",
-        usage="say <message>",
+        usage="dev say <message>",
     )
     @commands.is_owner()
     async def say(self, context: Context, *, message: str) -> None:
