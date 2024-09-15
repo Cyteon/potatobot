@@ -212,7 +212,7 @@ class Owner(commands.Cog, name="owner"):
         await context.send(embed=embed)
         sys.exit(0)
 
-    @commands.command(
+    @dev.command(
         name="say",
         description="talk",
         usage="say <message>",
