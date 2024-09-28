@@ -104,8 +104,8 @@ class General(commands.Cog, name="⬜ General"):
                 color=0xBEBEFE
             )
 
-            usage = cmd.usage if cmd.usage else "Not Set"
-            example = cmd.extras["example"] if "example" in cmd.extras else "Not Set"
+            usage = cmd.usage if cmd.usage else "Not Found"
+            example = cmd.extras["example"] if "example" in cmd.extras else "Not Found"
             embed.add_field(
                 name="Usage",
                 value=f"```Syntax: {usage}\nExample: {example}```",

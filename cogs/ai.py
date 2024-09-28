@@ -558,7 +558,10 @@ class Ai(commands.Cog, name="🤖 AI"):
         loop = asyncio.get_running_loop()
         data = await loop.run_in_executor(None, functools.partial(prompt_ai, "Hello", groq_client=client))
 
-        await context.channel.edit(slowmode_delay=5)
+        try:
+             await context.channel.edit(slowmode_delay=5)
+        except:
+             pass
 
         await context.send(data)
 
