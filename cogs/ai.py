@@ -394,7 +394,7 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         if data["groq_api_key"] == "NONE":
             if not data["ai_access"]:
-                await message.channel.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(message)}groq_api_key <api_key>**")
+                await message.channel.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(message)}groq-api-key <api_key>**")
                 logger.info(f"{message.author} tried to ask AI in {message.guild.name} ({message.guild.id}): AI Disabled!")
                 return
             client = Groq(api_key=get_api_key())
@@ -543,7 +543,7 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         if data["groq_api_key"] == "NONE":
             if not data["ai_access"]:
-                await context.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(context)}groq_api_key <api_key>**")
+                await context.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(context)}groq-api-key <api_key>**")
                 logger.info(f"{context.author} tried to set AI channel in {context.guild.name} ({context.guild.id}): AI Disabled!")
                 return
 
@@ -620,7 +620,7 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         if data["groq_api_key"] == "NONE":
             if not data["ai_access"]:
-                await context.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(context)}groq_api_key <api_key>**")
+                await context.send(f"**This server does not have access to built-in api keys, provide your own from https://console.groq.com/keys using {await self.bot.get_prefix(context)}groq-api-key <api_key>**")
                 logger.info(f"{context.author} tried to create AI thread in {context.guild.name} ({context.guild.id}): AI Disabled!")
                 return
 
