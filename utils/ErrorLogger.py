@@ -15,6 +15,44 @@ else:
     with open(f"./config.json") as file:
         config = json.load(file)
 
+def apply_context_errors(embed, context, ignore_message=False):
+    embed.add_field(
+        name="Author",
+        value=f"{context.author.mention}",
+        inline=True
+    )
+
+    if context.guild:
+        embed.add_field(
+            name="Guild",
+            value=f"`{context.guild.name}` (`{context.guild.id}`)",
+            inline=True
+        )
+
+    if context.command:
+        embed.add_field(
+            name="Command",
+            value=f"`{context.command.name}`",
+            inline=True
+        )
+
+    if context.message.content != "" and not ignore_message:
+        embed.add_field(
+            name="Message",
+            value=f"```{context.message.content}```",
+            inline=True
+        )
+
+    if context.interaction:
+        options = context.interaction.data["options"]
+        options = json.dumps(options, indent=2)
+
+        embed.add_field(
+            name="Interaction Options",
+            value=f"```{options}```",
+            inline=True
+        )
+
 async def command_error(error, context):
     async with aiohttp.ClientSession() as session:
         command_error_webhook = Webhook.from_url(config["command_error_webhook"], session=session)
@@ -25,44 +63,10 @@ async def command_error(error, context):
             color=discord.Color.red()
         )
 
-        embed.add_field(
-            name="Author",
-            value=f"{context.author.mention}",
-            inline=True
-        )
-
-        if context.guild:
-            embed.add_field(
-                name="Guild",
-                value=f"`{context.guild.name}` (`{context.guild.id}`)",
-                inline=True
-            )
-
-        if context.command:
-            embed.add_field(
-                name="Command",
-                value=f"`{context.command.name}`",
-                inline=True
-            )
-
-        if context.message.content != "":
-            embed.add_field(
-                name="Message",
-                value=f"```{context.message.content}```",
-                inline=True
-            )
-
-        if context.interaction:
-            options = context.interaction.data["options"]
-            options = json.dumps(options, indent=2)
-
-            embed.add_field(
-                name="Interaction Options",
-                value=f"```{options}```",
-                inline=True
-            )
+        apply_context_errors(embed, context)
 
         await command_error_webhook.send(embed=embed, username = "PotatoBot - Error Logger")
+
 async def error(self, event_method, *args, **kwargs):
     async with aiohttp.ClientSession() as session:
         error_webhook = Webhook.from_url(config["error_webhooks"], session=session)
@@ -76,6 +80,22 @@ async def error(self, event_method, *args, **kwargs):
         embed.add_field(
             name="Event Method",
             value=f"`{event_method}`",
+            inline=False
+        )
+
+        if args:
+            if isinstance(args[0], discord.ext.commands.Context):
+                apply_context_errors(embed, args[0], ignore_message=True)
+            else:
+                embed.add_field(
+                    name="Args",
+                    value=f"```{args}```",
+                    inline=False
+                )
+
+        embed.add_field(
+            name="Kwargs",
+            value=f"```{kwargs}```",
             inline=False
         )
 
