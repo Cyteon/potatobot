@@ -668,25 +668,6 @@ class Fun(commands.Cog, name="🎉 Fun"):
 
             await context.send(data["image"])
 
-    @random.command(
-        name="potato",
-        description="Get a random potato image",
-        usage="random potato"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.check(Checks.command_not_disabled)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def random_potato(self, context: Context) -> None:
-        async with aiohttp.ClientSession() as session:
-            data = await session.get(
-                "http://107.150.34.106:1728/api/random/potato"
-            )
-
-            data = await data.json()
-
-            await context.send(data["image"])
-
     @commands.hybrid_group(
         name="image",
         description="Commands for image creation",
