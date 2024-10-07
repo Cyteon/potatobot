@@ -451,7 +451,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
     @commands.hybrid_group(
         name="random",
         description="Random image commands",
-        usage="image random <subcommand>"
+        usage="random <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
@@ -669,9 +669,9 @@ class Fun(commands.Cog, name="🎉 Fun"):
             await context.send(data["image"])
 
     @commands.hybrid_group(
-        name="image",
+        name="img",
         description="Commands for image creation",
-        usage="image <subcommand>"
+        usage="img <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)

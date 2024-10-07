@@ -40,6 +40,8 @@ os.makedirs("pickle", exist_ok=True)
 prefixDB = pickledb.load("pickle/prefix.db", False)
 statsDB = pickledb.load("pickle/stats.db", False)
 
+cant_react_in = []
+
 class LoggingFormatter(logging.Formatter):
     black = "\x1b[30m"
     red = "\x1b[31m"
@@ -298,13 +300,14 @@ class DiscordBot(commands.AutoShardedBot):
             )
             await context.send(embed=embed)
         elif isinstance(error, commands.CommandNotFound):
-            embed = discord.Embed(
-                title = "Command not Found!",
-                description=str(error).capitalize(),
-                color=0xE02B2B
-            )
-
-            await context.send(embed=embed)
+            if not context.channel in cant_react_in:
+                try:
+                    await context.message.add_reaction("❓")
+                except discord.errors.Forbidden:
+                    cant_react_in.append(context.channel)
+                    logger.warning(
+                        f"Couldn't react to a message in {context.channel.name} (ID: {context.channel.id}) in {context.guild.name} (ID: {context.guild.id})"
+                    )
         elif isinstance(error, Errors.CommandDisabled):
             embed = discord.Embed(
                 title="Error!",

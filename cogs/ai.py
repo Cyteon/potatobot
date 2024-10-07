@@ -667,7 +667,8 @@ class Ai(commands.Cog, name="🤖 AI"):
     @commands.hybrid_command(
         name="ai-image",
         description="Generate an ai image",
-        usage="ai-image <prompt>"
+        usage="ai-image <prompt>",
+        aliases=["image"]
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
