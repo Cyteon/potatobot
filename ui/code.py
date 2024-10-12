@@ -10,13 +10,13 @@ class CodeModal(ui.Modal, title = "Run Code"):
         async with aiohttp.ClientSession() as session:
             embed = discord.Embed(title=f"Running your {self.language.value} code...", color=0xFFFFFF)
 
-            code = self.code.value[:500].strip()
-            shortened = len(code) > 500
+            code = self.code.value[:1000].strip()
+            shortened = len(code) > 1000
             lines = code.splitlines()
-            shortened = shortened or (len(lines) > 30)
-            code = "\n".join(lines[:30])
+            shortened = shortened or (len(lines) > 40)
+            code = "\n".join(lines[:40])
             code += shortened * "\n\n**Code shortened**"
-            embed.add_field(name="Code", value=f"```{code}```", inline=False)
+            embed.add_field(name="Code", value=f"```{self.language.value}\n{code}```", inline=False)
 
             await interaction.response.send_message(embed=embed)
 
@@ -41,6 +41,6 @@ class CodeModal(ui.Modal, title = "Run Code"):
             shortened = shortened or (len(lines) > 15)
             output = "\n".join(lines[:15])
             output += shortened * "\n\n**Output shortened**"
-            embed.add_field(name="Output", value=f"```\n{output}\n```" or "**<No output>**")
+            embed.add_field(name="Output", value=f"```{self.language.value}\n{output}\n```" or "**<No output>**")
 
             await interaction.followup.send(embed=embed)
