@@ -450,7 +450,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
 
     @commands.hybrid_group(
         name="random",
-        description="Random image commands",
+        description="Commands for random stuff",
         usage="random <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -509,6 +509,66 @@ class Fun(commands.Cog, name="🎉 Fun"):
             data = await data.json()
 
             await context.send(data["image"])
+
+    @random.command(
+        name="gary",
+        description="Get a random gary image",
+        usage="random gary"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def random_gary(self, context: Context) -> None:
+        async with aiohttp.ClientSession() as session:
+            data = await session.get(
+                "https://garybot.dev/api/gary",
+                headers={"api_key": os.getenv("GARY_API_KEY")}
+            )
+
+            data = await data.json()
+
+            await context.send(data["url"])
+
+    @random.command(
+        name="gary-quote",
+        description="Get a random gary quote",
+        usage="random gary-quote"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def random_gary_quote(self, context: Context) -> None:
+        async with aiohttp.ClientSession() as session:
+            data = await session.get(
+                "https://garybot.dev/api/quote",
+                headers={"api_key": os.getenv("GARY_API_KEY")}
+            )
+
+            data = await data.json()
+
+            await context.send(data["quote"])
+
+    @random.command(
+        name="gary-joke",
+        description="Get a random gary joke",
+        usage="random gary-joke"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def random_gary_joke(self, context: Context) -> None:
+        async with aiohttp.ClientSession() as session:
+            data = await session.get(
+                "https://garybot.dev/api/joke",
+                headers={"api_key": os.getenv("GARY_API_KEY")}
+            )
+
+            data = await data.json()
+
+            await context.send(data["joke"])
 
     @random.command(
         name="dog",
@@ -579,7 +639,6 @@ class Fun(commands.Cog, name="🎉 Fun"):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def random_kangaroo(self, context: Context) -> None:
-
         async with aiohttp.ClientSession() as session:
             data = await session.get(
                 "https://some-random-api.com/animal/kangaroo"

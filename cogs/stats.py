@@ -30,6 +30,9 @@ class Stats(commands.Cog, name="📈 Stats"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.guild == None:
+            return
+
         if message.author == self.bot.user:
             return
 

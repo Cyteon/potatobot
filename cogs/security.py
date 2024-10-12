@@ -47,6 +47,9 @@ class Security(commands.Cog, name="🛡️ Security"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        if message.guild == None:
+            return
+
         if message.author == self.bot.user:
             return
 

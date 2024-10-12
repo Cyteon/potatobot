@@ -93,15 +93,18 @@ class DiscordBot(commands.AutoShardedBot):
         )
         self.logger = logger
         self.config = config
-        self.version = "2.1.2"
+        self.version = "2.1.4"
         self.start_time = time.time()
         self.prefixDB = prefixDB
         self.statsDB = statsDB
 
     async def get_prefix(self, message):
-        guild_id = str(message.guild.id)
-        if prefixDB.exists(guild_id):
-            return prefixDB.get(guild_id)
+        if message.guild:
+            guild_id = str(message.guild.id)
+            if prefixDB.exists(guild_id):
+                return prefixDB.get(guild_id)
+            else:
+                return config["prefix"]
         else:
             return config["prefix"]
 

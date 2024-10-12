@@ -87,6 +87,8 @@ class General(commands.Cog, name="⬜ General"):
         usage="help [optional: command]"
     )
     @commands.check(Checks.is_not_blacklisted)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def help(self, context: Context, *, command: str = "none") -> None:
         if command != "none":
             cmd = self.bot.get_command(command)
@@ -192,8 +194,6 @@ class General(commands.Cog, name="⬜ General"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def uptime(self, context: Context):
         uptime = time.time() - self.bot.start_time
         str = time.strftime("%H:%M:%S", time.gmtime(uptime))

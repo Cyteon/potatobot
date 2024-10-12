@@ -95,6 +95,9 @@ class Level(commands.Cog, name="🚀 Level"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        if message.guild == None:
+            return
+
         if message.author == self.bot or message.author.bot:
             return
 
