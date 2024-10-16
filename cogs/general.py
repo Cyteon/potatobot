@@ -353,10 +353,50 @@ class General(commands.Cog, name="⬜ General"):
         message = await context.send("https://discord.gg/wtur9j8uVP")
 
     @commands.hybrid_command(
+        name="define",
+        description="Get the definition of a word.",
+        usage="define <word>",
+        aliases=["dictionary"]
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def define(self, context: Context, *, word: str) -> None:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}") as response:
+                if response.status != 200:
+                    return await context.send("No results found.")
+
+                data = await response.json()
+                data = data[0]
+
+                embed = discord.Embed(title=f"Definition of {data['word']}", description=data.get("phonetic", "N/A"), color=0xBEBEFE)
+
+                def truncate_text(text, limit=1024):
+                    if len(text) > limit:
+                        return text[:limit-3] + "..."
+                    return text
+
+                definitions = "\n".join(f"{i+1}. {definition['definition']}" for i, meaning in enumerate(data["meanings"]) for definition in meaning["definitions"])
+
+                synonyms = ", ".join(synonym for meaning in data["meanings"] for synonym in meaning.get("synonyms", []))
+                antonyms = ", ".join(antonym for meaning in data["meanings"] for antonym in meaning.get("antonyms", []))
+
+                embed.add_field(name="Definition(s)", value=truncate_text(definitions), inline=False)
+                embed.add_field(name="Synonym(s)", value=truncate_text(synonyms) if synonyms else "None", inline=False)
+                embed.add_field(name="Antonym(s)", value=truncate_text(antonyms) if antonyms else "None", inline=False)
+
+                await context.send(embed=embed)
+
+
+
+
+    @commands.hybrid_command(
         name="urban-dictionary",
         description="Get the definition of a word from Urban Dictionary.",
         usage="urban-dictionary <word>",
-        aliases=["urban"]
+        aliases=["urban", "ud"]
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
