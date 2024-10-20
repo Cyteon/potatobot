@@ -51,7 +51,6 @@ class JSONEncoder(json.JSONEncoder):
             return None  # Skip binary data
         return json.JSONEncoder.default(self, obj)
 
-# Define a simple FastAPI route
 @app.get("/")
 async def read_root():
     return {"message": "User: " + bot.user.name + " is online! "}
