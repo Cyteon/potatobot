@@ -157,6 +157,16 @@ class Fun(commands.Cog, name="🎉 Fun"):
     async def fish(self, context: Context, code) -> None:
         await context.send(f"https://http.fish/{code}.jpg")
 
+    @http.command(
+        name="goat",
+        description="Get a goat image representing a http status code.",
+        usage="http goat <code>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    async def cat(self, context: Context, code) -> None:
+        await context.send(f"https://httpgoats.com/{code}.jpg")
+
     @commands.hybrid_command( # TODO: fix this crap
         name="bored",
         description="Get an activity if you are bored"
