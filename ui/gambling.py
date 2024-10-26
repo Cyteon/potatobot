@@ -429,12 +429,12 @@ class SlotsButton(View):
         self.amount = amount
         self.multii = multii
         self.authorid = authorid
-        self.result = "" 
-        self.outcome_message = ""
+        self.result = "❌ ❌ ❌" 
+        self.outcome_message = "Spin first!"
 
     def getEmbed(self):
         embed = discord.Embed(title="Slots", color=0xe86e30)
-        embed.add_field(name="Your Slots:", value=f"# ```{self.result}```", inline=False)
+        embed.add_field(name="Your Slots:", value=f"# `{self.result}`", inline=False)
         embed.add_field(name="Result:", value=f"`{self.outcome_message}`", inline=False)
         embed.add_field(name="Multiplier:", value=f"`x{self.multii}`", inline=False)
         return embed
