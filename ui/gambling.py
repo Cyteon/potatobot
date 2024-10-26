@@ -432,11 +432,11 @@ class SlotsButton(View):
         self.result = "" 
         self.outcome_message = ""
 
-    def getEmbed():
+    def getEmbed(self):
         embed = discord.Embed(title="Slots", color=0xe86e30)
-        embed.add_field(name="Your Slots:", value=f"# ```{slotValues}```", inline=False)
-        embed.add_field(name="Result:", value=f"`{outcome_msg}`", inline=False)
-        embed.add_field(name="-# Multiplier:", value=f"`-# {self.multii}`", inline=False)
+        embed.add_field(name="Your Slots:", value=f"# ```{self.result}```", inline=False)
+        embed.add_field(name="Result:", value=f"`{self.outcome_message}`", inline=False)
+        embed.add_field(name="Multiplier:", value=f"`x{self.multii}`", inline=False)
         return embed
 
     @button(label="Spin", style=discord.ButtonStyle.primary, custom_id="spin", emoji="🎰")
@@ -448,31 +448,31 @@ class SlotsButton(View):
         self.result = result
         self.outcome_message = outcome_message
         
+        # Update user wallet in database
         c = db["users"]
         user = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
         user["wallet"] += amount_won
         newdata = {"$set": {"wallet": user["wallet"]}}
         c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
         
-        await interaction.response.edit_message(embed=getEmbed(), view=self)
+        await interaction.response.edit_message(embed=self.getEmbed(), view=self)
 
     @button(label="", style=discord.ButtonStyle.primary, custom_id="incmulti", emoji="➕")
-    async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def increment_multiplier(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
         
-        self.multii = self.multii + 1
-        
-        await interaction.response.edit_message(embed=getEmbed(), view=self)
+        self.multii += 1
+        await interaction.response.edit_message(embed=self.getEmbed(), view=self)
 
     @button(label="", style=discord.ButtonStyle.primary, custom_id="decmulti", emoji="➖")
-    async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def decrement_multiplier(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
         
-        self.multii = self.multii + 1
-        
-        await interaction.response.edit_message(embed=getEmbed(), view=self)
+        if self.multii > 1:  # Prevents multiplier from going below 1
+            self.multii -= 1
+        await interaction.response.edit_message(embed=self.getEmbed(), view=self)
 
 def play_slots(amount, multii):
     symbols = ["🍒", "🍋", "🍉", "⭐", "🔔", "🍇", "🍍", "🍎", "🍓", "🥭"]
