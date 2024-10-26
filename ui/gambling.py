@@ -436,7 +436,7 @@ class SlotsButton(View):
         embed = discord.Embed(title="Slots", color=0xe86e30)
         embed.add_field(name="Your Slots:", value=f"# `{self.result}`", inline=False)
         embed.add_field(name="Result:", value=f"`{self.outcome_message}`", inline=False)
-        embed.add_field(name="Multiplier:", value=f"`x{self.multii}`", inline=False)
+        embed.add_field(name="Multiplier:", value=f"`{self.multii}`", inline=False)
         return embed
 
     @button(label="Spin", style=discord.ButtonStyle.primary, custom_id="spin", emoji="🎰")
