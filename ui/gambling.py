@@ -37,6 +37,13 @@ class GamblingButton(View):
         view = BlackjackView(self.amount, self.authorid)
         await view.start_game(interaction)
 
+    @button(label="Slots", style=discord.ButtonStyle.primary, custom_id="slots", emoji="🎰")
+    async def slots(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.authorid:
+            return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
+        await interaction.response.edit_message(content="Spinning the slots...", view=SlotsButton(self.amount, self.authorid))
+
+
 class BlackjackView(View):
     def __init__(self, amount, authorid):
         super().__init__(timeout=None)
@@ -413,3 +420,43 @@ class RollButton(View):
         c.update_one(
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
+
+        # TODO: make sure my ass code actually works
+
+class SlotsButton(View):
+    def __init__(self, amount, authorid):
+        super().__init__(timeout=None)
+        self.amount = amount
+        self.authorid = authorid
+
+    @button(label="Spin", style=discord.ButtonStyle.primary, custom_id="spin", emoji="🎰")
+    async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.authorid:
+            return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
+        
+        result, outcome_message, amount_won = play_slots(self.amount)
+        
+        c = db["users"]
+        user = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
+        user["wallet"] += amount_won
+        newdata = {"$set": {"wallet": user["wallet"]}}
+        c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
+        
+        await interaction.response.edit_message(content=f"{result}\n{outcome_message}", view=self)
+
+def play_slots(amount):
+    symbols = ["🍒", "🍋", "🍉", "⭐", "🔔"]
+    reel = [random.choice(symbols) for _ in range(3)]
+    result = f"{reel[0]} | {reel[1]} | {reel[2]}"
+
+    if reel[0] == reel[1] == reel[2]:
+        amount_won = amount * 5
+        outcome_message = f"Jackpot! You won {amount_won}$!"
+    elif reel[0] == reel[1] or reel[1] == reel[2] or reel[0] == reel[2]:
+        amount_won = amount * 2
+        outcome_message = f"You got a match! You won {amount_won}$!"
+    else:
+        amount_won = -amount
+        outcome_message = f"Unlucky! You lost {amount}$."
+
+    return result, outcome_message, amount_won
