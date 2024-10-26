@@ -41,7 +41,7 @@ class GamblingButton(View):
     async def slots(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
-        await interaction.response.edit_message(content="Spinning the slots...", view=SlotsButton(self.amount, self.authorid))
+        await interaction.response.edit_message(content="LETS GO GAMBLING!!!", view=SlotsButton(self.amount, 1, self.authorid))
 
 
 class BlackjackView(View):
@@ -421,20 +421,32 @@ class RollButton(View):
             {"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata
         )
 
-        # TODO: make sure my ass code actually works
+        # TODO: make sure my ass code actually w̶o̶r̶k̶s looks good
 
 class SlotsButton(View):
-    def __init__(self, amount, authorid):
+    def __init__(self, amount, multii, authorid):
         super().__init__(timeout=None)
         self.amount = amount
+        self.multii = multii
         self.authorid = authorid
+        self.result = "" 
+        self.outcome_message = ""
+
+    def getEmbed():
+        embed = discord.Embed(title="Slots", color=0xe86e30)
+        embed.add_field(name="Your Slots:", value=f"# ```{slotValues}```", inline=False)
+        embed.add_field(name="Result:", value=f"`{outcome_msg}`", inline=False)
+        embed.add_field(name="-# Multiplier:", value=f"`-# {self.multii}`", inline=False)
+        return embed
 
     @button(label="Spin", style=discord.ButtonStyle.primary, custom_id="spin", emoji="🎰")
     async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
         
-        result, outcome_message, amount_won = play_slots(self.amount)
+        result, outcome_message, amount_won = play_slots(self.amount, self.multii)
+        self.result = result
+        self.outcome_message = outcome_message
         
         c = db["users"]
         user = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
@@ -442,21 +454,39 @@ class SlotsButton(View):
         newdata = {"$set": {"wallet": user["wallet"]}}
         c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
         
-        await interaction.response.edit_message(content=f"{result}\n{outcome_message}", view=self)
+        await interaction.response.edit_message(embed=getEmbed(), view=self)
 
-def play_slots(amount):
-    symbols = ["🍒", "🍋", "🍉", "⭐", "🔔"]
+    @button(label="", style=discord.ButtonStyle.primary, custom_id="incmulti", emoji="➕")
+    async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.authorid:
+            return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
+        
+        self.multii = self.multii + 1
+        
+        await interaction.response.edit_message(embed=getEmbed(), view=self)
+
+    @button(label="", style=discord.ButtonStyle.primary, custom_id="decmulti", emoji="➖")
+    async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.authorid:
+            return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
+        
+        self.multii = self.multii + 1
+        
+        await interaction.response.edit_message(embed=getEmbed(), view=self)
+
+def play_slots(amount, multii):
+    symbols = ["🍒", "🍋", "🍉", "⭐", "🔔", "🍇", "🍍", "🍎", "🍓", "🥭"]
     reel = [random.choice(symbols) for _ in range(3)]
-    result = f"{reel[0]} | {reel[1]} | {reel[2]}"
+    result = f"{reel[0]} {reel[1]} {reel[2]}"
 
     if reel[0] == reel[1] == reel[2]:
-        amount_won = amount * 5
+        amount_won = amount * 5 * multii
         outcome_message = f"Jackpot! You won {amount_won}$!"
     elif reel[0] == reel[1] or reel[1] == reel[2] or reel[0] == reel[2]:
-        amount_won = amount * 2
+        amount_won = amount * 2 * multii
         outcome_message = f"You got a match! You won {amount_won}$!"
     else:
-        amount_won = -amount
+        amount_won = -amount * multii
         outcome_message = f"Unlucky! You lost {amount}$."
 
     return result, outcome_message, amount_won
