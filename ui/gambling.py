@@ -429,39 +429,38 @@ class SlotsButton(View):
         self.amount = amount
         self.multii = multii
         self.authorid = authorid
-        self.result = "❌ ❌ ❌" 
+        self.result = "❌ ❌ ❌"
         self.outcome_message = "Spin first!"
 
     def getEmbed(self):
-        embed = discord.Embed(title="Slots", color=0xe86e30)
-        embed.add_field(name=f"`{self.result}`", value=f" ", inline=False)
-        embed.add_field(name="Result:", value=f"`{self.outcome_message}`", inline=False)
-        embed.add_field(name="Multiplier:", value=f"`x{self.multii}`", inline=False)
+        embed = discord.Embed(title="Slots", description=f"# `{self.result}`", color=0xe86e30)
+        embed.add_field(name="Result:", value=f"```{self.outcome_message}```", inline=False)
+        embed.add_field(name="Multiplier:", value=f"```x{self.multii}```", inline=False)
         return embed
 
     @button(label="Spin", style=discord.ButtonStyle.primary, custom_id="spin", emoji="🎰")
     async def spin(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
-        
+
         result, outcome_message, amount_won = play_slots(self.amount, self.multii)
         self.result = result
         self.outcome_message = outcome_message
-        
+
         # Update user wallet in database
         c = db["users"]
         user = c.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
         user["wallet"] += amount_won
         newdata = {"$set": {"wallet": user["wallet"]}}
         c.update_one({"id": interaction.user.id, "guild_id": interaction.guild.id}, newdata)
-        
+
         await interaction.response.edit_message(embed=self.getEmbed(), view=self)
 
     @button(label="", style=discord.ButtonStyle.primary, custom_id="incmulti", emoji="➕")
     async def increment_multiplier(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
-        
+
         self.multii += 1
         await interaction.response.edit_message(embed=self.getEmbed(), view=self)
 
@@ -469,7 +468,7 @@ class SlotsButton(View):
     async def decrement_multiplier(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("Nuh uh :D", ephemeral=True)
-        
+
         if self.multii > 1:  # Prevents multiplier from going below 1
             self.multii -= 1
         await interaction.response.edit_message(embed=self.getEmbed(), view=self)

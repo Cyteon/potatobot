@@ -2,6 +2,7 @@ import discord
 import asyncio
 import aiohttp
 import json
+import os
 from datetime import datetime
 from discord import ui
 from discord.ui import Button, button, View
@@ -13,13 +14,13 @@ db = DBClient.db
 # Configuration Constants
 # TODO: put this in a config file
 ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
-RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY')
 MIN_TRADE_AMOUNT = 1
 MAX_TRADE_AMOUNT = 1000
 TRADE_COOLDOWN = 5
-DEMO_MODE = True
+DEMO_MODE = False
 MOCK_PRICES = {
     "AAPL": 175.50,
+    "GOOGL": 140.25,
     "GOOGL": 140.25,
     "MSFT": 380.75,
     "AMZN": 145.30,
@@ -35,22 +36,22 @@ class StockPortfolioView(View):
         self.authorid = authorid
         self.last_trade_time = {}
 
-    @button(label="Buy Stocks", style=discord.ButtonStyle.primary, custom_id="buy_stocks", emoji="📈")
     async def buy_stocks(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
             return await interaction.response.send_message("This isn't your trading session!", ephemeral=True)
-        
+
         current_time = datetime.now().timestamp()
         if self.authorid in self.last_trade_time:
             time_diff = current_time - self.last_trade_time[self.authorid]
+            time_diff = current_time - self.last_trade_time[self.authorid]
             if time_diff < TRADE_COOLDOWN:
-                return await interaction.response.send_message(
                     f"Please wait {TRADE_COOLDOWN - int(time_diff)} seconds before trading again!",
                     ephemeral=True
                 )
-        
+
         self.last_trade_time[self.authorid] = current_time
         await interaction.response.send_modal(BuyStocksModal(self.authorid))
+
 
     @button(label="Sell Stocks", style=discord.ButtonStyle.danger, custom_id="sell_stocks", emoji="📉")
     async def sell_stocks(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -72,31 +73,31 @@ class StockPortfolioView(View):
     @button(label="View Portfolio", style=discord.ButtonStyle.secondary, custom_id="view_portfolio", emoji="📊")
     async def view_portfolio(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.authorid:
-            return await interaction.response.send_message("This isn't your trading session!", ephemeral=True)
 
         c = db["trading"]
         portfolio = c.find_one({"user_id": interaction.user.id, "guild_id": interaction.guild.id})
-        
+
         if not portfolio or not portfolio.get("positions", {}):
             return await interaction.response.send_message("You don't have any positions yet!", ephemeral=True)
 
         c_users = db["users"]
         user = c_users.find_one({"id": interaction.user.id, "guild_id": interaction.guild.id})
-        
+
         embed = discord.Embed(title="Your Portfolio", color=0x00ff00)
         embed.add_field(name="Available Balance", value=f"${user['wallet']:,.2f}", inline=False)
-        
+
         total_value = 0
 
         for symbol, position in portfolio["positions"].items():
+        for symbol, position in portfolio["positions"].items():
             price = await get_stock_price(symbol)
-            if price:
                 current_value = position["shares"] * price
                 total_value += current_value
                 profit_loss = current_value - (position["shares"] * position["average_price"])
-                
+
                 embed.add_field(
                     name=f"{symbol}",
+                    value=f"Shares: {position['shares']}\n"
                     value=f"Shares: {position['shares']}\n"
                           f"Avg Price: ${position['average_price']:.2f}\n"
                           f"Current Price: ${price:.2f}\n"
@@ -143,13 +144,13 @@ class BuyStocksModal(ui.Modal, title="Buy Stocks"):
             return await interaction.response.send_message(
                 f"Insufficient funds! You need ${total_cost:,.2f} but have ${user['wallet']:,.2f}",
                 ephemeral=True
-            )
 
         c = db["trading"]
         portfolio = c.find_one({"user_id": interaction.user.id, "guild_id": interaction.guild.id})
-        
+
         if not portfolio:
             portfolio = {
+                "user_id": interaction.user.id,
                 "user_id": interaction.user.id,
                 "guild_id": interaction.guild.id,
                 "positions": {}
@@ -207,13 +208,13 @@ class SellStocksModal(ui.Modal, title="Sell Stocks"):
             if shares <= 0:
                 raise ValueError("Shares must be positive")
         except ValueError:
-            return await interaction.response.send_message("Please enter a valid number of shares!", ephemeral=True)
 
         c = db["trading"]
         portfolio = c.find_one({"user_id": interaction.user.id, "guild_id": interaction.guild.id})
-        
+
         if not portfolio or symbol not in portfolio["positions"]:
             return await interaction.response.send_message("You don't own this stock!", ephemeral=True)
+
 
         current_position = portfolio["positions"][symbol]
         if current_position["shares"] < shares:
@@ -257,15 +258,15 @@ class SellStocksModal(ui.Modal, title="Sell Stocks"):
             ephemeral=True
         )
 
-async def get_stock_price_av(symbol):
     """Get current stock price using Alpha Vantage API or mock data"""
     if DEMO_MODE and symbol in MOCK_PRICES:
         return MOCK_PRICES[symbol]
-        
+
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={ALPHA_VANTAGE_API_KEY}"
-    
+
     async with aiohttp.ClientSession() as session:
         try:
+            async with session.get(url) as response:
             async with session.get(url) as response:
                 data = await response.json()
                 if "Global Quote" in data and "05. price" in data["Global Quote"]:
@@ -277,13 +278,13 @@ async def get_stock_price_av(symbol):
 async def get_stock_price(symbol): 
     """Get current stock price using Yahoo Finance API via RapidAPI or mock data."""
     if DEMO_MODE and symbol in MOCK_PRICES:
-        return MOCK_PRICES[symbol]
-        
-    url = f"https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary?symbol={symbol}&region=US"
-    headers = {
-        "x-rapidapi-host": "apidojo-yahoo-finance-v1.p.rapidapi.com",
-        "x-rapidapi-key": RAPIDAPI_KEY
-    }
+    """
+    c = db["users"]
+    user = c.find_one({"id": ctx.author.id, "guild_id": ctx.guild.id})
+
+    if not user:
+        return await ctx.send("get outa here brokie")
+
     
     async with aiohttp.ClientSession() as session:
         try:
@@ -300,10 +301,10 @@ async def start_paper_trading(ctx):
     """
     Command to start paper trading session
     Usage: !trade or /trade
-    """
-    c = db["users"]
-    user = c.find_one({"id": ctx.author.id, "guild_id": ctx.guild.id})
-    
+        )
+
+    view = StockPortfolioView(ctx.author.id)
+    await ctx.send(embed=embed, view=view)
     if not user:
         return await ctx.send("get outa here brokie")
 

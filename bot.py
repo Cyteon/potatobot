@@ -93,7 +93,7 @@ class DiscordBot(commands.AutoShardedBot):
         )
         self.logger = logger
         self.config = config
-        self.version = "2.1.5"
+        self.version = "2.1.6"
         self.start_time = time.time()
         self.prefixDB = prefixDB
         self.statsDB = statsDB
