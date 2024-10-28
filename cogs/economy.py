@@ -12,6 +12,8 @@ from utils import CONSTANTS, DBClient, CachedDB, Checks
 from ui.farm import FarmButton
 from ui.gambling import GamblingButton
 
+from ui.papertrading import start_paper_trading
+
 db = DBClient.db
 
 class Economy(commands.Cog, name="🪙 Economy"):
@@ -292,6 +294,16 @@ class Economy(commands.Cog, name="🪙 Economy"):
             "How would you like to gamble?",
             view=GamblingButton(amount, context.author.id),
         )
+
+    @commands.hybrid_command(
+        name="stockmarket",
+        description="Gamble your money(but like irl but like fake fr)",
+        usage="stockmarket"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    async def stockmarket(self, context: Context) -> None:
+        await start_paper_trading(context)
 
     # TODO: MORE CACHING AFTER THIS POINT
 
