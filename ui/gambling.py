@@ -480,13 +480,13 @@ def play_slots(amount, multii):
     result = f"{reel[0]} {reel[1]} {reel[2]}"
 
     if reel[0] == reel[1] == reel[2]:
-        amount_won = amount * 5 * multii
+        amount_won = (amount * 5) * multii
         outcome_message = f"Jackpot! You won {amount_won}$!"
     elif reel[0] == reel[1] or reel[1] == reel[2] or reel[0] == reel[2]:
-        amount_won = amount * 2 * multii
+        amount_won = (amount * 2) * multii
         outcome_message = f"You got a match! You won {amount_won}$!"
     else:
-        amount_won = -amount * multii
+        amount_won = (-amount) * multii
         outcome_message = f"Unlucky! You lost {amount}$."
 
     return result, outcome_message, amount_won
