@@ -13,6 +13,7 @@ db = DBClient.db
 # Configuration Constants
 # TODO: put this in a config file
 ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
+RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY')
 MIN_TRADE_AMOUNT = 1
 MAX_TRADE_AMOUNT = 1000
 TRADE_COOLDOWN = 5
@@ -256,7 +257,7 @@ class SellStocksModal(ui.Modal, title="Sell Stocks"):
             ephemeral=True
         )
 
-async def get_stock_price(symbol):
+async def get_stock_price_av(symbol):
     """Get current stock price using Alpha Vantage API or mock data"""
     if DEMO_MODE and symbol in MOCK_PRICES:
         return MOCK_PRICES[symbol]
@@ -271,6 +272,28 @@ async def get_stock_price(symbol):
                     return float(data["Global Quote"]["05. price"])
                 return None
         except:
+            return None
+
+async def get_stock_price(symbol): 
+    """Get current stock price using Yahoo Finance API via RapidAPI or mock data."""
+    if DEMO_MODE and symbol in MOCK_PRICES:
+        return MOCK_PRICES[symbol]
+        
+    url = f"https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary?symbol={symbol}&region=US"
+    headers = {
+        "x-rapidapi-host": "apidojo-yahoo-finance-v1.p.rapidapi.com",
+        "x-rapidapi-key": RAPIDAPI_KEY
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, headers=headers) as response:
+                data = await response.json()
+                if "price" in data and "regularMarketPrice" in data["price"]:
+                    return float(data["price"]["regularMarketPrice"]["raw"])
+                return None
+        except Exception as e:
+            print(f"Error fetching stock price: {e}")
             return None
 
 async def start_paper_trading(ctx):
