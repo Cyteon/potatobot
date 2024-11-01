@@ -479,7 +479,31 @@ class Fun(commands.Cog, name="🎉 Fun"):
             name="Commands", value=f"```{cmds}```", inline=False
         )
 
-        await context.send(embed=embed)
+        await context.send(embed=embed)    @random.command(
+        name="gayrate",
+        description="Get your gay rate",
+        usage="random gayrate <user>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def gayrate(self, context: Context, user: discord.User = None) -> None:
+        if not user:
+            user = context.author
+
+        percentage = random.randint(0, 100)
+        emojis = ["😳", "😳", "😳", "😳", "😳", "😳", "😳", "😳", "😳", "😳", "🏳️‍🌈", "🔥"]
+
+        if percentage > 90:
+            emoji = "🌈"
+        elif percentage < 10:
+            emoji = "🔥"
+        else:
+            emoji = random.choice(emojis)
+
+        await context.send(f"{user.mention} is {percentage}% gay {emoji}")
+
 
     @random.command(
         name="coffee",
