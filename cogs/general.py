@@ -9,9 +9,6 @@ import inspect
 import json
 import sys
 
-from asteval import Interpreter
-aeval = Interpreter()
-
 import logging
 logger = logging.getLogger("discord_bot")
 
@@ -254,7 +251,6 @@ class General(commands.Cog, name="⬜ General"):
         )
         await context.send(embed=embed)
 
-
     @commands.hybrid_command(
         name="bug",
         description="Send a bug report",
@@ -279,29 +275,6 @@ class General(commands.Cog, name="⬜ General"):
         await context.send("Bug Reported")
 
     @commands.hybrid_command(
-        name="translate",
-        description="Translate text to a specified language example: ;translate 'How are you' es",
-        usage="translate <text> <language>"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.check(Checks.command_not_disabled)
-    @app_commands.describe(text="The text you want to translate.")
-    @app_commands.describe(language="The language you want to translate the text to.")
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def translate(self, context: Context, text: str, language: str = "en") -> None:
-
-        translated = GoogleTranslator(source='auto', target=language).translate(text)
-
-        embed = discord.Embed(
-            title="Translation",
-            description=f"**Original text:**\n{text}\n\n**Translated text:**\n{translated}",
-            color=0xBEBEFE,
-        )
-        embed.set_footer(text=f"Translated to {language}")
-        await context.send(embed=embed)
-
-    @commands.hybrid_command(
         name="8ball",
         description="Ask any question to the bot.",
         usage="8ball <question>"
@@ -317,7 +290,6 @@ class General(commands.Cog, name="⬜ General"):
             "It is decidedly so.",
             "You may rely on it.",
             "Without a doubt.",
-            "Yes - definitely.",
             "As I see, yes.",
             "Most likely.",
             "Outlook good.",
@@ -326,7 +298,6 @@ class General(commands.Cog, name="⬜ General"):
             "Reply hazy, try again.",
             "Ask again later.",
             "Better not tell you now.",
-            "Cannot predict now.",
             "Concentrate and ask again later.",
             "Don't count on it.",
             "My reply is no.",
@@ -388,9 +359,6 @@ class General(commands.Cog, name="⬜ General"):
                 embed.add_field(name="Antonym(s)", value=truncate_text(antonyms) if antonyms else "None", inline=False)
 
                 await context.send(embed=embed)
-
-
-
 
     @commands.hybrid_command(
         name="urban-dictionary",
@@ -509,29 +477,6 @@ class General(commands.Cog, name="⬜ General"):
 
         await context.send(embed=embed, view=VoteView())
 
-    @commands.hybrid_command(
-        name="calc",
-        description="Calculate a math expression.",
-        usage="calc <expression>",
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.check(Checks.command_not_disabled)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def calc(self, context: Context, *, expression: str) -> None:
-        try:
-            result = aeval(expression)
-
-            embed = discord.Embed(
-                title="Calculator",
-                description=f"**Input:**\n```{expression}```\n**Output:**\n```{result}```",
-                color=0xBEBEFE
-            )
-
-            await context.send(embed=embed)
-        except Exception as e:
-            await context.send(f"An error occurred: {e}")
-
 class VoteButton(discord.ui.Button):
     def __init__(self):
         super().__init__(style=discord.ButtonStyle.link, label="Vote on top.gg", url="https://top.gg/bot/1226487228914602005/vote")
@@ -576,7 +521,6 @@ class CogSelect(discord.ui.Select):
         )
         embed.set_footer(text=f"To get more info on a command, use {await interaction.client.get_prefix(interaction)}help <command>")
 
-        # Edit the original message instead of sending a new one
         await interaction.message.edit(embed=embed)
 
 class CogSelectView(discord.ui.View):

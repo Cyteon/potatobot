@@ -1,5 +1,8 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
+from asteval import Interpreter
+aeval = Interpreter()
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -93,6 +96,51 @@ class Utility(commands.Cog, name="⚡ Utility"):
             gb = tb * 1000
 
         await context.send(f"{tb}TB is equal to {gb}GB")
+
+    @commands.hybrid_command(
+        name="calc",
+        description="Calculate a math expression.",
+        usage="calc <expression>",
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def calc(self, context: Context, *, expression: str) -> None:
+        try:
+            result = aeval(expression)
+
+            embed = discord.Embed(
+                title="Calculator",
+                description=f"**Input:**\n```{expression}```\n**Output:**\n```{result}```",
+                color=0xBEBEFE
+            )
+
+            await context.send(embed=embed)
+        except Exception as e:
+            await context.send(f"An error occurred: {e}")
+
+    @commands.hybrid_command(
+        name="translate",
+        description="Translate text to a specified language example: ;translate 'How are you' es",
+        usage="translate <text> <language>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.describe(text="The text you want to translate.")
+    @app_commands.describe(language="The language you want to translate the text to.")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def translate(self, context: Context, text: str, language: str = "en") -> None:
+        translated = GoogleTranslator(source='auto', target=language).translate(text)
+
+        embed = discord.Embed(
+            title="Translation",
+            description=f"**Original text:**\n{text}\n\n**Translated text:**\n{translated}",
+            color=0xBEBEFE,
+        )
+        embed.set_footer(text=f"Translated to {language}")
+        await context.send(embed=embed)
 
 async def setup(bot) -> None:
     await bot.add_cog(Utility(bot))
