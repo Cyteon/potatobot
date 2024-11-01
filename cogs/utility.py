@@ -7,6 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
+from deep_translator import GoogleTranslator
 
 from utils import Checks
 
@@ -122,7 +123,7 @@ class Utility(commands.Cog, name="⚡ Utility"):
 
     @commands.hybrid_command(
         name="translate",
-        description="Translate text to a specified language example: ;translate 'How are you' es",
+        description="Translate text to a specified language example: ,translate en hola",
         usage="translate <text> <language>"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -131,7 +132,7 @@ class Utility(commands.Cog, name="⚡ Utility"):
     @app_commands.describe(language="The language you want to translate the text to.")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def translate(self, context: Context, text: str, language: str = "en") -> None:
+    async def translate(self, context: Context, language, *, text: str) -> None:
         translated = GoogleTranslator(source='auto', target=language).translate(text)
 
         embed = discord.Embed(

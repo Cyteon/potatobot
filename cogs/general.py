@@ -17,8 +17,6 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from deep_translator import GoogleTranslator
-
 from utils import DBClient, Checks
 from ui import translate
 
