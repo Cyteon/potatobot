@@ -479,7 +479,9 @@ class Fun(commands.Cog, name="🎉 Fun"):
             name="Commands", value=f"```{cmds}```", inline=False
         )
 
-        await context.send(embed=embed)    @random.command(
+        await context.send(embed=embed)    
+        
+    @random.command(
         name="gayrate",
         description="Get your gay rate",
         usage="random gayrate <user>"
