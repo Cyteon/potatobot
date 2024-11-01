@@ -85,7 +85,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
-    @commands.cooldown(1, 60, commands.BucketType.user)
+    @commands.cooldown(1, 600, commands.BucketType.user)
     async def beg(self, context: Context) -> None:
         c = db["users"]
         data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
@@ -94,7 +94,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
             data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
             c.insert_one(data)
 
-        amount = random.randint(50, 300)
+        amount = random.randint(5, 200)
         data["wallet"] += amount
 
         newdata = {
@@ -104,7 +104,7 @@ class Economy(commands.Cog, name="🪙 Economy"):
         await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
 
         await context.send(f"Someone gave you {amount}$!")
-        
+
     @commands.hybrid_command(
         name="rob",
         description="Rob someone's wallet",
