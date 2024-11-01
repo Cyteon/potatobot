@@ -79,6 +79,33 @@ class Economy(commands.Cog, name="🪙 Economy"):
         await context.send(f"Added {guild_data['daily_cash']}$ to wallet")
 
     @commands.hybrid_command(
+        name="beg",
+        description="Beg for money",
+        usage="beg"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @commands.cooldown(1, 60, commands.BucketType.user)
+    async def beg(self, context: Context) -> None:
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
+            c.insert_one(data)
+
+        amount = random.randint(50, 300)
+        data["wallet"] += amount
+
+        newdata = {
+            "$set": {"wallet": data["wallet"]}
+        }
+
+        await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
+
+        await context.send(f"Someone gave you {amount}$!")
+        
+    @commands.hybrid_command(
         name="rob",
         description="Rob someone's wallet",
         usage="rob <user>"
