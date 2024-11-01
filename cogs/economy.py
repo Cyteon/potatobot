@@ -104,7 +104,50 @@ class Economy(commands.Cog, name="🪙 Economy"):
         await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
 
         await context.send(f"Someone gave you {amount}$!")
-        
+
+    @commands.hybrid_command(
+        name="sell",
+        description="Sell your items",
+        usage="sells <item> <amount>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    async def sell(self, context: Context, item: str, amount: int) -> None:
+        if amount < 0:
+            await context.send("You can't sell a negative amount")
+            return
+
+        c = db["users"]
+        data = await CachedDB.find_one(c, {"id": context.author.id, "guild_id": context.guild.id})
+
+        if not data:
+            data = CONSTANTS.user_data_template(context.author.id, context.guild.id)
+            c.insert_one(data)
+
+        if item == "potato":
+            if data["farm"]["harvestable"] < amount:
+                await context.send("You don't have enough potatoes")
+                return
+
+            tax = amount // 10
+            payout = amount - tax
+            data["wallet"] += payout
+            data["farm"]["harvestable"] -= amount
+
+            newdata = {
+                "$set": {
+                    "wallet": data["wallet"],
+                    "farm": data["farm"]
+                }
+            }
+
+            await CachedDB.update_one(c, {"id": context.author.id, "guild_id": context.guild.id}, newdata)
+
+            await context.send(f"Sold {amount} potatoes for {payout}$ (tax: {tax}$)")
+
+        else:
+            await context.send("Item not found")
+
     @commands.hybrid_command(
         name="rob",
         description="Rob someone's wallet",
