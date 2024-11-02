@@ -42,7 +42,7 @@ else:
         config = json.load(file)
 
 models = [
-    "llama-3.2-90b-text-preview"
+    "llama-3.2-90b-text-preview",
     "llama-3.1-70b-versatile",
     "llama-3.1-8b-instant",
     "llama3-groq-70b-8192-tool-use-preview",
@@ -87,6 +87,7 @@ def get_api_key():
 
 def prompt_ai(
         prompt="Hello",
+        image_url=None,
         authorId = 0,
         channelId = 0,
         userInfo="",
@@ -116,6 +117,24 @@ def prompt_ai(
             data = { "isChannel": False, "id": authorId, "messageArray": [], "expiresAt": time.time()+604800 }
 
             c.insert_one(data)
+
+    image_description = ""
+
+    if image_url and image_url.split("?")[0].endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+        image = requests.get(image_url)
+
+        if image.status_code == 200:
+            response = requests.post(
+                "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('HF_API_KEY')}"
+                },
+                data=image.content
+            )
+
+            if response.status_code == 200:
+                prompt += f" | Image Description: {response.json()[0]['generated_text']}"
+                image_description = response.json()[0]['generated_text']
 
     messageArray.append(
         {
@@ -170,6 +189,7 @@ def prompt_ai(
 
             break
         except Exception as e:
+            logger.info(f"Error: {e}")
             ai_response = f"Error: {e}"
 
     messageArray.append(
@@ -210,6 +230,9 @@ def prompt_ai(
             if systemInfo["support_server"] in ai_response:
                 continue
         ai_response =  ai_response.replace(word, "[FILTERED]")
+
+    if image_description:
+        ai_response += f"\n-# Image Description: {image_description}"
 
     return ai_response
 
@@ -428,7 +451,17 @@ class Ai(commands.Cog, name="🤖 AI"):
         loop = asyncio.get_running_loop()
         try:
             async with message.channel.typing():
-                data = await loop.run_in_executor(None, functools.partial(prompt_ai, message.author.name + ": " + message.content, 0, message.channel.id, str(userInfo), groq_client=client, systemPrompt=systemPrompt))
+                data = await loop.run_in_executor(
+                    None,
+                    functools.partial(
+                        prompt_ai,
+                        message.author.name + ": " + message.content,
+                        message.attachments[0].url if message.attachments else None,
+                        0,
+                        message.channel.id, str(userInfo),
+                        groq_client=client,
+                        systemPrompt=systemPrompt)
+                    )
                 await message.reply(data)
 
                 ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
@@ -436,6 +469,7 @@ class Ai(commands.Cog, name="🤖 AI"):
                 self.statsDB.dump()
 
         except Exception as e:
+            logger.error(f"Error in AI: {e}")
             await message.reply("An error in the AI has occured")
 
         logger.info(f"AI replied to {message.author} in {message.guild.name} ({message.guild.id})")

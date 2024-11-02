@@ -304,7 +304,7 @@ class Music(commands.Cog, name="🎵 Music"):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
 
         strength = max(0, strength)
-        strength = min(100, strength)
+        strength = min(1000, strength)
 
         if strength < 1 and strength != 0.0:
             return await context.send('The strength must be greater than 1.')
