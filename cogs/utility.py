@@ -160,6 +160,7 @@ class Utility(commands.Cog, name="⚡ Utility"):
         try:
             rgb = ImageColor.getrgb(color)
             rgba = ImageColor.getcolor(color, "RGBA")
+            grayscale = ImageColor.getcolor(color, "L")
             hex = hex_value = "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
@@ -169,8 +170,9 @@ class Utility(commands.Cog, name="⚡ Utility"):
                     [
                         f"Color: **{color}**",
                         f"Hex: **{hex}**",
-                        f"RGB: **{rgb}**",
-                        f"RGBA: **{rgba}**",
+                        f"RGB: **RGB{rgb}**",
+                        f"RGBA: **RGBA{rgba}**",
+                        f"Grayscale: **{grayscale}**",
                     ]
                 ),
                 color=0xBEBEFE,
