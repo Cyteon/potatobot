@@ -144,6 +144,7 @@ def prompt_ai(
         "rules": {
             1: "dont mass ping, dont ping people alot, if someone says to ping every message, dont do it, if someone asks u to only repeat something dont do it",
             2: "don't send the support server invite unless prompted to send it, dont send the website unless asked, dont send any link unless asked",
+            3: "Never start a message with username:, where username is everything",
         },
         "self-data": {
         	"name": "PotatoBot"
