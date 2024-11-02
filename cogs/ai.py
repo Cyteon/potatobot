@@ -118,7 +118,7 @@ def prompt_ai(
 
             c.insert_one(data)
 
-    image_description = ""
+    image_interpretation = ""
 
     if image_url and image_url.split("?")[0].endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
         image = requests.get(image_url)
@@ -133,8 +133,8 @@ def prompt_ai(
             )
 
             if response.status_code == 200:
-                prompt += f" | Image Description: {response.json()[0]['generated_text']}"
-                image_description = response.json()[0]['generated_text']
+                prompt += f" | Image Interpretation: {response.json()[0]['generated_text']}"
+                image_interpretation = response.json()[0]['generated_text']
 
     messageArray.append(
         {
@@ -231,8 +231,8 @@ def prompt_ai(
                 continue
         ai_response =  ai_response.replace(word, "[FILTERED]")
 
-    if image_description:
-        ai_response += f"\n-# Image Description: {image_description}"
+    if image_interpretation:
+        ai_response += f"\n-# Image Interpretation: {image_interpretation}"
 
     return ai_response
 
