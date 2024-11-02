@@ -1,5 +1,7 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
+import io
+
 from asteval import Interpreter
 aeval = Interpreter()
 
@@ -10,6 +12,8 @@ from discord.ext.commands import Context
 from deep_translator import GoogleTranslator
 
 from utils import Checks
+
+from PIL import ImageColor, Image
 
 class Utility(commands.Cog, name="⚡ Utility"):
     def __init__(self, bot) -> None:
@@ -142,6 +146,49 @@ class Utility(commands.Cog, name="⚡ Utility"):
         )
         embed.set_footer(text=f"Translated to {language}")
         await context.send(embed=embed)
+
+    @commands.hybrid_command(
+        name="color",
+        description="Get information about a color.",
+        usage="color <color>"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def color(self, context: Context, color: str) -> None:
+        try:
+            rgb = ImageColor.getrgb(color)
+            rgba = ImageColor.getcolor(color, "RGBA")
+            hex = hex_value = "#{:02x}{:02x}{:02x}".format(*rgb)
+
+
+            embed = discord.Embed(
+                title="Color Information",
+                description="\n".join(
+                    [
+                        f"Color: **{color}**",
+                        f"Hex: **{hex}**",
+                        f"RGB: **{rgb}**",
+                        f"RGBA: **{rgba}**",
+                    ]
+                ),
+                color=0xBEBEFE,
+            )
+
+            img = Image.new("RGB", (100, 100), rgb)
+
+            with io.BytesIO() as image_binary:
+                img.save(image_binary, "PNG")
+                image_binary.seek(0)
+
+                file = discord.File(fp=image_binary, filename="color.png")
+                embed.set_image(url="attachment://color.png")
+
+                await context.send(embed=embed, file=file)
+        except ValueError:
+            await context.send("Invalid color")
+            return
 
 async def setup(bot) -> None:
     await bot.add_cog(Utility(bot))
