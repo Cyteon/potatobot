@@ -1,12 +1,34 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-FILTER_LIST = ["@everyone", "@here", "<@&", "discord.gg", "discord.com/invite"]
+FILTERS = [
+    {
+        "old": "@everyone",
+        "new": "@​everyone"
+    },
+    {
+        "old": "@here",
+        "new": "@​here"
+    },
+    {
+        "old": "<@&",
+        "new": "<@&​"
+    },
+    {
+        "old": "discord.gg",
+        "new": "[filtered]"
+    },
+    {
+        "old": "discord.com/invite",
+        "new": "[filtered]"
+    }
+]
+
 WORD_BLACKLIST = ["nigger", "nigga", "n i g g e r"]
 
 import discord
 import requests
 import os
-
+import re
 import time
 import asyncio
 import functools
@@ -135,6 +157,8 @@ def prompt_ai(
             if response.status_code == 200:
                 prompt += f" | Image Interpretation: {response.json()[0]['generated_text']}"
                 image_interpretation = response.json()[0]['generated_text']
+            else:
+                logger.info(f"Failed to get image interpretation: {response.status_code}")
 
     messageArray.append(
         {
@@ -224,12 +248,12 @@ def prompt_ai(
             logger.error(f"AI Response contains blacklisted word: {word}")
             return "The AIs response has been identified as containing blacklisted words, we are sorry for this inconvenience"
 
-    for word in FILTER_LIST:
-        if word == "discord.gg":
+    for filter in FILTERS:
+        if filter["old"] == "discord.gg":
             # TODO: Fix where if someone makes ai say support server invite and another invite it dosent get filtered
             if systemInfo["support_server"] in ai_response:
                 continue
-        ai_response =  ai_response.replace(word, "[FILTERED]")
+        ai_response =  ai_response.replace(filter["old"], filter["new"])
 
     if image_interpretation:
         ai_response += f"\n-# Image Interpretation: {image_interpretation}"
@@ -448,6 +472,16 @@ class Ai(commands.Cog, name="🤖 AI"):
                         await message.reply("The system prompt contains profanity and this channel is not marked as NSFW. **Using default system prompt**")
                         systemPrompt = "NONE"
 
+        image_url = None
+
+        if message.attachments:
+            image_url = message.attachments[0].url
+        else:
+            if message.content:
+                urls = re.findall(r'(https?://[^\s]+)', message.content)
+                if urls:
+                    image_url = urls[0]
+
         loop = asyncio.get_running_loop()
         try:
             async with message.channel.typing():
@@ -456,7 +490,7 @@ class Ai(commands.Cog, name="🤖 AI"):
                     functools.partial(
                         prompt_ai,
                         message.author.name + ": " + message.content,
-                        message.attachments[0].url if message.attachments else None,
+                        image_url,
                         0,
                         message.channel.id, str(userInfo),
                         groq_client=client,
@@ -489,6 +523,7 @@ class Ai(commands.Cog, name="🤖 AI"):
     @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def ai(self, context: Context, *, prompt: str) -> None:
         if self.ai_temp_disabled:
             await context.send("AI is temporarily disabled due to techincal difficulties")
