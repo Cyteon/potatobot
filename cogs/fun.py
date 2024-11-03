@@ -489,10 +489,10 @@ class Fun(commands.Cog, name="🎉 Fun"):
     )
     @commands.check(Checks.is_not_blacklisted)   
     
-    @commands.hybrid_command(
+        @random.command(
             name="hug",
             description="Get a random hug gif",
-            usage="hug"
+            usage="random hug"
         )
         @commands.check(Checks.is_not_blacklisted)
         @commands.check(Checks.command_not_disabled)
