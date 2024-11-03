@@ -369,7 +369,7 @@ class Music(commands.Cog, name="🎵 Music"):
     @commands.hybrid_command(
         name="disconnect",
         description="Disconnects the player from the voice channel and clears the queue",
-        aliases=['dc'],
+        aliases=['dc', 'leave', 'stop'],
         usage="disconnect"
     )
     @commands.check(Checks.is_not_blacklisted)

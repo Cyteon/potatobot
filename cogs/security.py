@@ -770,32 +770,22 @@ class Security(commands.Cog, name="🛡️ Security"):
         if guild["lockdown"]:
             await member.kick(reason="Guild is in lockdown")
 
+    ###
+
     @commands.hybrid_group(
         name="whitelist",
         description="Whitelist users from security measures (guild owner only)"
     )
     async def whitelist(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Whitelist",
-            description="Commands"
-        )
+        prefix = await self.bot.get_prefix(context)
 
-        # get all subcommands in group
+        cmds = "\n".join([f"{prefix}whitelist {cmd.name} - {cmd.description}" for cmd in self.whitelist.walk_commands()])
 
-        subcommands = [cmd for cmd in self.whitelist.walk_commands()]
-
-        data = []
-
-        for subcommand in subcommands:
-            description = subcommand.description.partition("\n")[0]
-            data.append(f"{await self.bot.get_prefix(context)}whitelist {subcommand.name} - {description}")
-
-        help_text = "\n".join(data)
         embed = discord.Embed(
             title=f"Help: Whitelist", description="List of available commands:", color=0xBEBEFE
         )
         embed.add_field(
-            name="Commands", value=f"```{help_text}```", inline=False
+            name="Commands", value=f"```{cmds}```", inline=False
         )
 
         await context.send(embed=embed)
@@ -891,27 +881,15 @@ class Security(commands.Cog, name="🛡️ Security"):
         description="Trusted users can bypass security measures and change security settings"
     )
     async def trusted(self, context: Context) -> None:
-        embed = discord.Embed(
-            title="Trusted",
-            description="Commands"
-        )
+        prefix = await self.bot.get_prefix(context)
 
-        # get all subcommands in group
+        cmds = "\n".join([f"{prefix}trusted {cmd.name} - {cmd.description}" for cmd in self.trusted.walk_commands()])
 
-        subcommands = [cmd for cmd in self.trusted.walk_commands()]
-
-        data = []
-
-        for subcommand in subcommands:
-            description = subcommand.description.partition("\n")[0]
-            data.append(f"{await self.bot.get_prefix(context)}trusted {subcommand.name} - {description}")
-
-        help_text = "\n".join(data)
         embed = discord.Embed(
             title=f"Help: Trusted", description="List of available commands:", color=0xBEBEFE
         )
         embed.add_field(
-            name="Commands", value=f"```{help_text}```", inline=False
+            name="Commands", value=f"```{cmds}```", inline=False
         )
 
         await context.send(embed=embed)

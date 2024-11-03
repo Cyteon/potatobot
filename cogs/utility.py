@@ -105,6 +105,7 @@ class Utility(commands.Cog, name="⚡ Utility"):
     @commands.hybrid_command(
         name="calc",
         description="Calculate a math expression.",
+        aliases=["calculate"],
         usage="calc <expression>",
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -150,6 +151,7 @@ class Utility(commands.Cog, name="⚡ Utility"):
     @commands.hybrid_command(
         name="color",
         description="Get information about a color.",
+        aliases=["colour"],
         usage="color <color>"
     )
     @commands.check(Checks.is_not_blacklisted)

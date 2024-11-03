@@ -877,6 +877,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         name="jail",
         description="Jail a user.",
         usage="jail <user> [reason]",
+        aliases=["quarantine"],
         extras={"example": "jail @user admin abusing"}
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -984,6 +985,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         name="unjail",
         description="Unjail a user.",
         usage="unjail <user>",
+        aliases=["unquarantine"],
         extras={"example": "unjail @user"}
     )
     @commands.check(Checks.is_not_blacklisted)

@@ -285,6 +285,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
     @commands.hybrid_group(
         name="avatar",
         description="Commands for avatar manipulation",
+        aliases=["av", "pfp"],
         usage="avatar <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -479,8 +480,8 @@ class Fun(commands.Cog, name="🎉 Fun"):
             name="Commands", value=f"```{cmds}```", inline=False
         )
 
-        await context.send(embed=embed)    
-        
+        await context.send(embed=embed)
+
     @random.command(
         name="gayrate",
         description="Get your gay rate",

@@ -325,7 +325,7 @@ class General(commands.Cog, name="⬜ General"):
         name="define",
         description="Get the definition of a word.",
         usage="define <word>",
-        aliases=["dictionary"]
+        aliases=["dictionary", "dict", "word"]
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
