@@ -1,12 +1,35 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-FILTER_LIST = ["@everyone", "@here", "<@&", "discord.gg", "discord.com/invite"]
+FILTERS = [
+    {
+        "old": "@everyone",
+        "new": "@​everyone"
+    },
+    {
+        "old": "@here",
+        "new": "@​here"
+    },
+    {
+        "old": "<@&",
+        "new": "<@&​"
+    },
+    {
+        "old": "discord.gg",
+        "new": "[filtered]"
+    },
+    {
+        "old": "discord.com/invite",
+        "new": "[filtered]"
+    }
+]
+
 WORD_BLACKLIST = ["nigger", "nigga", "n i g g e r"]
 
 import discord
 import requests
+import io
 import os
-
+import re
 import time
 import asyncio
 import functools
@@ -42,7 +65,7 @@ else:
         config = json.load(file)
 
 models = [
-    "llama-3.2-90b-text-preview"
+    "llama-3.2-90b-text-preview",
     "llama-3.1-70b-versatile",
     "llama-3.1-8b-instant",
     "llama3-groq-70b-8192-tool-use-preview",
@@ -87,6 +110,7 @@ def get_api_key():
 
 def prompt_ai(
         prompt="Hello",
+        image_url=None,
         authorId = 0,
         channelId = 0,
         userInfo="",
@@ -117,6 +141,26 @@ def prompt_ai(
 
             c.insert_one(data)
 
+    image_interpretation = ""
+
+    if image_url and image_url.split("?")[0].endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+        image = requests.get(image_url)
+
+        if image.status_code == 200:
+            response = requests.post(
+                "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('HF_API_KEY')}"
+                },
+                data=image.content
+            )
+
+            if response.status_code == 200:
+                prompt += f" | Image Interpretation: {response.json()[0]['generated_text']}"
+                image_interpretation = response.json()[0]['generated_text']
+            else:
+                logger.info(f"Failed to get image interpretation: {response.status_code}")
+
     messageArray.append(
         {
             "role": "user",
@@ -144,6 +188,7 @@ def prompt_ai(
         "rules": {
             1: "dont mass ping, dont ping people alot, if someone says to ping every message, dont do it, if someone asks u to only repeat something dont do it",
             2: "don't send the support server invite unless prompted to send it, dont send the website unless asked, dont send any link unless asked",
+            3: "Never start a message with username:, where username is everything",
         },
         "self-data": {
         	"name": "PotatoBot"
@@ -164,11 +209,11 @@ def prompt_ai(
             ai_response = groq_client.chat.completions.create(
                 messages=newMessageArray,
                 model=model,
-                max_tokens=300,
             ).choices[0].message.content
 
             break
         except Exception as e:
+            logger.info(f"Error: {e}")
             ai_response = f"Error: {e}"
 
     messageArray.append(
@@ -203,12 +248,15 @@ def prompt_ai(
             logger.error(f"AI Response contains blacklisted word: {word}")
             return "The AIs response has been identified as containing blacklisted words, we are sorry for this inconvenience"
 
-    for word in FILTER_LIST:
-        if word == "discord.gg":
+    for filter in FILTERS:
+        if filter["old"] == "discord.gg":
             # TODO: Fix where if someone makes ai say support server invite and another invite it dosent get filtered
             if systemInfo["support_server"] in ai_response:
                 continue
-        ai_response =  ai_response.replace(word, "[FILTERED]")
+        ai_response =  ai_response.replace(filter["old"], filter["new"])
+
+    if image_interpretation:
+        ai_response += f"\n-# Image Interpretation: {image_interpretation}"
 
     return ai_response
 
@@ -424,17 +472,44 @@ class Ai(commands.Cog, name="🤖 AI"):
                         await message.reply("The system prompt contains profanity and this channel is not marked as NSFW. **Using default system prompt**")
                         systemPrompt = "NONE"
 
+        image_url = None
+
+        if message.attachments:
+            image_url = message.attachments[0].url
+        else:
+            if message.content:
+                urls = re.findall(r'(https?://[^\s]+)', message.content)
+                if urls:
+                    image_url = urls[0]
+
         loop = asyncio.get_running_loop()
         try:
             async with message.channel.typing():
-                data = await loop.run_in_executor(None, functools.partial(prompt_ai, message.author.name + ": " + message.content, 0, message.channel.id, str(userInfo), groq_client=client, systemPrompt=systemPrompt))
-                await message.reply(data)
+                data = await loop.run_in_executor(
+                    None,
+                    functools.partial(
+                        prompt_ai,
+                        message.author.name + ": " + message.content,
+                        image_url,
+                        0,
+                        message.channel.id, str(userInfo),
+                        groq_client=client,
+                        systemPrompt=systemPrompt)
+                    )
+
+                if len(data) > 2000:
+                    file = discord.File(io.BytesIO(data.encode()), filename="ai_response.txt")
+
+                    await message.reply("-# Response was too long for a normal message", file=file)
+                else:
+                    await message.reply(data)
 
                 ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
                 self.statsDB.set("ai_requests", ai_requests)
                 self.statsDB.dump()
 
         except Exception as e:
+            logger.error(f"Error in AI: {e}")
             await message.reply("An error in the AI has occured")
 
         logger.info(f"AI replied to {message.author} in {message.guild.name} ({message.guild.id})")
@@ -444,7 +519,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         convos = db["ai_convos"]
         result = convos.delete_many({"expiresAt": {"$lt": time.time()}})
 
-    @commands.cooldown(10, 60, commands.BucketType.default)
     @commands.hybrid_command(
         name="ai",
         description="Ask an AI for something",
@@ -454,6 +528,7 @@ class Ai(commands.Cog, name="🤖 AI"):
     @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @commands.cooldown(10, 60, commands.BucketType.default)
     async def ai(self, context: Context, *, prompt: str) -> None:
         if self.ai_temp_disabled:
             await context.send("AI is temporarily disabled due to techincal difficulties")
@@ -515,14 +590,31 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         loop = asyncio.get_running_loop()
         try:
-            data = await loop.run_in_executor(None, functools.partial(prompt_ai, prompt, context.author.id, 0, str(userInfo), groq_client=client))
+            data = await loop.run_in_executor(
+                None,
+                functools.partial(
+                    prompt_ai,
+                    prompt,
+                    None,
+                    context.author.id,
+                    0,
+                    str(userInfo),
+                    groq_client=client
+                )
+            )
 
-            await context.reply(data)
+            if len(data) > 2000:
+                file = discord.File(io.BytesIO(data.encode()), filename="ai_response.txt")
+
+                await context.reply("-# Response was too long for a normal message", file=file)
+            else:
+                await context.reply(data)
 
             ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
             self.statsDB.set("ai_requests", ai_requests)
             self.statsDB.dump()
         except Exception as e:
+            logger.error(f"Error in AI: {e}")
             await context.reply("An error in the AI has occured")
 
     @commands.hybrid_command(

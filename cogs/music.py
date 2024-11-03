@@ -304,7 +304,7 @@ class Music(commands.Cog, name="🎵 Music"):
         player = self.bot.lavalink.player_manager.get(context.guild.id)
 
         strength = max(0, strength)
-        strength = min(100, strength)
+        strength = min(1000, strength)
 
         if strength < 1 and strength != 0.0:
             return await context.send('The strength must be greater than 1.')
@@ -369,7 +369,7 @@ class Music(commands.Cog, name="🎵 Music"):
     @commands.hybrid_command(
         name="disconnect",
         description="Disconnects the player from the voice channel and clears the queue",
-        aliases=['dc'],
+        aliases=['dc', 'leave', 'stop'],
         usage="disconnect"
     )
     @commands.check(Checks.is_not_blacklisted)

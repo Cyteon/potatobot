@@ -285,6 +285,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
     @commands.hybrid_group(
         name="avatar",
         description="Commands for avatar manipulation",
+        aliases=["av", "pfp"],
         usage="avatar <subcommand>"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -479,8 +480,27 @@ class Fun(commands.Cog, name="🎉 Fun"):
             name="Commands", value=f"```{cmds}```", inline=False
         )
 
-        await context.send(embed=embed)    
-        
+        await context.send(embed=embed)
+
+    @random.command(
+        name="boykisser",
+        description="Get a random boykisser image",
+        usage="boykisser"
+    )
+    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.command_not_disabled)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def boykisser(self, context: Context) -> None:
+        async with aiohttp.ClientSession() as session:
+            data = await session.get(
+                "https://api.gizzy.is-a.dev/api/random?redirect=0"
+            )
+
+            data = await data.json()
+
+            await context.send(data['url'])
+
     @random.command(
         name="gayrate",
         description="Get your gay rate",
