@@ -27,6 +27,7 @@ WORD_BLACKLIST = ["nigger", "nigga", "n i g g e r"]
 
 import discord
 import requests
+import io
 import os
 import re
 import time
@@ -208,7 +209,6 @@ def prompt_ai(
             ai_response = groq_client.chat.completions.create(
                 messages=newMessageArray,
                 model=model,
-                max_tokens=300,
             ).choices[0].message.content
 
             break
@@ -496,7 +496,13 @@ class Ai(commands.Cog, name="🤖 AI"):
                         groq_client=client,
                         systemPrompt=systemPrompt)
                     )
-                await message.reply(data)
+
+                if len(data) > 2000:
+                    file = discord.File(io.BytesIO(data.encode()), filename="ai_response.txt")
+
+                    await message.reply("-# Response was too long for a normal message", file=file)
+                else:
+                    await message.reply(data)
 
                 ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
                 self.statsDB.set("ai_requests", ai_requests)
@@ -513,7 +519,6 @@ class Ai(commands.Cog, name="🤖 AI"):
         convos = db["ai_convos"]
         result = convos.delete_many({"expiresAt": {"$lt": time.time()}})
 
-    @commands.cooldown(10, 60, commands.BucketType.default)
     @commands.hybrid_command(
         name="ai",
         description="Ask an AI for something",
@@ -523,7 +528,7 @@ class Ai(commands.Cog, name="🤖 AI"):
     @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.cooldown(10, 60, commands.BucketType.default)
     async def ai(self, context: Context, *, prompt: str) -> None:
         if self.ai_temp_disabled:
             await context.send("AI is temporarily disabled due to techincal difficulties")
@@ -598,12 +603,18 @@ class Ai(commands.Cog, name="🤖 AI"):
                 )
             )
 
-            await context.reply(data)
+            if len(data) > 2000:
+                file = discord.File(io.BytesIO(data.encode()), filename="ai_response.txt")
+
+                await context.reply("-# Response was too long for a normal message", file=file)
+            else:
+                await context.reply(data)
 
             ai_requests = (self.statsDB.get("ai_requests") if self.statsDB.exists("ai_requests") else 0) + 1
             self.statsDB.set("ai_requests", ai_requests)
             self.statsDB.dump()
         except Exception as e:
+            logger.error(f"Error in AI: {e}")
             await context.reply("An error in the AI has occured")
 
     @commands.hybrid_command(
