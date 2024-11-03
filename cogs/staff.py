@@ -351,11 +351,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @Checks.has_perm(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     async def kick(
-        self, context: Context, user: discord.User, *, reason: str = "Not specified"
+        self, context: Context, member: discord.Member, *, reason: str = "Not specified"
     ) -> None:
-        member = context.guild.get_member(user.id) or await context.guild.fetch_member(
-            user.id
-        )
+        if context.author.top_role.position <= member.top_role.position:
+            embed = discord.Embed(
+                description="You cannot kick a user with a higher or equal role than you.",
+                color=0xE02B2B,
+            )
+            return await context.send(embed=embed)
 
         if member == self.bot.user:
             return await context.send("what did i do :C")
@@ -373,7 +376,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                     await member.send(f"You were kicked by **{context.author}** from **{context.guild.name}**!\nReason: {reason}")
                     messaged = True
                 except:
-                    # Couldn't send a message in the private messages of the user
                     pass
                 await member.kick(reason=reason)
 
@@ -408,7 +410,6 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                         )
 
                         await log_channel.send(embed=embed)
-
             except:
                 embed = discord.Embed(
                     description="An error occurred while trying to kick the user. Make sure my role is above the role of the user you want to kick.",
@@ -456,11 +457,14 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def ban(
-        self, context: Context, user: discord.User, *, reason: str = "Not specified"
+        self, context: Context, member: discord.Member, *, reason: str = "Not specified"
     ) -> None:
-        member = context.guild.get_member(user.id) or await context.guild.fetch_member(
-            user.id
-        )
+        if context.author.top_role.position <= member.top_role.position:
+            embed = discord.Embed(
+                description="You cannot kick a user with a higher or equal role than you.",
+                color=0xE02B2B,
+            )
+            return await context.send(embed=embed)
 
         if member == self.bot.user:
             return await context.send("what did i do :C")
@@ -542,6 +546,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         if user == self.bot.user:
             return await context.send("what did i do :C")
 
+        member = await context.guild.fetch_member(user.id)
+
+        if member:
+            return await context.send("User is already in the server! Use the `ban` command instead.")
+
         try:
             await context.guild.ban(user, reason=reason, delete_message_days=0)
 
@@ -586,15 +595,18 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @commands.check(Checks.command_not_disabled)
     @Checks.has_perm(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def softban(self, context: Context, user: discord.User):
+    async def softban(self, context: Context, user: discord.Member):
+        if context.author.top_role.position <= user.top_role.position:
+            embed = discord.Embed(
+                description="You cannot kick a user with a higher or equal role than you.",
+                color=0xE02B2B,
+            )
+            return await context.send(embed=embed)
+
         if user == self.bot.user:
             return await context.send("what did i do :C")
 
         try:
-            user = context.guild.get_member(user.id) or await context.guild.fetch_member(
-                user.id
-            )
-
             if user.guild_permissions.administrator:
                 embed = discord.Embed(
                     description="User has administrator permissions.", color=0xE02B2B
@@ -749,6 +761,13 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     @Checks.has_perm(moderate_members=True)
     @commands.bot_has_permissions(moderate_members=True)
     async def mute(self, context: Context, user: discord.Member, time: str, *, reason: str = "Not specified") -> None:
+        if context.author.top_role.position <= user.top_role.position:
+            embed = discord.Embed(
+                description="You cannot mute a user with a higher or equal role than you.",
+                color=0xE02B2B,
+            )
+            return await context.send(embed=embed)
+
         if user == self.bot.user:
             return await context.send("what did i do :C")
         try:
@@ -862,9 +881,16 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
-    @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
+    @Checks.has_perm(moderate_members=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def jail(self, context: Context, user: discord.Member, *, reason: str = "Not specified") -> None:
+        if context.author.top_role.position <= user.top_role.position:
+            embed = discord.Embed(
+                description="You cannot jail a user with a higher or equal role than you.",
+                color=0xE02B2B,
+            )
+            return await context.send(embed=embed)
+
         await context.send("Jailing user... please wait")
         guilds = db["guilds"]
         data = await CachedDB.find_one(guilds, {"id": context.guild.id})
@@ -962,9 +988,11 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
     )
     @commands.check(Checks.is_not_blacklisted)
     @commands.check(Checks.command_not_disabled)
-    @Checks.has_perm(manage_roles=True, manage_channels=True, manage_messages=True)
+    @Checks.has_perm(moderate_members=True)
     @commands.bot_has_permissions(manage_roles=True, manage_channels=True, manage_messages=True)
     async def unjail(self, context: Context, user: discord.Member):
+
+
         guilds = db["guilds"]
         data = guilds.find_one({"id": context.guild.id})
 
