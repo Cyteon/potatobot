@@ -487,7 +487,27 @@ class Fun(commands.Cog, name="🎉 Fun"):
         description="Get a random boykisser image",
         usage="boykisser"
     )
-    @commands.check(Checks.is_not_blacklisted)
+    @commands.check(Checks.is_not_blacklisted)   
+    
+    @commands.hybrid_command(
+            name="hug",
+            description="Get a random hug gif",
+            usage="hug"
+        )
+        @commands.check(Checks.is_not_blacklisted)
+        @commands.check(Checks.command_not_disabled)
+        @app_commands.allowed_installs(guilds=True, users=True)
+        @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+        async def hug(self, context: Context) -> None:
+            async with aiohttp.ClientSession() as session:
+                data = await session.get(
+                    "https://some-random-api.com/animu/hug"
+                )
+    
+                data = await data.json()
+    
+                await context.send(data['link'])
+    
     @commands.check(Checks.command_not_disabled)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
