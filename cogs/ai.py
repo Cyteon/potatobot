@@ -550,7 +550,18 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         loop = asyncio.get_running_loop()
         try:
-            data = await loop.run_in_executor(None, functools.partial(prompt_ai, prompt, context.author.id, 0, str(userInfo), groq_client=client))
+            data = await loop.run_in_executor(
+                None,
+                functools.partial(
+                    prompt_ai,
+                    prompt,
+                    None,
+                    context.author.id,
+                    0,
+                    str(userInfo),
+                    groq_client=client
+                )
+            )
 
             await context.reply(data)
 
