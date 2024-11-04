@@ -1,6 +1,5 @@
 # This project is licensed under the terms of the GPL v3.0 license. Copyright 2024 Cyteon
 
-
 import discord
 import asyncio
 import datetime
@@ -50,10 +49,10 @@ class Security(commands.Cog, name="🛡️ Security"):
         if message.guild == None:
             return
 
-        if message.author == self.bot.user:
+        if message.author.id == self.bot.user.id:
             return
 
-        if message.author == message.guild.owner:
+        if message.author.id == message.guild.owner.id:
             return
 
         if message.webhook_id:
@@ -68,7 +67,7 @@ class Security(commands.Cog, name="🛡️ Security"):
             if message.webhook_id in webhook_cache:
                 webhook_cache[message.webhook_id] += 1
 
-                if "@everyone" in message.content.lower() or "@here" in message.content.lower():
+                if "@everyone" in message.content or "@here" in message.content:
                     webhook_cache[message.webhook_id] += 11
 
                 if webhook_cache[message.webhook_id] > WEBHOOK_TRESHOLD:
@@ -89,7 +88,6 @@ class Security(commands.Cog, name="🛡️ Security"):
                         return
 
                     await message.delete()
-
 
                     log_channel = message.guild.get_channel(data["log_channel"])
 
@@ -114,7 +112,6 @@ class Security(commands.Cog, name="🛡️ Security"):
                         if log_channel != None:
                             await log_channel.send(embed=embed)
 
-
                     embed = discord.Embed(
                         title="AntiSpam Warning",
                         description=f"Webhook **{message.webhook_id}** has triggered the antispam system, last message: `{message.content}`",
@@ -132,27 +129,18 @@ class Security(commands.Cog, name="🛡️ Security"):
                     ping_cache[message.author] += len(message.role_mentions) * 2
 
             if len(message.mentions) > 0:
-                if message.author == message.guild.owner:
-                    return
-
                 ping_cache[message.author] += len(message.mentions)/2
 
                 if message.author in message.mentions:
                     ping_cache[message.author] -= 0.5
 
-            if "@everyone" in message.content.lower() or "@here" in message.content.lower():
-                if message.author == message.guild.owner:
-                    return
-
+            if "@everyone" in message.content or "@here" in message.content:
                 if message.author.guild_permissions.mention_everyone:
                     ping_cache[message.author] += 11
-
 
             if ping_cache[message.author] > PING_TRESHOLD:
                 logger.info("boom")
                 ping_cache[message.author] = 0
-                if message.author == message.guild.owner:
-                    return
 
                 users = db["users"]
                 user_data = users.find_one({"id": message.author.id, "guild_id": message.guild.id})
@@ -164,7 +152,6 @@ class Security(commands.Cog, name="🛡️ Security"):
                 if "whitelisted" in user_data:
                     if user_data["whitelisted"]:
                         return
-
 
                 guilds = db["guilds"]
                 data = guilds.find_one({"id": message.guild.id})
@@ -268,7 +255,13 @@ class Security(commands.Cog, name="🛡️ Security"):
                         if entry.target == role:
                             user = entry.user
 
-                    if user == discord_guild.owner:
+                    if user is None:
+                        return
+
+                    if user.id == discord_guild.owner.id:
+                        return
+
+                    if user.id == self.bot.user.id:
                         return
 
                     users = db["users"]
@@ -309,7 +302,6 @@ class Security(commands.Cog, name="🛡️ Security"):
 
                     await log_channel.send(embed=embed)
 
-
     @commands.Cog.listener()
     async def on_guild_role_update(self, before: discord.Role, after: discord.Role) -> None:
         if after.permissions.administrator and not before.permissions.administrator:
@@ -332,10 +324,12 @@ class Security(commands.Cog, name="🛡️ Security"):
                                 continue
                             user = entry.user
 
-                    if user == discord_guild.owner:
+                    if user is None:
+
+                    if user.id == self.bot.user.id:
                         return
 
-                    if not user:
+                    if user.id == after.guild.owner.id:
                         return
 
                     users = db["users"]
@@ -433,16 +427,19 @@ class Security(commands.Cog, name="🛡️ Security"):
             if antinuke.get("anti_massban", False):
                 user = None
 
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.5) # So audit log can update
 
                 async for entry in discord_guild.audit_logs(action=discord.AuditLogAction.ban, limit=2):
                     if entry.target == banned_user:
                         user = entry.user
 
-                if not user:
+                if user is None:
                     return
 
-                if user == discord_guild.owner:
+                if user.id == self.bot.user.id:
+                    return
+
+                if user.id == discord_guild.owner.id:
                     return
 
                 users = db["users"]
@@ -532,10 +529,13 @@ class Security(commands.Cog, name="🛡️ Security"):
                     if entry.target == member:
                         user = entry.user
 
-                if not user:
+                if user is None:
                     return
 
-                if user == member.guild.owner:
+                if user.id == self.bot.user.id:
+                    return
+
+                if user.id == member.guild.owner.id:
                     return
 
                 users = db["users"]
@@ -627,7 +627,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                 else:
                     deleted_channels[channel.guild] = [channel]
 
-                if not user:
+                if user is None:
                     return
 
                 if user == self.bot.user:
@@ -806,7 +806,7 @@ class Security(commands.Cog, name="🛡️ Security"):
         users = db["users"]
         user_data = users.find_one({"id": user.id, "guild_id": context.guild.id})
 
-        if not user:
+        if user is None:
             user_data = CONSTANTS.user_data_template(user.id, context.guild.id)
             users.insert_one(user_data)
 
@@ -836,7 +836,7 @@ class Security(commands.Cog, name="🛡️ Security"):
         users = db["users"]
         user_data = users.find_one({"id": user.id, "guild_id": context.guild.id})
 
-        if not user:
+        if user is None:
             user_data = CONSTANTS.user_data_template(user.id, context.guild.id)
             users.insert_one(user_data)
 
@@ -910,7 +910,7 @@ class Security(commands.Cog, name="🛡️ Security"):
         users = db["users"]
         user_data = users.find_one({"id": user.id, "guild_id": context.guild.id})
 
-        if not user:
+        if user is None:
             user_data = CONSTANTS.user_data_template(user.id, context.guild.id)
             users.insert_one(user_data)
 
@@ -940,7 +940,7 @@ class Security(commands.Cog, name="🛡️ Security"):
         users = db["users"]
         user_data = users.find_one({"id": user.id, "guild_id": context.guild.id})
 
-        if not user:
+        if user is None:
             user_data = CONSTANTS.user_data_template(user.id, context.guild.id)
             users.insert_one(user_data)
 
@@ -1264,7 +1264,6 @@ class Security(commands.Cog, name="🛡️ Security"):
         guild_owner = context.guild.owner
 
         if context.author != guild_owner:
-
             users = db["users"]
             user_data = users.find_one({"id": context.author.id, "guild_id": context.guild.id})
 
@@ -1325,7 +1324,6 @@ class Security(commands.Cog, name="🛡️ Security"):
         guild_owner = context.guild.owner
 
         if context.author != guild_owner:
-
             users = db["users"]
             user_data = users.find_one({"id": context.author.id, "guild_id": context.guild.id})
 
@@ -1386,7 +1384,6 @@ class Security(commands.Cog, name="🛡️ Security"):
         guild_owner = context.guild.owner
 
         if context.author != guild_owner:
-
             users = db["users"]
             user_data = users.find_one({"id": context.author.id, "guild_id": context.guild.id})
 
@@ -1518,15 +1515,12 @@ class ConfirmView(discord.ui.View):
 
             await interaction.message.edit(content="Server lockdown complete.", view=None, embed=None)
 
-
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.primary)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.author != interaction.user:
             return interaction.response.send_message("no", ephemeral=True)
 
         await interaction.response.edit_message("Action cancelled", view=None)
-
-
 
 async def setup(bot) -> None:
     await bot.add_cog(Security(bot))
