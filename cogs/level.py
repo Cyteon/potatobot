@@ -94,6 +94,13 @@ class Level(commands.Cog, name="🚀 Level"):
             else:
                 fetched = await self.bot.fetch_user(user["id"])
 
+                if fetched == None:
+                    embed.add_field(
+                        name=f"{index}. Unknown User",
+                        value=f"Level: {user['level']} - XP: {user['xp']}",
+                        inline=False
+                    )
+
                 if not fetched.bot:
                     embed.add_field(
                         name=f"{index}. {fetched.name}",
