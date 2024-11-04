@@ -65,6 +65,7 @@ class Level(commands.Cog, name="🚀 Level"):
     @commands.hybrid_command(
         name="leaderboard",
         description="See the top 10 users with the most xp in this server",
+        aliases=["lb"],
         usage="leaderboard"
     )
     @commands.check(Checks.is_not_blacklisted)
@@ -82,14 +83,23 @@ class Level(commands.Cog, name="🚀 Level"):
 
         for index, user in enumerate(data, start=1):
             member = context.guild.get_member(user["id"])
+
             if member != None:
-                if member.bot:
-                    continue
-                embed.add_field(
-                    name=f"{index}. {member.nick if member.nick else member.display_name if member.display_name else member.name}",
-                    value=f"Level: {user['level']} - XP: {user['xp']}",
-                    inline=False
-                )
+                if not member.bot:
+                    embed.add_field(
+                        name=f"{index}. {member.nick if member.nick else member.display_name if member.display_name else member.name}",
+                        value=f"Level: {user['level']} - XP: {user['xp']}",
+                        inline=False
+                    )
+            else:
+                fetched = await self.bot.fetch_user(user["id"])
+
+                if not fetched.bot:
+                    embed.add_field(
+                        name=f"{index}. {fetched.name}",
+                        value=f"Level: {user['level']} - XP: {user['xp']}",
+                        inline=False
+                    )
 
         await context.send(embed=embed)
 
