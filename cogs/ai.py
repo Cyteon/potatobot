@@ -456,6 +456,11 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         if not userInfo:
             userInfo = {}
+        else:
+            userInfo["whitelisted"] = "[REDACTED]"
+            userInfo["trusted"] = "[REDACTED]"
+            userInfo["jailed"] = "[REDACTED]"
+            userInfo["warnings"] = "[REDACTED]"
 
         userInfo["user"] = message.author
         userInfo["channel"] = message.channel
@@ -585,6 +590,12 @@ class Ai(commands.Cog, name="🤖 AI"):
 
         c = db["users"]
         userData = c.find_one({"id": context.author.id, "guild_id": context.guild.id}) if context.guild else {}
+
+        if userData:
+            userData["whitelisted"] = "[REDACTED]"
+            userData["trusted"] = "[REDACTED]"
+            userData["jailed"] = "[REDACTED]"
+            userData["warnings"] = "[REDACTED]"
 
         userInfo["data"] = userData
 
