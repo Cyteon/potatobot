@@ -17,7 +17,7 @@ export default {
       });
     }
 
-    if (user.blacklisted) {
+    if (user.blacklisted && command.data.name !== "root") {
       return await interaction.reply({
         content: `:no_entry: You are blacklisted from using commands! Reason: ${user.blacklist_reason}`,
         ephemeral: true,
