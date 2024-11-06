@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+import GlobalUser from "../../lib/models/GlobalUser.js";
 
 const data = new SlashCommandBuilder()
   .setName("root")
@@ -19,10 +20,21 @@ const data = new SlashCommandBuilder()
           name: "💻 Exec | text",
           value: "exec",
         },
+        {
+          name: "⛔ Blacklist | user, text (reason)",
+          value: "blacklist",
+        },
+        {
+          name: "✅ Unblacklist | user",
+          value: "unblacklist",
+        },
       ),
   )
   .addStringOption((input) =>
     input.setName("text").setDescription("If applicable"),
+  )
+  .addUserOption((input) =>
+    input.setName("user").setDescription("If applicable"),
   );
 
 const execute = async function (interaction) {
@@ -34,6 +46,7 @@ const execute = async function (interaction) {
 
   const action = interaction.options.getString("action");
   const text = interaction.options.getString("text");
+  const user = interaction.options.getUser("user");
 
   if (action === "eval") {
     try {
@@ -58,6 +71,40 @@ const execute = async function (interaction) {
         return interaction.reply(`\`\`\`sh\n${stderr}\`\`\``);
       }
       interaction.reply(`\`\`\`sh\n${stdout}\`\`\``);
+    });
+  } else if (action === "blacklist") {
+    let data = await GlobalUser.findOne({ id: user.id }).exec();
+
+    if (!data) {
+      data = await GlobalUser.create({
+        id: user.id,
+        blacklisted: true,
+        blacklist_reason: text || "No reason provided",
+      });
+    } else {
+      data.blacklisted = true;
+      data.blacklist_reason = text || "No reason provided";
+      await data.save();
+    }
+
+    await interaction.reply({
+      content: `:white_check_mark: Blacklisted user ${user.tag}!`,
+    });
+  } else if (action === "unblacklist") {
+    let data = await GlobalUser.findOne({ id: user.id }).exec();
+
+    if (!data) {
+      return await interaction.reply({
+        content: `:x: User ${user.tag} is not blacklisted!`,
+      });
+    }
+
+    data.blacklisted = false;
+    data.blacklist_reason = "";
+    await data.save();
+
+    await interaction.reply({
+      content: `:white_check_mark: Unblacklisted user ${user.tag}!`,
     });
   }
 };
