@@ -11,8 +11,6 @@ export default {
 
     let user = await GlobalUser.findOne({ id: interaction.user.id });
 
-    console.log(user);
-
     if (!user) {
       user = await GlobalUser.create({
         id: interaction.user.id,
