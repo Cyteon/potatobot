@@ -1,5 +1,6 @@
 # PotatoBot
 > The best AIO bot on Discord. Now in JS!
+
 Red: 0xff6961 Yellow: 0xfdfd96 Green: 0x77dd77 Blue: 0x56b3fa
 
 TODO: Convert all int IDs to BigInt
