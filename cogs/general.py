@@ -267,7 +267,7 @@ class General(commands.Cog, name="⬜ General"):
             color=0xFF0000
         )
 
-        embed.set_footer(text=f"By {context.author} ({context.author.id}) in {context.guild} ({context.guild.id})")
+        embed.set_footer(text=f"By {context.author} ({context.author.id}) in {context.guild if context.guild else 'DM'} ({context.guild.id if context.guild else 'DM'})")
 
         await channel.send(embed=embed)
         await context.send("Bug Reported")

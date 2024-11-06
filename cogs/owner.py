@@ -572,8 +572,10 @@ class Owner(commands.Cog, name="owner"):
         for channel_id in listOfChannels["ai_channels"]:
             channel = self.bot.get_channel(channel_id)
             if channel:
+                if channel.permissions_for(channel.guild.me).send_messages:
+                    await channel.send(embed=embed)
 
-                await channel.send(embed=embed)
+        await context.send("Announced")
 
     @dev.command(
         name="copy-db-to-backup",
