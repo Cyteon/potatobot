@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 
 const data = new SlashCommandBuilder()
   .setName("api")
-  .setDescription("Commands for diffrent api stuff")
+  .setDescription("Commands for different API calls")
   .setIntegrationTypes(0, 1)
   .setContexts(0, 1, 2)
   .addSubcommand((subcommand) =>

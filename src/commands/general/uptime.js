@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 
 const data = new SlashCommandBuilder()
   .setName("uptime")
-  .setDescription("Get the uptime of the bot")
+  .setDescription("Gets the uptime of the bot")
   .setIntegrationTypes(0, 1)
   .setContexts(0, 1, 2);
 
