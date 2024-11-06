@@ -1,0 +1,12 @@
+{
+  "prefix": ",",
+  "invite_link": "https://discord.com/oauth2/authorize?client_id=1226487228914602005&scope=bot&permissions=8",
+  "join_leave_webhook": "",
+  "bug_channel": "1244584577989873684",
+  "origins": ["http://localhost", "http://localhost:3000"],
+  "ssl_keyfile": "./ssl/example.com.key",
+  "ssl_certfile": "./ssl/example.com.pem",
+  "use_ssl": false,
+  "port": 80,
+  "fully_ignore": []
+}
