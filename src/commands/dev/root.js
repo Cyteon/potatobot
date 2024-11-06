@@ -27,7 +27,7 @@ const data = new SlashCommandBuilder()
 
 const execute = async function (interaction) {
   if (interaction.user.id !== process.env.OWNER_ID) {
-    return interaction.reply(
+    return await interaction.reply(
       "https://tenor.com/view/pluh-cat-spinning-gif-18263966663003556958",
     );
   }
