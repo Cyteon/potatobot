@@ -75,7 +75,7 @@ const execute = async function (interaction) {
       "https://api.gizzy.is-a.dev/api/random?redirect=0",
     );
     const json = await response.json();
-    const imgurl = json.image;
+    const imgurl = json.url;
 
     await interaction.reply({ content: imgurl, ephemeral: false });
   } else if (subCommand === "cat") {
