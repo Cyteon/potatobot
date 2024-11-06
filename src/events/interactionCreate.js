@@ -1,3 +1,5 @@
+import GlobalUser from "../lib/models/GlobalUser.js";
+
 export default {
   name: "interactionCreate",
   async execute(interaction, client) {
@@ -6,6 +8,21 @@ export default {
     const command = client.commands.get(interaction.commandName);
 
     if (!command) return;
+
+    let user = await GlobalUser.findOne({ id: interaction.user.id });
+
+    if (!user) {
+      user = await GlobalUser.create({
+        id: interaction.user.id,
+      });
+    }
+
+    if (user.blacklisted) {
+      return await interaction.reply({
+        content: `:no_entry: You are blacklisted from using commands! Reason: ${user.blacklist_reason}`,
+        ephemeral: true,
+      });
+    }
 
     try {
       await command.execute(interaction, client);
