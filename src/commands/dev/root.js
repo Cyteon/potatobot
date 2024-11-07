@@ -22,6 +22,14 @@ const data = new SlashCommandBuilder()
           value: "exec",
         },
         {
+          name: "📋 List top servers",
+          value: "list_top_servers",
+        },
+        {
+          name: "📢 Say | text",
+          value: "say",
+        },
+        {
           name: "⛔ Blacklist | user, text (reason)",
           value: "blacklist",
         },
@@ -32,17 +40,18 @@ const data = new SlashCommandBuilder()
         {
           name: "🤖 Enable AI | text (guild id)",
           value: "enable_ai",
-        }, {
+        },
+        {
           name: "⛔🤖 Disable AI | text (guild id)",
           value: "disable_ai",
-        }
+        },
       ),
   )
   .addStringOption((input) =>
-    input.setName("text").setDescription("still water")
+    input.setName("text").setDescription("still water"),
   )
   .addUserOption((input) =>
-    input.setName("user").setDescription("(those who know)")
+    input.setName("user").setDescription("(those who know)"),
   );
 
 const execute = async function (interaction) {
@@ -66,19 +75,89 @@ const execute = async function (interaction) {
         await interaction.reply(`\`\`\`js\n${evaled.slice(0, 1990)}\`\`\``);
       }
     } catch (err) {
-      await interaction.reply(`\`\`\`js\n${err.toString().slice(0, 1990)}\`\`\``);
+      await interaction.reply(
+        `\`\`\`js\n${err.toString().slice(0, 1990)}\`\`\``,
+      );
     }
   } else if (action === "exec") {
     const { exec } = await import("child_process");
 
     exec(text, (err, stdout, stderr) => {
       if (err) {
-        return interaction.reply(`\`\`\`sh\n${err.toString().slice(0, 1990)}\`\`\``);
+        return interaction.reply(
+          `\`\`\`sh\n${err.toString().slice(0, 1990)}\`\`\``,
+        );
       }
       if (stderr) {
         return interaction.reply(`\`\`\`sh\n${stderr.slice(0, 1990)}\`\`\``);
       }
       interaction.reply(`\`\`\`sh\n${stdout.slice(0, 1990)}\`\`\``);
+    });
+  } else if (action === "list_top_servers") {
+    let offset = 0;
+    let index = 0;
+
+    let guilds = interaction.client.guilds.cache
+      .sort((a, b) => b.memberCount - a.memberCount)
+      .map((guild) => {
+        index += 1;
+        return `[${index}] ${guild.name} (${guild.id}) - ${guild.memberCount} members`;
+      })
+      .slice(offset, 10 + offset);
+
+    const msg = await interaction.reply({
+      content: `\`\`\`${guilds.join("\n")}\`\`\``,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 1,
+              label: "Previous",
+              custom_id: "previous-" + interaction.id,
+            },
+            {
+              type: 2,
+              style: 1,
+              label: "Next",
+              custom_id: "next-" + interaction.id,
+            },
+          ],
+        },
+      ],
+    });
+
+    const filter = (i) => i.user.id === interaction.user.id;
+
+    const collector = interaction.channel.createMessageComponentCollector({
+      filter,
+      time: 60000,
+    });
+
+    collector.on("collect", async (i) => {
+      if (i.customId === "previous-" + interaction.id) {
+        offset = Math.max(0, offset - 10);
+      } else if (i.customId === "next-" + interaction.id) {
+        offset = Math.min(
+          Math.max(10, interaction.client.guilds.cache.size) - 10,
+          offset + 10,
+        );
+      }
+
+      index = offset;
+
+      guilds = interaction.client.guilds.cache
+        .sort((a, b) => b.memberCount - a.memberCount)
+        .map((guild) => {
+          index += 1;
+          return `[${index}] ${guild.name} (${guild.id}) - ${guild.memberCount} members`;
+        })
+        .slice(offset, 10 + offset);
+
+      await i.update({
+        content: `\`\`\`${guilds.join("\n")}\`\`\``,
+      });
     });
   } else if (action === "blacklist") {
     let data = await GlobalUser.findOne({ id: user.id }).exec();
@@ -115,7 +194,9 @@ const execute = async function (interaction) {
       content: `:white_check_mark: Unblacklisted user ${user.tag}!`,
     });
   } else if (action === "enable_ai") {
-    let guildData = await Guild.findOne({ id: text || interaction.guild.id }).exec();
+    let guildData = await Guild.findOne({
+      id: text || interaction.guild.id,
+    }).exec();
 
     if (!guildData) {
       guildData = await Guild.create({
@@ -131,7 +212,9 @@ const execute = async function (interaction) {
       content: `:white_check_mark: AI enabled for guild ${text || "current guild"}`,
     });
   } else if (action === "disable_ai") {
-    let guildData = await Guild.findOne({ id: text || interaction.guild.id }).exec();
+    let guildData = await Guild.findOne({
+      id: text || interaction.guild.id,
+    }).exec();
 
     if (!guildData) {
       return await interaction.reply({
@@ -146,6 +229,8 @@ const execute = async function (interaction) {
     await interaction.reply({
       content: `:white_check_mark: AI disabled for guild ${text || "current guild"}`,
     });
+  } else if (action === "say") {
+    await interaction.channel.send(text);
   }
 };
 
