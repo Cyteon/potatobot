@@ -95,7 +95,7 @@ const execute = async function (interaction) {
     await interaction.channel.members.remove(user);
 
     await interaction.reply({
-      content: `User <@${user.id}> removed from ticket`,
+      content: `User **${user.tag}** removed from ticket`,
     });
   }
 };
