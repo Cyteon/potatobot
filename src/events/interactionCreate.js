@@ -108,6 +108,16 @@ export default {
           content: "Ticket created!",
           ephemeral: true,
         });
+
+        await ticketChannel.send({
+          embeds: [
+            {
+              title: "Ticket Created",
+              description: `A ticket has been made by <@${interaction.user.id}>`,
+              color: 0x56b3fa
+            }
+          ]
+        });
       }
     }
   },

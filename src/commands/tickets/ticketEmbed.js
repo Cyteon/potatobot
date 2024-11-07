@@ -19,6 +19,7 @@ const execute = async function (interaction) {
       {
         type: 2,
         style: 1,
+        emoji: "🎫",
         label: "Open ticket",
         custom_id: "open_ticket",
       },
