@@ -3,6 +3,8 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 const data = new SlashCommandBuilder()
   .setName("random")
   .setDescription("Gets a random image of something.")
+  .setIntegrationTypes(0, 1)
+  .setContexts(0, 1, 2)
   .addSubcommand((subcommand) =>
     subcommand.setName("bird").setDescription("Get a random bird image"),
   )
