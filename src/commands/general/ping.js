@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 
 const data = new SlashCommandBuilder()
   .setName("ping")
-  .setDescription("Get ping of the bot")
+  .setDescription("Gets the current ping of the bot")
   .setIntegrationTypes(0, 1)
   .setContexts(0, 1, 2);
 
