@@ -13,7 +13,29 @@ const data = new SlashCommandBuilder()
           .setName("channel")
           .setDescription("The channel to set as the ticket channel")
           .setRequired(true),
+      )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+      .setName("add")
+      .setDescription("Add a user to a ticket")
+      .addUserOption((option) =>
+        option
+        .setName("user")
+        .setDescription("The user to add to the ticket")
+        .setRequired(true),
       ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+      .setName("remove")
+      .setDescription("Remove a user from a ticket")
+      .addUserOption((option) =>
+        option
+        .setName("user")
+        .setDescription("The user to remove from the ticket")
+        .setRequired(true),
+    ),  
   );
 
 const execute = async function (interaction) {
@@ -44,6 +66,36 @@ const execute = async function (interaction) {
     await interaction.reply({
       content: `Ticket channel set to <#${channel.id}>`,
       ephemeral: true,
+    });
+  } else if (subCommand === "add") {
+    const user = interaction.options.getUser("user");
+
+    if (!interaction.member.permissions.has("MANAGE_CHANNELS")) {
+      return interaction.reply({
+        content: "You do not have permission to use this command",
+        ephemeral: true,
+      });
+    }
+
+    await interaction.channel.members.add(user);
+
+    await interaction.reply({
+      content: `User <@${user.id}> added to ticket`,
+    });
+  }  else if (subCommand === "remove") {
+    const user = interaction.options.getUser("user");
+
+    if (!interaction.member.permissions.has("MANAGE_CHANNELS")) {
+      return interaction.reply({
+        content: "You do not have permission to use this command",
+        ephemeral: true,
+      });
+    }
+
+    await interaction.channel.members.remove(user);
+
+    await interaction.reply({
+      content: `User <@${user.id}> removed from ticket`,
     });
   }
 };
