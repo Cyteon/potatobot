@@ -93,12 +93,8 @@ export default {
 
         await ticket.members.add(interaction.user.id);
 
-        const supportRole = interaction.guild.roles.cache.get(
-          guildData.tickets_support_role,
-        );
-
         await ticket.send({
-          content: `<@${interaction.user.id}> <@&${supportRole.id}>`,
+          content: `<@${interaction.user.id}> <@&${guildData.tickets_support_role}>`,
           embeds: [
             {
               color: 0x56b3fa,
