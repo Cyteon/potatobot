@@ -524,7 +524,7 @@ class Fun(commands.Cog, name="🎉 Fun"):
         else:
             emoji = random.choice(emojis)
 
-        await context.send(f"{user.mention} is {percentage}% gay {emoji}")
+        await context.send(f"**{user}** is {percentage}% gay {emoji}")
 
 
     @random.command(
