@@ -39,10 +39,10 @@ const data = new SlashCommandBuilder()
       ),
   )
   .addStringOption((input) =>
-    input.setName("text").setDescription("If applicable"),
+    input.setName("text").setDescription("still water")
   )
   .addUserOption((input) =>
-    input.setName("user").setDescription("If applicable"),
+    input.setName("user").setDescription("(those who know)")
   );
 
 const execute = async function (interaction) {
