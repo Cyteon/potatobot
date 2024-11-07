@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import GlobalUser from "../../lib/models/GlobalUser.js";
+import Guild from "../../lib/models/Guild.js";
 
 const data = new SlashCommandBuilder()
   .setName("root")
@@ -28,6 +29,13 @@ const data = new SlashCommandBuilder()
           name: "✅ Unblacklist | user",
           value: "unblacklist",
         },
+        {
+          name: "🤖 Enable AI | text (guild id)",
+          value: "enable_ai",
+        }, {
+          name: "⛔🤖 Disable AI | text (guild id)",
+          value: "disable_ai",
+        }
       ),
   )
   .addStringOption((input) =>
@@ -105,6 +113,38 @@ const execute = async function (interaction) {
 
     await interaction.reply({
       content: `:white_check_mark: Unblacklisted user ${user.tag}!`,
+    });
+  } else if (action === "enable_ai") {
+    let guildData = await Guild.findOne({ id: text || interaction.guild.id }).exec();
+
+    if (!guildData) {
+      guildData = await Guild.create({
+        id: text,
+        ai_access: true,
+      });
+    } else {
+      guildData.ai_access = true;
+      await guildData.save();
+    }
+
+    await interaction.reply({
+      content: `:white_check_mark: AI enabled for guild ${text || "current guild"}`,
+    });
+  } else if (action === "disable_ai") {
+    let guildData = await Guild.findOne({ id: text || interaction.guild.id }).exec();
+
+    if (!guildData) {
+      return await interaction.reply({
+        content: `:x: AI is not enabled for guild ${text}`,
+      });
+    }
+
+    guildData.ai_access = false;
+
+    await guildData.save();
+
+    await interaction.reply({
+      content: `:white_check_mark: AI disabled for guild ${text || "current guild"}`,
     });
   }
 };

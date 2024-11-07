@@ -20,6 +20,7 @@ const guildsSchema = new mongoose.Schema({
       return val.toString();
     },
   },
+  ai_access: Boolean,
 });
 
 export default mongoose.model("Guild", guildsSchema);
