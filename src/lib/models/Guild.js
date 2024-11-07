@@ -11,6 +11,7 @@ const guildsSchema = new mongoose.Schema({
     },
   },
   ticketChannel: String, // this only exists in this ver so can be properly typed
+  ticketLogChannel: String, // same with this
   tickets_support_role: {
     type: BigInt,
     set: (val) => {

@@ -1,4 +1,8 @@
-import { ThreadAutoArchiveDuration, ChannelType } from "discord.js";
+import {
+  ThreadAutoArchiveDuration,
+  ChannelType,
+  PermissionFlagsBits,
+} from "discord.js";
 import GlobalUser from "../lib/models/GlobalUser.js";
 import Guild from "../lib/models/Guild.js";
 
@@ -65,8 +69,18 @@ export default {
 
         if (!ticketChannel) {
           return await interaction.reply({
-            content: "This server does not have tickets set up!",
+            content: "This server does not have tickets set up correctly!",
             ephemeral: true,
+          });
+        }
+
+        const ticketLogChannel = interaction.guild.channels.cache.get(
+          guildData.ticketLogChannel,
+        );
+
+        if (!ticketLogChannel) {
+          return await interaction.reply({
+            content: "This server does not have tickets set up correctly!",
           });
         }
 
@@ -94,7 +108,7 @@ export default {
         await ticket.members.add(interaction.user.id);
 
         const msg = await ticket.send({
-          content: `<@${interaction.user.id}> <@&${guildData.tickets_support_role}>`,
+          content: `<@${interaction.user.id}>`,
           embeds: [
             {
               color: 0x56b3fa,
@@ -125,20 +139,46 @@ export default {
           ephemeral: true,
         });
 
-        await ticketChannel.send({
+        await ticketLogChannel.send({
           embeds: [
             {
               title: "Ticket Created",
               description: `A ticket has been made by <@${interaction.user.id}>`,
               color: 0x56b3fa,
+              footer: {
+                text: ticket.id,
+              },
+            },
+          ],
+          components: [
+            {
+              type: 1,
+              components: [
+                {
+                  type: 2,
+                  style: 1,
+                  emoji: "🔓",
+                  label: "Join ticket",
+                  custom_id: "join_ticket",
+                },
+              ],
             },
           ],
         });
       } else if (interaction.customId == "close_ticket") {
-        if (!interaction.member.permissions.has("MANAGE_CHANNELS")) {
-          return interaction.reply({
-            content: "You do not have permission to use this command",
-          });
+        if (
+          !interaction.member.permissions.has(
+            PermissionFlagsBits.ManageChannels,
+          )
+        ) {
+          if (
+            interaction.user.username !== interaction.channel.name.split("-")[1]
+          ) {
+            return interaction.reply({
+              content: "You do not have permission to use this command",
+              ephemeral: true,
+            });
+          }
         }
 
         await interaction.channel.send({
@@ -152,6 +192,28 @@ export default {
         });
 
         await interaction.channel.setArchived(true);
+      } else if (interaction.customId == "join_ticket") {
+        const id = interaction.message.embeds[0].footer.text;
+
+        const ticket = interaction.guild.channels.cache.get(id);
+
+        if (!ticket) {
+          return interaction.reply({
+            content: "This ticket no longer exists!",
+            ephemeral: true,
+          });
+        }
+
+        await ticket.members.add(interaction.user.id);
+
+        await ticket.send({
+          content: `<@${interaction.user.id}> has joined the ticket!`,
+        });
+
+        await interaction.reply({
+          content: "You have joined the ticket!",
+          ephemeral: true,
+        });
       }
     }
   },
