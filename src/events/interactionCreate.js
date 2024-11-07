@@ -93,7 +93,7 @@ export default {
 
         await ticket.members.add(interaction.user.id);
 
-        await ticket.send({
+        const msg = await ticket.send({
           content: `<@${interaction.user.id}> <@&${guildData.tickets_support_role}>`,
           embeds: [
             {
@@ -102,7 +102,23 @@ export default {
               description: `Please describe your issue here. Staff will be with you shortly.`,
             },
           ],
+          components: [
+            {
+              type: 1,
+              components: [
+                {
+                  type: 2,
+                  style: 4,
+                  emoji: "🔒",
+                  label: "Close ticket",
+                  custom_id: "close_ticket",
+                },
+              ],
+            },
+          ],
         });
+
+        await msg.pin();
 
         await interaction.reply({
           content: "Ticket created!",
@@ -114,10 +130,28 @@ export default {
             {
               title: "Ticket Created",
               description: `A ticket has been made by <@${interaction.user.id}>`,
-              color: 0x56b3fa
-            }
-          ]
+              color: 0x56b3fa,
+            },
+          ],
         });
+      } else if (interaction.customId == "close_ticket") {
+        if (!interaction.member.permissions.has("MANAGE_CHANNELS")) {
+          return interaction.reply({
+            content: "You do not have permission to use this command",
+          });
+        }
+
+        await interaction.channel.send({
+          embeds: [
+            {
+              title: "Ticket Closed",
+              description: `This ticket has been closed by <@${interaction.user.id}>`,
+              color: 0xff6961,
+            },
+          ],
+        });
+
+        await interaction.channel.setArchived(true);
       }
     }
   },
