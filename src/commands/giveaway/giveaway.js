@@ -100,7 +100,7 @@ async function endGiveaway(interaction) {
         .setDescription(`The winner is: ${winner} 🎉🎉🎉`)
         .setColor(0x56b3fa);
 
-      await interaction.reply({ content: winner.toString(), embeds: [embed] });
+      await message.reply({ content: winner.toString(), embeds: [embed] });
     } else {
       let winnersList = [];
 
@@ -122,7 +122,7 @@ async function endGiveaway(interaction) {
         )
         .setColor(0x56b3fa);
 
-      await interaction.reply({
+      await message.reply({
         embeds: [embed],
         content: winnersList.join(", "),
       });
