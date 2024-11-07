@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import GlobalUser from "../../lib/models/GlobalUser.js";
+import Guild from "../../lib/models/Guild.js";
 
 const data = new SlashCommandBuilder()
   .setName("root")
@@ -28,13 +29,20 @@ const data = new SlashCommandBuilder()
           name: "✅ Unblacklist | user",
           value: "unblacklist",
         },
+        {
+          name: "🤖 Enable AI | text (guild id)",
+          value: "enable_ai",
+        }, {
+          name: "⛔🤖 Disable AI | text (guild id)",
+          value: "disable_ai",
+        }
       ),
   )
   .addStringOption((input) =>
-    input.setName("text").setDescription("If applicable"),
+    input.setName("text").setDescription("still water")
   )
   .addUserOption((input) =>
-    input.setName("user").setDescription("If applicable"),
+    input.setName("user").setDescription("(those who know)")
   );
 
 const execute = async function (interaction) {
@@ -52,25 +60,25 @@ const execute = async function (interaction) {
     try {
       if (text.includes("await")) {
         const evaled = await eval(`(async () => { ${text} })()`);
-        await interaction.reply(`\`\`\`js\n${evaled}\`\`\``);
+        await interaction.reply(`\`\`\`js\n${evaled.slice(0, 1990)}\`\`\``);
       } else {
         const evaled = eval(text);
-        await interaction.reply(`\`\`\`js\n${evaled}\`\`\``);
+        await interaction.reply(`\`\`\`js\n${evaled.slice(0, 1990)}\`\`\``);
       }
     } catch (err) {
-      await interaction.reply(`\`\`\`js\n${err}\`\`\``);
+      await interaction.reply(`\`\`\`js\n${err.toString().slice(0, 1990)}\`\`\``);
     }
   } else if (action === "exec") {
     const { exec } = await import("child_process");
 
     exec(text, (err, stdout, stderr) => {
       if (err) {
-        return interaction.reply(`\`\`\`sh\n${err}\`\`\``);
+        return interaction.reply(`\`\`\`sh\n${err.toString().slice(0, 1990)}\`\`\``);
       }
       if (stderr) {
-        return interaction.reply(`\`\`\`sh\n${stderr}\`\`\``);
+        return interaction.reply(`\`\`\`sh\n${stderr.slice(0, 1990)}\`\`\``);
       }
-      interaction.reply(`\`\`\`sh\n${stdout}\`\`\``);
+      interaction.reply(`\`\`\`sh\n${stdout.slice(0, 1990)}\`\`\``);
     });
   } else if (action === "blacklist") {
     let data = await GlobalUser.findOne({ id: user.id }).exec();
@@ -105,6 +113,38 @@ const execute = async function (interaction) {
 
     await interaction.reply({
       content: `:white_check_mark: Unblacklisted user ${user.tag}!`,
+    });
+  } else if (action === "enable_ai") {
+    let guildData = await Guild.findOne({ id: text || interaction.guild.id }).exec();
+
+    if (!guildData) {
+      guildData = await Guild.create({
+        id: text,
+        ai_access: true,
+      });
+    } else {
+      guildData.ai_access = true;
+      await guildData.save();
+    }
+
+    await interaction.reply({
+      content: `:white_check_mark: AI enabled for guild ${text || "current guild"}`,
+    });
+  } else if (action === "disable_ai") {
+    let guildData = await Guild.findOne({ id: text || interaction.guild.id }).exec();
+
+    if (!guildData) {
+      return await interaction.reply({
+        content: `:x: AI is not enabled for guild ${text}`,
+      });
+    }
+
+    guildData.ai_access = false;
+
+    await guildData.save();
+
+    await interaction.reply({
+      content: `:white_check_mark: AI disabled for guild ${text || "current guild"}`,
     });
   }
 };
