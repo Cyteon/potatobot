@@ -52,25 +52,25 @@ const execute = async function (interaction) {
     try {
       if (text.includes("await")) {
         const evaled = await eval(`(async () => { ${text} })()`);
-        await interaction.reply(`\`\`\`js\n${evaled}\`\`\``);
+        await interaction.reply(`\`\`\`js\n${evaled.slice(0, 1990)}\`\`\``);
       } else {
         const evaled = eval(text);
-        await interaction.reply(`\`\`\`js\n${evaled}\`\`\``);
+        await interaction.reply(`\`\`\`js\n${evaled.slice(0, 1990)}\`\`\``);
       }
     } catch (err) {
-      await interaction.reply(`\`\`\`js\n${err}\`\`\``);
+      await interaction.reply(`\`\`\`js\n${err.slice(0, 1990)}\`\`\``);
     }
   } else if (action === "exec") {
     const { exec } = await import("child_process");
 
     exec(text, (err, stdout, stderr) => {
       if (err) {
-        return interaction.reply(`\`\`\`sh\n${err}\`\`\``);
+        return interaction.reply(`\`\`\`sh\n${err.slice(0, 1990)}\`\`\``);
       }
       if (stderr) {
-        return interaction.reply(`\`\`\`sh\n${stderr}\`\`\``);
+        return interaction.reply(`\`\`\`sh\n${stderr.slice(0, 1990)}\`\`\``);
       }
-      interaction.reply(`\`\`\`sh\n${stdout}\`\`\``);
+      interaction.reply(`\`\`\`sh\n${stdout.slice(0, 1990)}\`\`\``);
     });
   } else if (action === "blacklist") {
     let data = await GlobalUser.findOne({ id: user.id }).exec();
