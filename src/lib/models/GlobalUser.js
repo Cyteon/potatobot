@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { Long } from "mongodb";
 
 const globalUserSchema = new mongoose.Schema({
   id: {
