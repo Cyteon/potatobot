@@ -7,11 +7,11 @@ WORKDIR /app
 # Add the current directory contents into the container at /app
 ADD . /app
 
-# Install any needed packages specified in requirements.txt
+# Install any needed packages
 RUN npm install
 
 # Make port 443 available to the world outside this container
 EXPOSE 443
 
-# Run app.py when the container launches
+# Run PotatoBot when the container launches
 CMD ["node", "."]
