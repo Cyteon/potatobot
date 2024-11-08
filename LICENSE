@@ -620,6 +620,15 @@ copy of the Program in return for a fee.
 
                      END OF TERMS AND CONDITIONS
 
+In addition to the terms of the GNU General Public License, the
+following restriction applies:
+
+1. The "source" command or functionality must always be included in
+   the source code. This command or functionality must not be removed,
+   altered, or disabled in any way. The "source" command is defined
+   as the function or method that provides access to the original
+   source code or other relevant project information.
+
             How to Apply These Terms to Your New Programs
 
   If you develop a new program, and you want it to be of the greatest
@@ -672,3 +681,4 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
