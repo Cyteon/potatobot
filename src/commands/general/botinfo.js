@@ -82,7 +82,7 @@ const execute = async function (interaction) {
       },
     ],
     footer: {
-      text: `Made by cyteon @ https://github.com/cyteon`,
+      text: `Made by cyteon @ https://github.com/cyteon`,
     },
   };
 

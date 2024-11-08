@@ -9,6 +9,8 @@ import {
 const data = new SlashCommandBuilder()
   .setName("github")
   .setDescription("Returns data from GitHub.")
+  .setIntegrationTypes(0, 1)
+  .setContexts(0, 1, 2)
   .addSubcommand((subcommand) =>
     subcommand
       .setName("user")
@@ -74,7 +76,7 @@ const execute = async function (interaction) {
           inline: true,
         })
         .addFields({
-          name: "Website 🖥️: ",
+          name: "Website 🌐: ",
           value: userData.blog || "N/A",
           inline: true,
         });
