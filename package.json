@@ -30,9 +30,11 @@
     "express": "^4.21.1",
     "figlet": "^1.8.0",
     "groq-sdk": "^0.4.0",
+    "kazagumo": "^3.2.1",
     "mathjs": "^13.0.0",
     "mongoose": "^8.8.0",
     "random": "^5.1.1",
+    "shoukaku": "^4.1.1",
     "ts-cache-mongoose": "^1.6.6"
   }
 }

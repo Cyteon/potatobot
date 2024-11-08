@@ -25,6 +25,8 @@ import {
   Collection,
   WebhookClient,
 } from "discord.js";
+import { Connectors } from "shoukaku";
+import { Kazagumo } from "kazagumo";
 import fs from "fs";
 import chalk from "chalk";
 import mongoose from "mongoose";
@@ -46,14 +48,37 @@ mongoose.connect(process.env.MONGODB_URL);
 
 console.log(chalk.green("Connected to MongoDB."));
 
+const Nodes = [
+  {
+    name: process.env.LAVALINK_NAME,
+    url: process.env.LAVALINK_HOST + ":" + process.env.LAVALINK_PORT,
+    auth: process.env.LAVALINK_PASSWORD,
+    secure: false,
+  },
+];
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildModeration,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
+
+const kazagumo = new Kazagumo(
+  {
+    defaultSearchEngine: "youtube",
+    send: (guildId, payload) => {
+      const guild = client.guilds.cache.get(guildId);
+      if (guild) guild.shard.send(payload);
+    },
+  },
+  new Connectors.DiscordJS(client),
+  Nodes,
+);
+client.kazagumo = kazagumo;
 
 const errorWebhook = new WebhookClient({
   url: process.env.ERROR_WEBHOOK,
@@ -150,4 +175,72 @@ process.on("warning", async (warning) => {
   });
 
   console.warn(chalk.yellow(warning));
+});
+
+// Music
+
+kazagumo.shoukaku.on("ready", (name) => {
+  console.log(chalk.green(`Shoukaku Node: ${name} | Connected!`));
+});
+
+kazagumo.shoukaku.on("error", async (name, error) => {
+  // if AggregateError
+
+  if (error.errors) {
+    console.error(
+      chalk.red(`Shoukaku Node: ${name} | Error: ${error.errors.join("\n")}`),
+    );
+
+    await errorWebhook.send({
+      embeds: [
+        {
+          title: "Shoukaku Error",
+          description: `Node: ${name}\n\`\`\`${error.errors.join("\n")}\`\`\``,
+          color: 0xff6961,
+        },
+      ],
+    });
+  } else {
+    console.error(chalk.red(`Shoukaku Node: ${name} | Error: ${error}`));
+
+    await errorWebhook.send({
+      embeds: [
+        {
+          title: "Shoukaku Error",
+          description: `Node: ${name}\n\`\`\`Error: ${error}\`\`\``,
+          color: 0xff6961,
+        },
+      ],
+    });
+  }
+});
+
+kazagumo.shoukaku.on("disconnect", (name, count) => {
+  const players = [...kazagumo.shoukaku.players.values()].filter(
+    (p) => p.node.name === name,
+  );
+  players.map((player) => {
+    kazagumo.destroyPlayer(player.guildId);
+    player.destroy();
+  });
+  console.warn(`Lavalink ${name}: Disconnected`);
+});
+
+kazagumo.on("playerStart", (player, track) => {
+  client.channels.cache
+    .get(player.textId)
+    ?.send({ content: `Now playing **${track.title}** by **${track.author}**` })
+    .then((x) => player.data.set("message", x));
+});
+
+kazagumo.on("playerEnd", (player) => {
+  player.data.get("message")?.edit({ content: `Finished playing` });
+});
+
+kazagumo.on("playerEmpty", (player) => {
+  client.channels.cache
+    .get(player.textId)
+    ?.send({ content: `Destroyed player due to inactivity.` })
+    .then((x) => player.data.set("message", x));
+  player.destroy();
 });
