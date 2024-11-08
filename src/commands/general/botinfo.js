@@ -39,6 +39,8 @@ const execute = async function (interaction) {
     }
   });
 
+  const totalUsers = await interaction.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
+
   const embed = {
     title: "Bot Information",
     color: 0x56b3fa,
@@ -64,8 +66,8 @@ const execute = async function (interaction) {
         inline: true,
       },
       {
-        name: "Users",
-        value: `\`\`\`${interaction.client.users.cache.size}\`\`\``,
+        name: "Total Users",
+        value: `\`\`\`${totalUsers}\`\`\``,
         inline: true,
       },
       {

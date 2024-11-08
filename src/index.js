@@ -25,7 +25,6 @@ import {
   Collection,
   WebhookClient,
 } from "discord.js";
-import fetch from "node-fetch";
 import fs from "fs";
 import chalk from "chalk";
 import mongoose from "mongoose";
