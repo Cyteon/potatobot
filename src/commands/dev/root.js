@@ -130,7 +130,7 @@ const execute = async function (interaction) {
 
     const filter = (i) => i.user.id === interaction.user.id;
 
-    const collector = interaction.channel.createMessageComponentCollector({
+    const collector = msg.createMessageComponentCollector({
       filter,
       time: 60000,
     });

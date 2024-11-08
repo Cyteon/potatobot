@@ -64,7 +64,7 @@ const execute = async function (interaction) {
             return await interaction.reply("Word not found.");
         }
 
-        const definition = data.list[0];
+        let definition = data.list[0];
 
         const embed = {
             title: definition.word,
@@ -91,11 +91,57 @@ const execute = async function (interaction) {
                 },
             ],
             footer: {
-                text: "⚠️ Urban Dictionary definitions may contain explicit content."
+                text: `⚠️ Urban Dictionary definitions may contain explicit content - 1/${data.list.length}`,
             }
         };
 
-        await interaction.reply({ embeds: [embed] });
+        const message = await interaction.reply(
+            { 
+                embeds: [embed],
+                components: [
+                    {
+                        type: 1,
+                        components: [
+                            {
+                                type: 2,
+                                style: 2,
+                                label: "Previous",
+                                customId: "previous",
+                            },
+                            {
+                                type: 2,
+                                style: 2,
+                                label: "Next",
+                                customId: "next",
+                            },
+                        ],
+                    },
+                ] 
+            }
+        );
+
+        const collector = message.createMessageComponentCollector({
+            filter: (i) => i.user.id === interaction.user.id,
+            time: 60000,
+        });
+
+        collector.on("collect", async (i) => {
+            if (i.customId === "next") {
+                definition = data.list[Math.min(data.list.length - 1, data.list.indexOf(definition) + 1)];
+            } else if (i.customId === "previous") {
+                definition = data.list[Math.max(0, data.list.indexOf(definition) - 1)];
+            }
+
+            embed.title = definition.word;
+            embed.description = "||" + definition.definition + "||";
+            embed.fields[0].value = "||" + definition.example + "||";
+            embed.fields[1].value = definition.author;
+            embed.fields[2].value = definition.thumbs_up;
+            embed.fields[3].value = definition.thumbs_down;
+            embed.footer.text = `⚠️ Urban Dictionary definitions may contain explicit content - ${data.list.indexOf(definition) + 1}/${data.list.length}`;
+
+            await i.update({ embeds: [embed] });
+        });
     }
 }
 
