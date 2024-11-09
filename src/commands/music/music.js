@@ -52,6 +52,8 @@ const execute = async function (interaction) {
 
     if (!result.tracks.length) return interaction.reply("No results found!");
 
+    console.log(result.tracks[0]);
+
     if (result.type === "PLAYLIST") {
       player.queue.add(result.tracks);
     } else {

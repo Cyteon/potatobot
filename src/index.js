@@ -53,7 +53,7 @@ const Nodes = [
     name: process.env.LAVALINK_NAME,
     url: process.env.LAVALINK_HOST + ":" + process.env.LAVALINK_PORT,
     auth: process.env.LAVALINK_PASSWORD,
-    secure: false,
+    secure: true,
   },
 ];
 
@@ -184,8 +184,6 @@ kazagumo.shoukaku.on("ready", (name) => {
 });
 
 kazagumo.shoukaku.on("error", async (name, error) => {
-  // if AggregateError
-
   if (error.errors) {
     console.error(
       chalk.red(`Shoukaku Node: ${name} | Error: ${error.errors.join("\n")}`),
