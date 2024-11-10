@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import GlobalUser from "../../lib/models/GlobalUser.js";
 import Guild from "../../lib/models/Guild.js";
+import AiChannels from "../../lib/models/AiChannels.js";
 
 const data = new SlashCommandBuilder()
   .setName("root")
@@ -52,6 +53,14 @@ const data = new SlashCommandBuilder()
         {
           name: "⛔🤖 Disable AI | text (guild id)",
           value: "disable_ai",
+        },
+        {
+          name: "💬 DM | user, text",
+          value: "dm",
+        },
+        {
+          name: "📢 AI Announce | text",
+          value: "ai_announce",
         },
       ),
   )
@@ -273,6 +282,48 @@ const execute = async function (interaction) {
     });
   } else if (action === "say") {
     await interaction.channel.send(text);
+  } else if (action === "dm") {
+    await user.send(text);
+
+    await interaction.reply({
+      content: `:white_check_mark: Sent message to ${user.tag}`,
+      ephemeral: true,
+    });
+  } else if (action === "ai_announce") {
+    await interaction.deferReply();
+
+    const channels = await AiChannels.findOne({}).exec();
+
+    if (!channels) {
+      return await interaction.reply({
+        content: `:x: No AI channels found!`,
+      });
+    }
+
+    channels.ai_channels.forEach(async (channel) => {
+      const ch = interaction.client.channels.cache.get(channel);
+
+      if (ch) {
+        try {
+          await ch.send({
+            embeds: [
+              {
+                description: text,
+                color: 0x56b3fa,
+              },
+            ],
+          });
+        } catch (e) {
+          console.error(
+            `Error sending announcement to ${ch.name}: ${e.message}`,
+          );
+        }
+      }
+    });
+
+    await interaction.editReply({
+      content: `:white_check_mark: Sent announcement to AI channels!`,
+    });
   }
 };
 
