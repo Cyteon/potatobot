@@ -139,7 +139,7 @@ process.on("unhandledRejection", async (error) => {
   await errorWebhook.send({
     embeds: [
       {
-        title: "Unhandled Rejection",
+        title: "Heartbreak :( (Unhandled Rejection)",
         description: `\`\`\`js\n${error}\`\`\``,
         color: 0xff6961,
       },
