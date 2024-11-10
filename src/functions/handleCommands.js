@@ -40,6 +40,38 @@ export default (client) => {
       }
     }
 
+    console.log(`-----`);
+    console.log(chalk.green(`Root command count: ${client.commands.size}/100`));
+    console.log(
+      chalk.green(
+        "Total command count: " +
+          client.commands.reduce((acc, cmd) => {
+            if (cmd.data.options) {
+              return (
+                acc +
+                cmd.data.options.reduce((n, option) => {
+                  if (option.type === "SUB_COMMAND") {
+                    if (option.options) {
+                      option.options.forEach((sub_option) => {
+                        if (sub_option.type === "SUB_COMMAND") {
+                          return n + 1;
+                        }
+                      });
+                    } else {
+                      return n + 1;
+                    }
+                  } else {
+                    return n + 1;
+                  }
+                }, 0)
+              );
+            } else {
+              return acc + 1;
+            }
+          }, 0),
+      ),
+    );
+
     const rest = new REST({ version: "9" }).setToken(process.env.TOKEN);
 
     try {
