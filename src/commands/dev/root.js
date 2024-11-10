@@ -38,6 +38,14 @@ const data = new SlashCommandBuilder()
           value: "unblacklist",
         },
         {
+          name: "⛔ AI ban | user, text (reason)",
+          value: "ai_ban",
+        },
+        {
+          name: "✅ AI unban | user",
+          value: "ai_unban",
+        },
+        {
           name: "🤖 Enable AI | text (guild id)",
           value: "enable_ai",
         },
@@ -192,6 +200,40 @@ const execute = async function (interaction) {
 
     await interaction.reply({
       content: `:white_check_mark: Unblacklisted user ${user.tag}!`,
+    });
+  } else if (action === "ai_ban") {
+    let data = await GlobalUser.findOne({ id: user.id }).exec();
+
+    if (!data) {
+      data = await GlobalUser.create({
+        id: user.id,
+        ai_ignore: true,
+        ai_ignore_reason: text || "No reason provided",
+      });
+    } else {
+      data.ai_ignore = true;
+      data.ai_ignore_reason = text || "No reason provided";
+      await data.save();
+    }
+
+    await interaction.reply({
+      content: `:white_check_mark: **${user.tag}** is now banned from using AI!`,
+    });
+  } else if (action === "ai_unban") {
+    let data = await GlobalUser.findOne({ id: user.id }).exec();
+
+    if (!data) {
+      return await interaction.reply({
+        content: `:x: User ${user.tag} is not banned from AI!`,
+      });
+    }
+
+    data.ai_ignore = false;
+    data.ai_ignore_reason = "";
+    await data.save();
+
+    await interaction.reply({
+      content: `:white_check_mark: **${user.tag}** is now allowed to use AI!`,
     });
   } else if (action === "enable_ai") {
     let guildData = await Guild.findOne({
