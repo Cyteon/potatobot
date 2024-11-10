@@ -14,7 +14,6 @@ const globalUserSchema = new mongoose.Schema({
   blacklist_reason: String,
   ai_ignore: Boolean,
   ai_ignore_reason: String,
-  strikes: mongoose.Schema.Types.Mixed, // i dont fucking know
 });
 
 export default mongoose.model("users_global", globalUserSchema, "users_global");
