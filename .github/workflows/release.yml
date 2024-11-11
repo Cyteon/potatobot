@@ -1,0 +1,33 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-create-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create source code archive
+        run: |
+          tar -czf source-code.tar.gz .
+
+      - name: Upload source code archive to release
+        uses: actions/upload-artifact@v2
+        with:
+          name: source-code
+          path: source-code.tar.gz
+
+      - name: Release
+        uses: actions/upload-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.repository }}
+          tag: ${{ github.sha }}
+          release_name: ${{ github.sha }}
+          assets: source-code.tar.gz
