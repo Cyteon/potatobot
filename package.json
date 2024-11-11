@@ -1,1 +1,38 @@
-
+{
+  "name": "potatobot",
+  "version": "3.0.0",
+  "description": "The best AIO bot on Discord. Now in JS!",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyteon/potatobot.git"
+  },
+  "keywords": [
+    "discord",
+    "discord-bot",
+    "discord-js"
+  ],
+  "author": "cyteon",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/cyteon/potatobot/issues"
+  },
+  "homepage": "https://github.com/cyteon/potatobot#readme",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "chalk": "^5.3.0",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "figlet": "^1.8.0",
+    "groq-sdk": "^0.4.0",
+    "mathjs": "^13.0.0",
+    "mongoose": "^8.8.0",
+    "random": "^5.1.1",
+    "ts-cache-mongoose": "^1.6.6"
+  }
+}
