@@ -6,6 +6,8 @@ import {
 import GlobalUser from "../lib/models/GlobalUser.js";
 import Guild from "../lib/models/Guild.js";
 
+const ai_commands = ["imagine"];
+
 export default {
   name: "interactionCreate",
   async execute(interaction, client) {
@@ -25,6 +27,16 @@ export default {
       if (user.blacklisted && command.data.name !== "root") {
         return await interaction.reply({
           content: `:no_entry: You are blacklisted from using commands! Reason: ${user.blacklist_reason}`,
+          ephemeral: true,
+        });
+      }
+
+      if (
+        ai_commands.includes(command.data.name) &&
+        user.ai_ignore /* ai_ignore is AI ban */
+      ) {
+        return await interaction.reply({
+          content: `:no_entry: You are banned from using AI commands! Reason: ${user.ai_ignore_reason}`,
           ephemeral: true,
         });
       }
