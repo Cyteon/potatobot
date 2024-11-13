@@ -40,11 +40,11 @@ const data = new SlashCommandBuilder()
           value: "passed",
         },
         {
-          name: "🔁 Tweet | text",
+          name: "🔁 Tweet | user, text",
           value: "tweet",
         },
         {
-          name: "🎥 Youtube Comment | text",
+          name: "🎥 Youtube Comment | user, text",
           value: "youtube",
         },
       ),

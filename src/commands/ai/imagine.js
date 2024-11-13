@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { RateLimiter } from "discord.js-rate-limiter";
+import random from "random";
 
 let rateLimiter = new RateLimiter(1, 5000);
 
@@ -50,6 +51,7 @@ const execute = async function (interaction) {
 
   let body = {
     prompt,
+    seed: random.int(0, 1000000),
   };
 
   if (model === "@cf/black-forest-labs/flux-1-schnell") {
@@ -69,7 +71,6 @@ const execute = async function (interaction) {
 
   if (response.ok) {
     // Some models have diffrent response types
-
     if (model === "@cf/black-forest-labs/flux-1-schnell") {
       const data = await response.json();
 
