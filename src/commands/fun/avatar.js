@@ -145,7 +145,7 @@ const execute = async function (interaction) {
     });
   } else if (action == "tweet") {
     const image = await fetch(
-      `https://some-random-api.com/canvas/misc/tweet?avatar=${avatar}&username=${user.username}&displayname=${user.username}&comment=${text}`,
+      `https://some-random-api.com/canvas/misc/tweet?avatar=${avatar}&username=${user.username}&displayname=${user.username}&comment=${text}&replies=69`,
     );
 
     return interaction.reply({
