@@ -28,8 +28,8 @@ const replaceList = [
     new: "@​here",
   },
   {
-    old: "<@&",
-    new: "<@&​",
+    old: "<@",
+    new: "<@​",
   },
   {
     old: "discord.gg",
