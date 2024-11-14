@@ -204,6 +204,13 @@ def prompt_ai(
 
     ai_response = ""
 
+    for msg in newMessageArray:
+        # To remove _id (appears from the rewrite in js using same db ig)
+        newMessageArray[newMessageArray.index(msg)] = {
+            "role": msg["role"],
+            "content": msg["content"]
+        }
+
     for model in models:
         try:
             ai_response = groq_client.chat.completions.create(
