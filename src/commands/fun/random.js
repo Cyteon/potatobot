@@ -35,7 +35,15 @@ const data = new SlashCommandBuilder()
     subcommand.setName("gary-quote").setDescription("Get a random gary quote"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("gayrate").setDescription("Get your gay rate"),
+    subcommand
+      .setName("gayrate")
+      .setDescription("Get someones gayrate")
+      .addUserOption((option) =>
+        option
+          .setName("user")
+          .setDescription("The user to get the gayrate for")
+          .setRequired(false),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -157,7 +165,11 @@ const execute = async function (interaction) {
       emoji = emojis[Math.floor(emojis.length * Math.random())];
     }
 
-    await interaction.reply(`<@${user}> is ${percentage}% gay ${emoji}`);
+    const user = options.getUser("user") || interaction.user;
+
+    await interaction.reply(
+      `**${user.username}** is ${percentage}% gay ${emoji}`,
+    );
   } else if (subCommand === "kangaroo") {
     const response = await fetch("https://some-random-api.com/animal/kangaroo");
     json = await response.json();
