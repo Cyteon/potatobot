@@ -1,6 +1,6 @@
 {
   "name": "potatobot",
-  "version": "3.0.0",
+  "version": "3.0.0-DEV",
   "description": "The best AIO bot on Discord. Now in JS!",
   "main": "src/index.js",
   "type": "module",
