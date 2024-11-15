@@ -53,7 +53,7 @@ const Nodes = [
     name: process.env.LAVALINK_NAME,
     url: process.env.LAVALINK_HOST + ":" + process.env.LAVALINK_PORT,
     auth: process.env.LAVALINK_PASSWORD,
-    secure: true,
+    secure: false,
   },
 ];
 
@@ -213,10 +213,11 @@ kazagumo.shoukaku.on("error", async (name, error) => {
   }
 });
 
-kazagumo.shoukaku.on("disconnect", (name, count) => {
+kazagumo.shoukaku.on("disconnect", (name, _) => {
   const players = [...kazagumo.shoukaku.players.values()].filter(
     (p) => p.node.name === name,
   );
+
   players.map((player) => {
     kazagumo.destroyPlayer(player.guildId);
     player.destroy();
@@ -233,6 +234,8 @@ kazagumo.on("playerStart", (player, track) => {
 
 kazagumo.on("playerEnd", (player) => {
   player.data.get("message")?.edit({ content: `Finished playing` });
+
+  kazagumo.destroyPlayer(player.guildId);
 });
 
 kazagumo.on("playerEmpty", (player) => {
