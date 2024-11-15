@@ -16,7 +16,9 @@ export default {
 
       if (!command) return;
 
-      let user = await GlobalUser.findOne({ id: interaction.user.id });
+      let user = await GlobalUser.findOne({ id: interaction.user.id }).cache(
+        "1 minute",
+      );
 
       if (!user) {
         user = await GlobalUser.create({
