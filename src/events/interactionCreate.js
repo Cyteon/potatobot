@@ -33,7 +33,7 @@ export default {
 
       if (
         ai_commands.includes(command.data.name) &&
-        user.ai_ignore /* ai_ignore is AI ban */
+        user.ai_ignore /* ai_ignore is AI ban. TODO: Change this */
       ) {
         return await interaction.reply({
           content: `:no_entry: You are banned from using AI commands! Reason: ${user.ai_ignore_reason}`,

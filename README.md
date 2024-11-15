@@ -8,7 +8,6 @@ TODO: Convert all int IDs to String
 top.gg: https://top.gg/bot/1226487228914602005 \
 Invite: https://discord.com/oauth2/authorize?client_id=1226487228914602005
 
-
 ## Run Locally
 
 1. Clone the project:
@@ -17,25 +16,30 @@ Invite: https://discord.com/oauth2/authorize?client_id=1226487228914602005
   git clone https://github.com/Cyteon/potatobot
 ```
 
-2. Go to the project directory:
+2. Switch to v3-js branch:
+```bash
+git checkout v3-js # only applies while in development
+```
+
+3. Go to the project directory:
 
 ```bash
   cd potatobot
 ```
 
-3. Install the required Python dependencies:
+4. Install the required Python dependencies:
 
 ```bash
   npm install
 ```
 
-4. Rename `.env.example` to `.env`, and populate the required values.
-5. Rename `config.example.json` to `config.json` and populate the required values.
+5. Rename `.env.example` to `.env`, and populate the required values.
+6. Rename `config.example.json` to `config.json` and populate the required values.
 
-6. Run the bot:
+7. Run the bot:
 
 ```bash
   node .
 ```
 
-7. Profit.
+8. Profit.
