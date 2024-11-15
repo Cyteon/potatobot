@@ -147,7 +147,7 @@ export default {
         await msg.pin();
 
         await interaction.reply({
-          content: "Ticket created!",
+          content: `Ticket created! ${ticket.url}`,
           ephemeral: true,
         });
 
@@ -203,6 +203,45 @@ export default {
           ],
         });
 
+        const guildData = await Guild.findOne({ id: interaction.guild.id });
+
+        if (guildData) {
+          if (guildData.ticketLogChannel) {
+            const ticketLogChannel = interaction.guild.channels.cache.get(
+              guildData.ticketLogChannel,
+            );
+
+            if (ticketLogChannel) {
+              await ticketLogChannel.send({
+                embeds: [
+                  {
+                    title: "Ticket Closed",
+                    description: `Ticket ${interaction.channel.url} has been closed by <@${interaction.user.id}>`,
+                    color: 0xff6961,
+                    footer: {
+                      text: interaction.channel.id,
+                    },
+                  },
+                ],
+                components: [
+                  {
+                    type: 1,
+                    components: [
+                      {
+                        type: 2,
+                        style: 1,
+                        emoji: "🔓",
+                        label: "Reopen ticket",
+                        custom_id: "reopen_ticket",
+                      },
+                    ],
+                  },
+                ],
+              });
+            }
+          }
+        }
+
         await interaction.channel.setArchived(true);
       } else if (interaction.customId == "join_ticket") {
         const id = interaction.message.embeds[0].footer.text;
@@ -216,6 +255,20 @@ export default {
           });
         }
 
+        let memberInTicket = false;
+
+        try {
+          await ticket.members.fetch(interaction.user.id);
+          memberInTicket = true;
+        } catch (_) {}
+
+        if (memberInTicket) {
+          return await interaction.reply({
+            content: "You are already in this ticket!",
+            ephemeral: true,
+          });
+        }
+
         await ticket.members.add(interaction.user.id);
 
         await ticket.send({
@@ -225,6 +278,56 @@ export default {
         await interaction.reply({
           content: "You have joined the ticket!",
           ephemeral: true,
+        });
+      } else if (interaction.customId == "reopen_ticket") {
+        const id = interaction.message.embeds[0].footer.text;
+
+        const ticket = interaction.guild.channels.cache.get(id);
+
+        if (!ticket) {
+          return interaction.reply({
+            content: "This ticket no longer exists!",
+          });
+        }
+
+        await ticket.setArchived(false);
+
+        await interaction.reply({
+          content: "Ticket has been reopened!",
+        });
+
+        await ticket.send({
+          embeds: [
+            {
+              title: "Ticket Reopened",
+              description: `This ticket has been reopened by <@${interaction.user.id}>`,
+              color: 0x77dd77,
+            },
+          ],
+          components: [
+            {
+              type: 1,
+              components: [
+                {
+                  type: 2,
+                  style: 4,
+                  emoji: "🔒",
+                  label: "Close ticket",
+                  custom_id: "close_ticket",
+                },
+              ],
+            },
+          ],
+        });
+
+        await interaction.channel.send({
+          embeds: [
+            {
+              title: "Ticket Reopened",
+              description: `Ticket ${interaction.channel.url} has been reopened by <@${interaction.user.id}>`,
+              color: 0x77dd77,
+            },
+          ],
         });
       }
     }
