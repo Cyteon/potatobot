@@ -17,7 +17,7 @@
     "discord-js"
   ],
   "author": "cyteon",
-  "license": "GPLv3.0 + custom restriction(s)",
+  "license": "AGPLv3.0 + custom restriction(s)",
   "bugs": {
     "url": "https://github.com/cyteon/potatobot/issues"
   },
