@@ -325,6 +325,7 @@ class Security(commands.Cog, name="🛡️ Security"):
                             user = entry.user
 
                     if user is None:
+                        pass
 
                     if user.id == self.bot.user.id:
                         return
