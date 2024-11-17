@@ -176,7 +176,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title="Member Unbanned",
             description=f"{user.mention} was unbanned",
-            color=0x77dd77
+            color=discord.Color.green()
         )
 
         await log_channel.send(embed=embed)
@@ -289,7 +289,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
         embed = discord.Embed(
             title = "Channel Created",
             description = f"Channel {channel.mention} was created",
-            color = 0x77dd77
+            color = discord.Color.green()
         )
 
         c = db["guilds"]
@@ -656,7 +656,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                         embed = discord.Embed(
                             title="You were unbanned!",
                             description=f"You were unbanned from **{context.guild.name}**",
-                            color=0x77dd77
+                            color=discord.Color.green()
                         )
 
                         await user.send(embed=embed)
@@ -677,7 +677,7 @@ class Staff(commands.Cog, name="👮‍♂️ Staff"):
                             embed = discord.Embed(
                                 title="Member Unbanned",
                                 description=f"{user.mention} was unbanned by {context.author.mention}",
-                                color=0x77dd77
+                                color=discord.Color.green()
                             )
 
                             await log_channel.send(embed=embed)
