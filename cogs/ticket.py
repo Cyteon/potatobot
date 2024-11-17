@@ -427,29 +427,6 @@ class Ticket(commands.Cog, name="🎫 Ticket"):
             view = TrashButton()
         )
 
-    @ticket.command(
-        name="delete",
-        description="Delete the ticket",
-        usage="ticket delete"
-    )
-    @commands.check(Checks.is_not_blacklisted)
-    @commands.check(Checks.command_not_disabled)
-
-    @commands.has_permissions(manage_channels=True)
-    async def delete(self, context: Context):
-        if not context.channel.name.startswith("closed-"):
-            return await context.send("Please close the ticket first")
-
-        await context.channel.delete()
-
-        await ServerLogger.send_log(
-            title="Ticket Deleted",
-            description=f"{context.author.mention} deleted ticket {context.channel.name}",
-            color=discord.Color.red(),
-            guild=context.guild,
-            channel=context.channel
-        )
-
 async def setup(bot) -> None:
     await bot.add_cog(Ticket(bot))
     bot.add_view(CreateButton())
