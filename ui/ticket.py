@@ -67,7 +67,7 @@ class CreateButton(View):
         )
 
         await ServerLogger.send_log(
-            title="Ticekt Created",
+            title="Ticket Created",
             description="Created by {0}".format(interaction.user.mention),
             color=discord.Color.green(),
             guild=interaction.guild,
