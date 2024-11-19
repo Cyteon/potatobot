@@ -1,5 +1,11 @@
+import axios from "axios";
 import { SlashCommandBuilder } from "discord.js";
 import { KazagumoTrack } from "kazagumo";
+
+/*
+ Writer-Of-Comment : Ducky
+ Info: Uhh so the code is AIO, it has all the commands. im so fucking confused. 
+*/
 
 const data = new SlashCommandBuilder()
   .setName("music")
@@ -48,6 +54,10 @@ const execute = async function (interaction) {
       return interaction.editReply("You need to be in a voice channel!");
     }
 
+    if (!query) {
+      return interaction.editReply("You need to input a query")
+    }
+
     const player = await interaction.client.kazagumo.createPlayer({
       guildId: interaction.guildId,
       voiceId: interaction.member.voice.channelId,
@@ -68,6 +78,7 @@ const execute = async function (interaction) {
       player.queue.add(result.tracks[0]);
     }
 
+        console.log(`https://img.youtube.com/vi/${result.tracks[0].identifier}/hqdefault.jpg`)
     await interaction.editReply({
       content:
         result.type === "PLAYLIST"
@@ -76,20 +87,26 @@ const execute = async function (interaction) {
       embeds: [
         {
           title: result.tracks[0].title,
+          thumbnail: {
+            url: `https://img.youtube.com/vi/${result.tracks[0].identifier}/hqdefault.jpg`,
+          },
           fields: [
             {
               name: "Duration",
               value: result.tracks[0].isStream
-                ? "Live Stream"
-                : new Date(result.tracks[0].length).toISOString().substr(11, 8),
+                ? `\`\`\`Live Stream\`\`\``
+                : `\`\`\`${new Date(result.tracks[0].length).toISOString().substr(11, 8)}\`\`\``,
+              inline: true
             },
             {
               name: "Author",
-              value: result.tracks[0].author,
+              value: `\`\`\`${result.tracks[0].author}\`\`\``,
+              inline: true
             },
             {
               name: "Platform",
-              value: result.tracks[0].sourceName,
+              value: `\`\`\`${result.tracks[0].sourceName}\`\`\``,
+              inline: true
             },
           ],
           url: result.tracks[0].uri,
