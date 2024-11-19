@@ -42,7 +42,7 @@ const replaceList = [
 ];
 
 const models = [
-  "llama-3.2-90b-text-preview",
+  "llama-3.2-11b-text-preview",
   "llama-3.1-70b-versatile",
   "llama-3.1-8b-instant",
   "llama3-groq-70b-8192-tool-use-preview",
