@@ -52,8 +52,9 @@ class Security(commands.Cog, name="🛡️ Security"):
         if message.author.id == self.bot.user.id:
             return
 
-        if message.author.id == message.guild.owner.id:
-            return
+        if message.guild.owner:
+            if message.author.id == message.guild.owner.id:
+                return
 
         if message.webhook_id:
             try:
