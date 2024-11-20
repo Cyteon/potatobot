@@ -50,7 +50,7 @@ const execute = async function (interaction) {
           },
           {
             name: "📜 License",
-            value: "GNU General Public License v3 + extra terms",
+            value: "GNU Affero General Public License v3 + extra terms",
           },
           {
             name: "📜 GNU AGPL v3",
@@ -84,7 +84,7 @@ In addition to the terms of the GNU Affero General Public License, the following
             style: 5,
             emoji: "📜",
             label: "View License",
-            url: "https://raw.githubusercontent.com/Cyteon/potatobot/9cce01dc136cdd7575139c25640b5fe0d9c93a28/LICENSE",
+            url: "https://raw.githubusercontent.com/Cyteon/potatobot/refs/heads/v3-js/LICENSE",
           },
         ],
       },
