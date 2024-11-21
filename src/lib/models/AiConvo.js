@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const aiConvosSchema = new mongoose.Schema({
   isChannel: Boolean,
   id: {
+    // TODO: Make this always string
     type: BigInt,
     set: (val) => {
       return BigInt(val);

@@ -1,6 +1,6 @@
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 import chalk from "chalk";
 import fs from "fs";
 
@@ -15,6 +15,11 @@ export default (client) => {
       const commandFiles = fs
         .readdirSync(`${path}/${folder}`)
         .filter((file) => file.endsWith(".js"));
+      
+      const subFolders = fs
+        .readdirSync(`${path}/${folder}`, { withFileTypes: true })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name);
 
       console.log(`----- ${folder}`);
 
@@ -31,12 +36,80 @@ export default (client) => {
             client.commandArray.push(command.data);
           }
 
-          console.log(chalk.green(`✅ Loaded command ${chalk.bold(file)}`));
+          console.log(chalk.green(`✅ Loaded command /${chalk.bold(file)}`));
         } catch (error) {
           console.log(
-            chalk.red(`❌ Error loading command ${chalk.bold(file)}: ${error}`),
+            chalk.red(`❌ Error loading command /${chalk.bold(file)}: ${error}`),
           );
         }
+      }
+
+      for (const subFolder of subFolders) {
+        const subCommandFiles = fs
+          .readdirSync(`${path}/${folder}/${subFolder}`)
+          .filter((file) => file.endsWith(".js") && !file.startsWith("_"));
+        
+        const meta = await import(`../commands/${folder}/${subFolder}/_meta.js`);
+
+        let cmd = new SlashCommandBuilder()
+          .setName(subFolder)
+          .setDescription("(no description)");
+        
+        if (meta.userInstalled) {
+          cmd.setIntegrationTypes(0, 1);
+          cmd.setContexts(0, 1, 2);
+        }
+
+        for (const file of subCommandFiles) {
+          try {
+            const { default: command } = await import(
+              `../commands/${folder}/${subFolder}/${file}`
+            );
+
+            if (command.data instanceof SlashCommandSubcommandBuilder) {
+              cmd.addSubcommand(command.data);
+            } else {
+              cmd.addSubcommandGroup(command.data);
+            }
+
+            console.log(chalk.green(`✅ Loaded command /${chalk.bold(subFolder)} ${chalk.bold(file)}`));
+          } catch (error) {
+            console.log(
+              chalk.red(`❌ Error loading command /${chalk.bold(subFolder)} ${chalk.bold(file)}: ${error}`),
+            );
+          }
+        }
+
+        const execute = async function (interaction) {
+          const subcommand = interaction.options.getSubcommand();
+
+          try {
+            const { default: command } = await import(
+              `../commands/${folder}/${subFolder}/${subcommand}.js`
+            );
+
+            await command.execute(interaction, client);
+          } catch (error) {
+            console.log(
+              chalk.red(`❌ Error executing command /${chalk.bold(subFolder)} ${chalk.bold(subcommand)}: ${error}`),
+            );
+
+            await interaction.reply({
+              content: "There was an error while executing this command!",
+              ephemeral: true,
+            });
+          }
+        }
+
+        const data = {
+          data: cmd,
+          execute: execute
+        }
+
+        client.commands.set(subFolder, data);
+        client.commandArray.push(cmd.toJSON());
+
+        console.log(chalk.green(`✅ Loaded command group /${chalk.bold(subFolder)}`));
       }
     }
 

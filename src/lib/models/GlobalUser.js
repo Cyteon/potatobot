@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const globalUserSchema = new mongoose.Schema({
   id: {
+    // TODO: Make this always string
     type: BigInt,
     set: (val) => {
       return BigInt(val);
