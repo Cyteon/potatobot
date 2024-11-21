@@ -1,6 +1,9 @@
 import { SlashCommandBuilder } from "discord.js";
 import OpenAI from "openai";
 import AiConvo from "../../lib/models/AiConvo.js";
+import { RateLimiter } from "discord.js-rate-limiter";
+
+let rateLimiter = new RateLimiter(1, 2000);
 
 let lastApiKey = 0;
 function getClient() {
@@ -62,6 +65,14 @@ const data = new SlashCommandBuilder()
   );
 
 const execute = async function (interaction) {
+  let limited = rateLimiter.take(interaction.user.id);
+
+  if (limited) {
+    return await interaction.reply({
+      content: "🕒 Please wait a few seconds before using this command again.",
+    });
+  }
+
   await interaction.deferReply();
 
   const message = interaction.options.getString("message");
@@ -104,6 +115,7 @@ const execute = async function (interaction) {
       aiResponse = response.choices[0].message.content;
       break;
     } catch (error) {
+      console.error(error);
       aiResponse = "An error occurred while talking to the AI.";
     }
   }
@@ -132,7 +144,9 @@ const execute = async function (interaction) {
       ],
     });
   } else {
-    await interaction.editReply(aiResponse);
+    await interaction.editReply({
+      content: aiResponse,
+    });
   }
 };
 

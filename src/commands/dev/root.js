@@ -2,6 +2,8 @@ import { SlashCommandBuilder } from "discord.js";
 import GlobalUser from "../../lib/models/GlobalUser.js";
 import Guild from "../../lib/models/Guild.js";
 import AiChannels from "../../lib/models/AiChannels.js";
+import EconomyUser from "../../lib/models/EconomyUser.js";
+import balance from "../economy/eco/balance.js";
 
 const data = new SlashCommandBuilder()
   .setName("root")
@@ -62,6 +64,10 @@ const data = new SlashCommandBuilder()
           name: "📢 AI Announce | text",
           value: "ai_announce",
         },
+        {
+          name: "💵 Add money | user, number (amount)",
+          value: "add_money",
+        },
       ),
   )
   .addStringOption((input) =>
@@ -69,7 +75,8 @@ const data = new SlashCommandBuilder()
   )
   .addUserOption((input) =>
     input.setName("user").setDescription("(those who know)"),
-  );
+  )
+  .addNumberOption((input) => input.setName("number").setDescription("number"));
 
 const execute = async function (interaction) {
   if (interaction.user.id !== process.env.OWNER_ID) {
@@ -81,6 +88,7 @@ const execute = async function (interaction) {
   const action = interaction.options.getString("action");
   const text = interaction.options.getString("text");
   const user = interaction.options.getUser("user");
+  const number = interaction.options.getNumber("number");
 
   if (action === "eval") {
     try {
@@ -324,6 +332,26 @@ const execute = async function (interaction) {
     await interaction.editReply({
       content: `:white_check_mark: Sent announcement to AI channels!`,
     });
+  } else if (action === "add_money") {
+    let target = await EconomyUser.findOne({ id: user.id });
+
+    if (!target) {
+      target = await EconomyUser.create({
+        id: user.id,
+      });
+    }
+
+    if (number == 0) {
+      target.balance = 0;
+    } else {
+      target.balance += number;
+    }
+
+    await target.save();
+
+    await interaction.reply(
+      `💵 Added **$${number}** to **${user.username}**! They now have **$${target.balance}**!`,
+    );
   }
 };
 

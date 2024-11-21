@@ -2,20 +2,24 @@ import { SlashCommandSubcommandBuilder } from "discord.js";
 import EconomyUser from "../../../lib/models/EconomyUser.js";
 
 const data = new SlashCommandSubcommandBuilder()
-    .setName("balance")
-    .setDescription("Check your balance!")
+  .setName("balance")
+  .setDescription("Check your balance!")
+  .addUserOption((option) =>
+    option.setName("user").setDescription("The user to check the balance of"),
+  );
 
 const execute = async function (interaction) {
-    let user = await EconomyUser.findOne({ id: interaction.user.id }).cache("1 minute");
+  let target = interaction.options.getUser("user") || interaction.user;
 
-    if (!user) {
-        user = await EconomyUser.create({
-            id: interaction.user.id,
-            balance: 50
-        });
-    }
+  let user = await EconomyUser.findOne({ id: target.id }).cache("1 minute");
 
-    await interaction.reply(`💵 You have $${user.balance}`);
-}
+  if (!user) {
+    user = await EconomyUser.create({
+      id: target.id,
+    });
+  }
+
+  await interaction.reply(`💵 **${target.username}** has $${user.balance}!`);
+};
 
 export default { data, execute };

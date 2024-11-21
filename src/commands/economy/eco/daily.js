@@ -14,7 +14,6 @@ const execute = async function (interaction) {
   if (!user) {
     user = await EconomyUser.create({
       id: interaction.user.id,
-      balance: 50,
     });
   }
 

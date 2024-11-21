@@ -46,14 +46,14 @@ export default {
       try {
         await command.execute(interaction, client);
       } catch (error) {
-        console.log(error);
+        console.error(error);
         try {
           await interaction.reply({
             content: "There was an error while executing this command!",
             ephemeral: true,
           });
         } catch (error) {
-          console.log(
+          console.error(
             "Error while handling error in interactionCreate event: ",
             error,
           );
