@@ -82,13 +82,22 @@ export default (client) => {
 
         const execute = async function (interaction) {
           const subcommand = interaction.options.getSubcommand();
+          const group = interaction.options.getSubcommandGroup();
 
           try {
-            const { default: command } = await import(
-              `../commands/${folder}/${subFolder}/${subcommand}.js`
-            );
-
-            await command.execute(interaction, client);
+            if (group) {
+              const { default: command } = await import(
+                `../commands/${folder}/${subFolder}/${group}.js`
+              );
+  
+              await command.execute(interaction, client);
+            } else {
+              const { default: command } = await import(
+                `../commands/${folder}/${subFolder}/${subcommand}.js`
+              );
+  
+              await command.execute(interaction, client);
+            }
           } catch (error) {
             console.log(
               chalk.red(`❌ Error executing command /${chalk.bold(subFolder)} ${chalk.bold(subcommand)}: ${error}`),
