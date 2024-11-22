@@ -51,135 +51,145 @@ export default (client) => {
       }
 
       for (const subFolder of subFolders) {
-        const subCommandFiles = fs
-          .readdirSync(`${path}/${folder}/${subFolder}`)
-          .filter((file) => file.endsWith(".js") && !file.startsWith("_"));
+        try {
+          const subCommandFiles = fs
+            .readdirSync(`${path}/${folder}/${subFolder}`)
+            .filter((file) => file.endsWith(".js") && !file.startsWith("_"));
 
-        const meta = await import(
-          `../commands/${folder}/${subFolder}/_meta.js`
-        );
+          let meta = { userInstalled: true };
 
-        let cmd = new SlashCommandBuilder()
-          .setName(subFolder)
-          .setDescription("(no description)");
-
-        if (meta.userInstalled) {
-          cmd.setIntegrationTypes(0, 1);
-          cmd.setContexts(0, 1, 2);
-        }
-
-        for (const file of subCommandFiles) {
-          try {
-            const { default: command } = await import(
-              `../commands/${folder}/${subFolder}/${file}`
-            );
-
-            cmd.addSubcommand(command.data);
-
-            console.log(
-              chalk.green(
-                `✅ Loaded command /${chalk.bold(subFolder)} ${chalk.bold(file)}`,
-              ),
-            );
-          } catch (error) {
-            console.log(
-              chalk.red(
-                `❌ Error loading command /${chalk.bold(subFolder)} ${chalk.bold(file)}: ${error}`,
-              ),
-            );
+          if (fs.existsSync(`${path}/${folder}/${subFolder}/_meta.js`)) {
+            meta = await import(`../commands/${folder}/${subFolder}/_meta.js`);
           }
-        }
 
-        const groupFolders = fs
-          .readdirSync(`${path}/${folder}/${subFolder}`, {
-            withFileTypes: true,
-          })
-          .filter((dirent) => dirent.isDirectory())
-          .map((dirent) => dirent.name);
-
-        for (const groupFolder of groupFolders) {
-          const groupCommandFiles = fs
-            .readdirSync(`${path}/${folder}/${subFolder}/${groupFolder}`)
-            .filter((file) => file.endsWith(".js"));
-
-          const group = new SlashCommandSubcommandGroupBuilder()
-            .setName(groupFolder)
+          let cmd = new SlashCommandBuilder()
+            .setName(subFolder)
             .setDescription("(no description)");
 
-          for (const groupFile of groupCommandFiles) {
+          if (meta.userInstalled) {
+            cmd.setIntegrationTypes(0, 1);
+            cmd.setContexts(0, 1, 2);
+          }
+
+          for (const file of subCommandFiles) {
             try {
               const { default: command } = await import(
-                `../commands/${folder}/${subFolder}/${groupFolder}/${groupFile}`
+                `../commands/${folder}/${subFolder}/${file}`
               );
 
-              group.addSubcommand(command.data);
+              cmd.addSubcommand(command.data);
 
               console.log(
                 chalk.green(
-                  `✅ Loaded command /${chalk.bold(subFolder)} ${chalk.bold(groupFolder)} ${chalk.bold(groupFile)}`,
+                  `✅ Loaded command /${chalk.bold(subFolder)} ${chalk.bold(file)}`,
                 ),
               );
             } catch (error) {
               console.log(
                 chalk.red(
-                  `❌ Error loading command /${chalk.bold(subFolder)} ${chalk.bold(groupFolder)} ${chalk.bold(groupFile)}: ${error}`,
+                  `❌ Error loading command /${chalk.bold(subFolder)} ${chalk.bold(file)}: ${error}`,
                 ),
               );
             }
           }
 
-          cmd.addSubcommandGroup(group);
+          const groupFolders = fs
+            .readdirSync(`${path}/${folder}/${subFolder}`, {
+              withFileTypes: true,
+            })
+            .filter((dirent) => dirent.isDirectory())
+            .map((dirent) => dirent.name);
+
+          for (const groupFolder of groupFolders) {
+            const groupCommandFiles = fs
+              .readdirSync(`${path}/${folder}/${subFolder}/${groupFolder}`)
+              .filter((file) => file.endsWith(".js"));
+
+            const group = new SlashCommandSubcommandGroupBuilder()
+              .setName(groupFolder)
+              .setDescription("(no description)");
+
+            for (const groupFile of groupCommandFiles) {
+              try {
+                const { default: command } = await import(
+                  `../commands/${folder}/${subFolder}/${groupFolder}/${groupFile}`
+                );
+
+                group.addSubcommand(command.data);
+
+                console.log(
+                  chalk.green(
+                    `✅ Loaded command /${chalk.bold(subFolder)} ${chalk.bold(groupFolder)} ${chalk.bold(groupFile)}`,
+                  ),
+                );
+              } catch (error) {
+                console.log(
+                  chalk.red(
+                    `❌ Error loading command /${chalk.bold(subFolder)} ${chalk.bold(groupFolder)} ${chalk.bold(groupFile)}: ${error}`,
+                  ),
+                );
+              }
+            }
+
+            cmd.addSubcommandGroup(group);
+
+            console.log(
+              chalk.green(
+                `✅ Loaded command group /${chalk.bold(subFolder)} ${chalk.bold(groupFolder)}`,
+              ),
+            );
+          }
+
+          const execute = async function (interaction) {
+            const subcommand = interaction.options.getSubcommand();
+            const group = interaction.options.getSubcommandGroup();
+
+            try {
+              if (group) {
+                const { default: command } = await import(
+                  `../commands/${folder}/${subFolder}/${group}/${subcommand}.js`
+                );
+
+                await command.execute(interaction, client);
+              } else {
+                const { default: command } = await import(
+                  `../commands/${folder}/${subFolder}/${subcommand}.js`
+                );
+
+                await command.execute(interaction, client);
+              }
+            } catch (error) {
+              console.log(
+                chalk.red(
+                  `❌ Error executing command /${chalk.bold(subFolder)} ${chalk.bold(subcommand)}: ${error}`,
+                ),
+              );
+
+              await interaction.reply({
+                content: "There was an error while executing this command!",
+                ephemeral: true,
+              });
+            }
+          };
+
+          const data = {
+            data: cmd,
+            execute: execute,
+          };
+
+          client.commands.set(subFolder, data);
+          client.commandArray.push(cmd.toJSON());
 
           console.log(
-            chalk.green(
-              `✅ Loaded command group /${chalk.bold(subFolder)} ${chalk.bold(groupFolder)}`,
+            chalk.green(`✅ Loaded command group /${chalk.bold(subFolder)}`),
+          );
+        } catch (error) {
+          console.log(
+            chalk.red(
+              `❌ Error loading command group /${chalk.bold(subFolder)}: ${error}`,
             ),
           );
         }
-
-        const execute = async function (interaction) {
-          const subcommand = interaction.options.getSubcommand();
-          const group = interaction.options.getSubcommandGroup();
-
-          try {
-            if (group) {
-              const { default: command } = await import(
-                `../commands/${folder}/${subFolder}/${group}/${subcommand}.js`
-              );
-
-              await command.execute(interaction, client);
-            } else {
-              const { default: command } = await import(
-                `../commands/${folder}/${subFolder}/${subcommand}.js`
-              );
-
-              await command.execute(interaction, client);
-            }
-          } catch (error) {
-            console.log(
-              chalk.red(
-                `❌ Error executing command /${chalk.bold(subFolder)} ${chalk.bold(subcommand)}: ${error}`,
-              ),
-            );
-
-            await interaction.reply({
-              content: "There was an error while executing this command!",
-              ephemeral: true,
-            });
-          }
-        };
-
-        const data = {
-          data: cmd,
-          execute: execute,
-        };
-
-        client.commands.set(subFolder, data);
-        client.commandArray.push(cmd.toJSON());
-
-        console.log(
-          chalk.green(`✅ Loaded command group /${chalk.bold(subFolder)}`),
-        );
       }
     }
 
