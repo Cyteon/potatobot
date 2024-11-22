@@ -31,8 +31,6 @@ const execute = async function (interaction) {
     return Math.max(max, `${timestamp} | ${author} |`.length);
   }, 0);
 
-  // tope off values
-
   for (const message of Array.from(messages.values()).reverse()) {
     const timestamp = message.createdAt
       .toISOString()
