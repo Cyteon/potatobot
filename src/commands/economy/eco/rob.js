@@ -18,12 +18,10 @@ const data = new SlashCommandSubcommandBuilder()
 const execute = async function (interaction) {
   const user = interaction.options.getUser("user");
 
-  let me = await EconomyUser.findOne({ id: interaction.user.id }).cache(
-    "1 minute",
-  );
+  let me = await EconomyUser.findOne({ id: interaction.user.id });
   let target = await EconomyUser.findOne({
     id: user.id,
-  }).cache("1 minute");
+  });
 
   if (!target) {
     return await interaction.reply("🤷‍♂️ That user doesn't have any money!");

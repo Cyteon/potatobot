@@ -26,12 +26,8 @@ const execute = async function (interaction) {
   let target = interaction.options.getUser("user");
   let amount = interaction.options.getInteger("amount");
 
-  let myData = await EconomyUser.findOne({ id: interaction.user.id }).cache(
-    "1 minute",
-  );
-  let targetData = await EconomyUser.findOne({ id: target.id }).cache(
-    "1 minute",
-  );
+  let myData = await EconomyUser.findOne({ id: interaction.user.id });
+  let targetData = await EconomyUser.findOne({ id: target.id });
 
   if (!targetData) {
     targetData = await EconomyUser.create({

@@ -11,7 +11,7 @@ const data = new SlashCommandSubcommandBuilder()
 const execute = async function (interaction) {
   let target = interaction.options.getUser("user") || interaction.user;
 
-  let user = await EconomyUser.findOne({ id: target.id }).cache("1 minute");
+  let user = await EconomyUser.findOne({ id: target.id });
 
   if (!user) {
     user = await EconomyUser.create({

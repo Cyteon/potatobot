@@ -18,9 +18,7 @@ const execute = async function (interaction) {
     });
   }
 
-  let user = await EconomyUser.findOne({ id: interaction.user.id }).cache(
-    "1 minute",
-  );
+  let user = await EconomyUser.findOne({ id: interaction.user.id });
 
   if (!user) {
     user = await EconomyUser.create({
