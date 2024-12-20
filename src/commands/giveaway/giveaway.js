@@ -1,8 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+import { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } from 'discord.js';
 
 // this command requires "Manage messages" perms to see
 
-module.exports = {
+export default {
     data: new SlashCommandBuilder()
      .setName('giveaway')
      .setDescription('create a giveaway')
