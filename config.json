@@ -1,6 +1,6 @@
 {
   "prefix": ",",
-  "invite_link": "https://discord.com/oauth2/authorize?client_id=1226487228914602005&scope=bot&permissions=8",
+  "invite_link": "https://discord.com/oauth2/authorize?client_id=1319758882033238057&permissions=8&integration_type=0&scope=bot",
   "join_leave_webhook": "",
   "bug_channel": "1244584577989873684",
   "origins": ["http://localhost", "http://localhost:3000"],
