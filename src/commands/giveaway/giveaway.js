@@ -6,7 +6,7 @@ export default {
     data: new SlashCommandBuilder()
      .setName('giveaway')
      .setDescription('create a giveaway')
-     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages)
+     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages) 
      .addSubcommand(subcommand =>
         subcommand
           .setName('start')
@@ -64,7 +64,7 @@ export default {
               return interaction.reply({
                   content: 'The duration must be at least 1 hour.',
                   ephemeral: true,
-              });
+              }); //must be 1+ hour
           }
 
             if (winnersCount < 1) {
@@ -72,7 +72,7 @@ export default {
                   content: 'There must be more than 0 winners.',
                   ephemeral: true,
               });
-          }
+          } //must be more than 0 winners
           
             const embed = new EmbedBuilder()
               .setTitle('🎉Giveaway!')
@@ -83,7 +83,7 @@ export default {
               const giveawayMessage = await interaction.reply({ embeds: [embed], fetchReply: true});
               giveawayMessage.react('🎉');
 
-              setTimeout(async () => {
+              setTimeout(async () => { //needed .. to start or whatever
                 const users = await giveawayMessage.reactions.resolve('🎉').users.fetch();
                 const validUsers = users.filter(user => !user.bot);
                 const winnersCount = interaction.options.getInteger('winners');
@@ -98,7 +98,7 @@ export default {
               }, duration * 60 * 60 * 1000);
         }
 
-        if (subcommand === 'reroll') {
+        if (subcommand === 'reroll') { // reroll cmd
             const messageId = interaction.options.getString('message_id');
 
             try {
@@ -117,7 +117,7 @@ export default {
             }
         }
 
-        if (subcommand === 'end') {
+        if (subcommand === 'end') { // end cmd
             const messageId = interaction.options.getString('messageid');
 
             try {
