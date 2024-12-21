@@ -1,148 +1,139 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
-import random from "random";
+import { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } from 'discord.js';
 
-const data = new SlashCommandBuilder()
-  .setName("giveaway")
-  .setDescription("commands for giveaway")
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName("start")
-      .setDescription("Start a giveaway!")
-      .addStringOption((option) =>
-        option
-          .setName("reward")
-          .setDescription("The reward for the giveaway")
-          .setRequired(true),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("winners")
-          .setDescription("The number of winners")
-          .setRequired(false),
-      )
-      .addStringOption((option) =>
-        option.setName("time").setDescription("The time for the giveaway"),
-      ),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName("end")
-      .setDescription("End a giveaway and choose a winner!")
-      .addStringOption((option) =>
-        option
-          .setName("message_id")
-          .setDescription("The message ID of the giveaway")
-          .setRequired(true),
-      ),
-  )
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
+// this command requires "Manage messages" perms to see
 
-async function startGiveaway(interaction) {
-  const reward = interaction.options.getString("reward");
-  const winners = interaction.options.getInteger("winners") || 1;
-  const time = interaction.options.getString("time");
+export default {
+    data: new SlashCommandBuilder()
+     .setName('giveaway')
+     .setDescription('create a giveaway')
+     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages) 
+     .addSubcommand(subcommand =>
+        subcommand
+          .setName('start')
+          .setDescription('start a giveaway')
+          .addStringOption(option =>
+            option
+              .setName('prize')
+              .setDescription('the prize to win')
+              .setRequired(true)
+          )
+          .addIntegerOption(option =>
+            option
+              .setName('duration')
+              .setDescription('the duration in hours')
+              .setRequired(true)
+          )
+          .addIntegerOption(option =>
+            option
+              .setName('winners')
+              .setDescription('amount of winners')
+              .setRequired(true)
+          )
+     )
+     .addSubcommand(subcommand =>
+        subcommand
+          .setName('reroll')
+          .setDescription('reroll the giveaway')
+          .addStringOption(option =>
+            option
+              .setName('message_id')
+              .setDescription('the message id of the giveaway')
+              .setRequired(true)
+          )
+     )
+    .addSubcommand(subcommand =>
+       subcommand
+         .setName('end')
+         .setDescription('end the giveaway')
+         .addStringOption(option =>
+           option
+             .setName('messageid')
+             .setDescription('the message id of the giveaway')
+             .setRequired(true)
+         )
+    ),
+    async execute(interaction) {
+        const subcommand = interaction.options.getSubcommand();
 
-  const embed = new EmbedBuilder()
-    .setTitle("Giveaway!")
-    .setDescription(reward)
-    .addFields([
-      {
-        name: "Winners",
-        value: winners.toString(),
-      },
-      {
-        name: "Time",
-        value: time || "Not set",
-      },
-    ])
-    .setFooter({
-      text: "React with 🎁 to participate!",
-    })
-    .setColor(0x56b3fa);
+        if (subcommand === 'start') {
+            const prize = interaction.options.getString('prize');
+            const duration = interaction.options.getInteger('duration');
+            const winnersCount = interaction.options.getInteger('winners');
+            
+            if (duration < 1) {
+              return interaction.reply({
+                  content: 'The duration must be at least 1 hour.',
+                  ephemeral: true,
+              }); //must be 1+ hour
+          }
 
-  const message = await interaction.reply({
-    embeds: [embed],
-    fetchReply: true,
-  });
+            if (winnersCount < 1) {
+              return interaction.reply({
+                  content: 'There must be more than 0 winners.',
+                  ephemeral: true,
+              });
+          } //must be more than 0 winners
+          
+            const embed = new EmbedBuilder()
+              .setTitle('🎉Giveaway!')
+              .setDescription(`**Prize:** ${prize}\n**React with 🎉 to enter!**\n**Winners:** ${winnersCount}\n**Ends in:** ${duration} hours`)
+              .setColor('#00FFFF')
+              .setTimestamp(Date.now() + duration * 60 * 60 * 1000);
 
-  await message.react("🎁");
-}
+              const giveawayMessage = await interaction.reply({ embeds: [embed], fetchReply: true});
+              giveawayMessage.react('🎉');
 
-async function endGiveaway(interaction) {
-  const messageId = interaction.options.getString("message_id");
-  const message = await interaction.channel.messages.fetch(messageId);
+              setTimeout(async () => { //needed .. to start or whatever
+                const users = await giveawayMessage.reactions.resolve('🎉').users.fetch();
+                const validUsers = users.filter(user => !user.bot);
+                const winnersCount = interaction.options.getInteger('winners');
+                const duration = interaction.options.getInteger('duration');
 
-  const winners = message.embeds[0].fields.find(
-    (field) => field.name === "Winners",
-  ).value;
+                if (validUsers.size < winnersCount) {
+                    return interaction.channel.send(`Not enough partipants for the giveaway **${prize}**.`);
+                }
 
-  const users = [];
-  const reaction = message.reactions.cache.get("🎁");
-
-  if (reaction) {
-    const usersIterator = await reaction.users.fetch();
-    usersIterator.forEach((user) => {
-      if (user.id !== interaction.client.user.id) {
-        users.push(user);
-      }
-    });
-
-    if (users.length === 0) {
-      return interaction.reply("No users participated in the giveaway.");
-    }
-
-    if (winners == 1) {
-      const winner = random.choice(users);
-
-      const embed = new EmbedBuilder()
-        .setTitle("Giveaway ended!")
-        .setDescription(`The winner is: ${winner} 🎉🎉🎉`)
-        .setColor(0x56b3fa);
-
-      await message.reply({ content: winner.toString(), embeds: [embed] });
-    } else {
-      let winnersList = [];
-
-      for (let i = 0; i < winners; i++) {
-        const winner = random.choice(users);
-        winnersList.push(winner.toString());
-
-        users.splice(users.indexOf(winner), 1);
-
-        if (users.length === 0) {
-          break;
+                const winners = validUsers.random(winnersCount).map(user => user.toString());
+                interaction.channel.send(`🎉 Congrats ${winners.join()}! You won **${prize}**!`);
+              }, duration * 60 * 60 * 1000);
         }
-      }
 
-      const embed = new EmbedBuilder()
-        .setTitle("Giveaway ended!")
-        .setDescription(
-          "The winners are: " + winnersList.join(", ") + " 🎉🎉🎉",
-        )
-        .setColor(0x56b3fa);
+        if (subcommand === 'reroll') { // reroll cmd
+            const messageId = interaction.options.getString('message_id');
 
-      await message.reply({
-        embeds: [embed],
-        content: winnersList.join(", "),
-      });
-    }
-  } else {
-    await interaction.reply("No reactions found on this message.");
-  }
-}
+            try {
+               const message = await interaction.channel.messages.fetch(messageId);
+               const users = await message.reactions.resolve('🎉').users.fetch();
+               const validUsers = users.filter(user => !user.bot);
 
-const execute = async function (interaction) {
-  const subcommand = interaction.options.getSubcommand();
+               if (validUsers.size === 0) {
+                return interaction.reply('No valid participants to reroll.');
+               }
 
-  switch (subcommand) {
-    case "start":
-      await startGiveaway(interaction);
-      break;
-    case "end":
-      await endGiveaway(interaction);
-      break;
-  }
+               const winner = validUsers.random();
+               interaction.reply(`🎉 The new winner is ${winner.toString()}!`);
+            } catch (error) {
+                interaction.reply('Could not fetch the giveaway message. Please check the message id.');
+            }
+        }
+
+        if (subcommand === 'end') { // end cmd
+            const messageId = interaction.options.getString('messageid');
+
+            try {
+               const message = await interaction.channel.messages.fetch(messageId);
+               const users = await message.reactions.resolve('🎉').users.fetch();
+               const validUsers = users.filter(user => !user.bot);
+               const winners = validUsers.random().toString();
+
+               if (validUsers.size === 0) {
+                return interaction.reply('No participants are in this giveaway.');
+               }
+
+               interaction.reply(`🎉 The giveaway has ended! The winner is ${winners}`);
+            } catch (error) {
+                interaction.reply('Could not fetch the giveaway message. Please check the message ID.');
+            }
+        }
+    },
 };
-
-export default { data, execute };
