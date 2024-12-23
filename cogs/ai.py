@@ -65,6 +65,7 @@ else:
         config = json.load(file)
 
 models = [
+    "llama-3.3-70b-versatile",
     "llama-3.2-11b-text-preview",
     "llama-3.1-8b-instant",
     "llama3-groq-70b-8192-tool-use-preview",
@@ -215,6 +216,7 @@ def prompt_ai(
             ai_response = groq_client.chat.completions.create(
                 messages=newMessageArray,
                 model=model,
+                temperature=0.7,
             ).choices[0].message.content
 
             break
