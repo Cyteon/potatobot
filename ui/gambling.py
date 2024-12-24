@@ -486,6 +486,6 @@ def play_slots(amount, multii):
         outcome_message = f"You got a match! You won {amount_won}$!"
     else:
         amount_won = (-amount) * multii
-        outcome_message = f"Unlucky! You lost {amount}$."
+        outcome_message = f"Unlucky! You lost {amount_won}$."
 
     return result, outcome_message, amount_won
