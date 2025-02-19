@@ -864,9 +864,6 @@ class Ai(commands.Cog, name="🤖 AI"):
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def imagine(self, context: commands.Context, model: str = "none", *, prompt: str = "potato") -> None:
         options = {
-            "chilloutmix": "emilianJR/chilloutmix_NiPrunedFp32Fix",
-            "animagine": "cagliostrolab/animagine-xl-3.1",
-            "nsfw-gen-v2": "UnfilteredAI/NSFW-gen-v2",
             "openjourney": "prompthero/openjourney-v4",
             "realistic-vision": "SG161222/Realistic_Vision_V4.0_noVAE",
             "ssd-1b": "segmind/SSD-1B",
@@ -876,7 +873,7 @@ class Ai(commands.Cog, name="🤖 AI"):
             "sdxl": "stabilityai/stable-diffusion-xl-base-1.0",
         }
 
-        nsfw_options = ["nsfw-gen-v2"]
+        nsfw_options = []
 
         users_global = db["users_global"]
         user_data = users_global.find_one({"id": context.author.id})
