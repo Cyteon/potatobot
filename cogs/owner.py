@@ -235,10 +235,10 @@ class Owner(commands.Cog, name="owner"):
 
         await context.channel.send(embed=embed)
 
-    @commands.command(
+    @dev.command(
         name="reply",
         description="Reply to a message",
-        usage="reply <channel_id> <message_id> <reply>",
+        usage="reply <message_url> <content>",
     )
     @commands.is_owner()
     async def reply(self, context: Context, message: discord.Message, *, reply: str) -> None:
