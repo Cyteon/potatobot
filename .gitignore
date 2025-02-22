@@ -156,3 +156,5 @@ pickle/
 config.json
 
 *.out
+
+*.removeme
