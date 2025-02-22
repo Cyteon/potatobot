@@ -238,7 +238,7 @@ class Owner(commands.Cog, name="owner"):
     @dev.command(
         name="reply",
         description="Reply to a message",
-        usage="reply <message_url> <content>",
+        usage="dev reply <message_url> <content>",
     )
     @commands.is_owner()
     async def reply(self, context: Context, message: discord.Message, *, reply: str) -> None:
