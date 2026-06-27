@@ -173,7 +173,7 @@ def prompt_ai(
         "owner/dev": "Cyteon",
         "instance owner/dev ID": os.getenv("OWNER_ID"),
         "support_server": "https://discord.gg/df8eCZDvxB",
-        "website": "https://potato.cyteon.tech",
+        "website": "https://potato.cyteon.dev",
         "bot_invite": config["invite_link"],
         "source_code": "https://github.com/cyteon/potatobot",
         "special_emojis": "<:joos:1254878760218529873>",
